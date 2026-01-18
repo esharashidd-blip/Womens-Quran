@@ -1,0 +1,178 @@
+Show a full-screen sign up / login screen when the app is opened for the first time or when the user is logged out.
+The user must choose to create an account or log in before accessing the app.
+
+Show the sign up / login screen only once.
+Once the user has successfully signed up or logged in, never show the sign up / login screen again on future app opens unless the user manually logs out.
+
+Play Quran verse audio softly in the background while the sign up / login screen is visible.
+The audio must be the same verse referenced in the quote displayed on the screen.
+Do not play any other audio on the sign up / login screen.
+
+Stop the audio immediately once login or signup is completed.
+
+Display this quote on the sign up / login screen above the buttons:
+“The best of you are those who learn the Qur’an and teach it.” — Bukhari 6478
+
+⸻
+
+Prompt the user on first app launch to optionally add a Prayer Times widget to their phone’s home screen.
+This prompt must be skippable.
+If skipped, the widget option must remain available later in Settings.
+
+Add a Prayer Times widget feature that displays accurate prayer times.
+The widget must always use the currently selected location.
+The widget must update automatically if the location changes.
+
+⸻
+
+Add a Ramadan mode switch in the top corner of the app.
+The Ramadan switch must be clearly visible and easy to toggle on and off.
+
+When Ramadan mode is enabled, display Ramadan-specific timings based on the user’s selected location.
+Show the time for opening the fast (Suhoor end / Fajr).
+Show the time for breaking the fast (Iftar / Maghrib).
+
+Ramadan timings must always match the selected location.
+Ramadan timings must update automatically if the location changes.
+
+When Ramadan mode is disabled, hide Ramadan-specific timings and return the app to normal prayer display.
+
+⸻
+
+Display prayer progress on the Home screen using circular indicators.
+
+Show a weekly prayer progress view with seven circles, one for each day.
+Show a monthly prayer progress view with daily circles for the entire month.
+
+A full circle means all five prayers were completed that day.
+A partially filled circle means some prayers were completed.
+An empty circle means no prayers were completed.
+
+Keep this view visual-first with minimal text.
+
+⸻
+
+Track Quran reading sessions.
+
+Track minutes read per session.
+Track total minutes read per day.
+Track the last surah and ayah read.
+
+Allow the user to set and edit a daily Quran reading goal.
+
+The reading goal must be selectable only as preset options:
+5 minutes
+10 minutes
+15 minutes
+
+When a reading goal is selected, display how many days it will take to complete the entire Quran based on the selected daily minutes.
+
+Update the “days to complete Quran” estimate dynamically when the user changes the selected reading goal.
+
+⸻
+
+While the user is actively reading the Quran, show a top banner indicating how many minutes are left to complete their daily goal when they are close to finishing.
+Example: “5 minutes left”.
+
+Only show this banner during active reading.
+Remove the banner once the daily goal is completed.
+
+⸻
+
+Show weekly Quran reading progress with daily indicators.
+Indicate which days the user read.
+Indicate which days the daily reading goal was completed.
+
+Show a “Continue Reading” card that resumes from the last surah and ayah.
+
+⸻
+
+Rename the “For You 🤍” tab to “For You”.
+Remove the white heart emoji completely.
+
+⸻
+
+Remove the “Speak to Allah” section from the For You tab.
+
+Remove the “Gentle action” section from the For You tab.
+
+Remove the “Shop Abayas” feature entirely from the app.
+
+⸻
+
+Make the For You tab English-led.
+Arabic text may be included, but English must be the primary language.
+
+At the top of the For You tab, display the title “For You”.
+Display a subtitle: “Quran guidance for what you’re feeling today.”
+Display a search bar with placeholder text such as “Search: anxiety, heartbreak, sleep, protection…”.
+
+⸻
+
+Add a horizontal Quick Picks row at the top of the For You tab.
+
+Include shortcuts such as:
+Anxiety & Overthinking
+Heartbreak & Healing
+Self-Worth
+Protection
+Patience
+Peace & Sleep
+
+These shortcuts must open the same topic pages as the main categories.
+
+⸻
+
+Group For You topics into the following categories:
+
+Calm & Emotional
+Love & Relationships
+Strength & Self-Worth
+Spiritual Protection
+Barakah & Growth
+
+Each category must contain multiple related topics.
+
+⸻
+
+When a user taps a topic, open a horizontal swipe-based feed.
+
+Each topic must include multiple ayahs and multiple duas.
+
+⸻
+
+Each swipe set must include an Ayah card.
+
+The Ayah card must show Arabic text.
+The Ayah card must show English translation.
+The Ayah card must show the surah and ayah reference.
+
+⸻
+
+Each Ayah card must be followed by a Meaning card.
+
+The Meaning card must explain what the ayah or dua means for the user in simple English.
+The Meaning card must stay in the same swipe flow and update dynamically as the user swipes.
+
+⸻
+
+Each swipe set must include a Dua card.
+
+The Dua card must show Arabic text.
+The Dua card must show the English meaning.
+Include an optional transliteration toggle.
+
+⸻
+
+Allow sharing from Ayah and Dua cards.
+
+Support sharing to Instagram Stories.
+Support sharing to Instagram Posts.
+
+Automatically format shared content correctly for each format.
+
+⸻
+
+The For You experience must be calm, respectful, and non-guilt-driven.
+Use swipe-based navigation.
+Avoid unnecessary pop-ups or pressure language.

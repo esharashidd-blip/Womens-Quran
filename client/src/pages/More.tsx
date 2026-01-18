@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
-import { BookHeart, Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, X, BookOpen, ShoppingBag, Plane } from "lucide-react";
+import { BookHeart, Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, X, BookOpen, Plane, LogOut } from "lucide-react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
@@ -29,12 +30,9 @@ const MENU_ITEMS = [
   { href: "/hajj", icon: BookOpen, label: "Hajj Guide", description: "Pilgrimage essentials" },
 ];
 
-const EXTERNAL_LINKS = [
-  { url: "https://modanisa.com", label: "Shop Abayas", description: "Modest fashion", icon: ShoppingBag },
-];
-
 export default function More() {
   const { data: settings, isLoading } = useSettings();
+  const { user } = useAuth();
   const updateSettings = useUpdateSettings();
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
@@ -130,29 +128,6 @@ export default function More() {
         })}
       </div>
 
-      <div className="space-y-2">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium px-1">Shop</p>
-        {EXTERNAL_LINKS.map((link) => {
-          const Icon = link.icon;
-          return (
-            <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer">
-              <Card className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer" data-testid={`link-shop`}>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-accent/50 rounded-full flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{link.label}</p>
-                    <p className="text-xs text-muted-foreground">{link.description}</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                </div>
-              </Card>
-            </a>
-          );
-        })}
-      </div>
-
       <Card className="bg-white/80 border-white/50 p-4 rounded-2xl">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -178,6 +153,23 @@ export default function More() {
           </button>
         </div>
       </Card>
+
+      {user && (
+        <a href="/api/logout">
+          <Card className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer" data-testid="button-logout">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center">
+                <LogOut className="w-5 h-5 text-rose-500" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">Sign Out</p>
+                <p className="text-xs text-muted-foreground">Signed in as {user.email || user.firstName}</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </div>
+          </Card>
+        </a>
+      )}
 
       <Card className="bg-accent/30 border-white/50 p-4 rounded-2xl text-center">
         <p className="text-sm text-muted-foreground">

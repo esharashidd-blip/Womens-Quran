@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomNav } from "@/components/BottomNav";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import PrayerTab from "@/pages/PrayerTab";
@@ -16,8 +18,9 @@ import Duas from "@/pages/Duas";
 import UmrahGuide from "@/pages/UmrahGuide";
 import HajjGuide from "@/pages/HajjGuide";
 import More from "@/pages/More";
+import LandingPage from "@/pages/LandingPage";
 
-function Router() {
+function AuthenticatedApp() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-accent/20 text-foreground font-sans">
       <Switch>
@@ -39,12 +42,33 @@ function Router() {
   );
 }
 
+function AppContent() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-accent/20 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LandingPage />;
+  }
+
+  return <AuthenticatedApp />;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <AppContent />
       </TooltipProvider>
     </QueryClientProvider>
   );

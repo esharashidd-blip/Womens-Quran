@@ -1,6 +1,9 @@
-import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, date, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Export auth models
+export * from "./models/auth";
 
 export const favorites = pgTable("favorites", {
   id: serial("id").primaryKey(),
@@ -19,20 +22,52 @@ export const qada = pgTable("qada", {
 
 export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"),
   city: text("city").notNull().default("Mecca"),
   country: text("country").notNull().default("Saudi Arabia"),
   autoLocation: boolean("auto_location").notNull().default(false),
   tasbihCount: integer("tasbih_count").notNull().default(0),
+  ramadanMode: boolean("ramadan_mode").notNull().default(false),
+  quranGoalMinutes: integer("quran_goal_minutes").notNull().default(10),
+});
+
+// Prayer progress tracking
+export const prayerProgress = pgTable("prayer_progress", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id"),
+  date: date("date").notNull(),
+  fajr: boolean("fajr").notNull().default(false),
+  dhuhr: boolean("dhuhr").notNull().default(false),
+  asr: boolean("asr").notNull().default(false),
+  maghrib: boolean("maghrib").notNull().default(false),
+  isha: boolean("isha").notNull().default(false),
+});
+
+// Quran reading sessions
+export const quranReadingSessions = pgTable("quran_reading_sessions", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id"),
+  date: date("date").notNull(),
+  minutesRead: integer("minutes_read").notNull().default(0),
+  lastSurahNumber: integer("last_surah_number"),
+  lastAyahNumber: integer("last_ayah_number"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertFavoriteSchema = createInsertSchema(favorites).omit({ id: true });
 export const insertQadaSchema = createInsertSchema(qada).omit({ id: true });
 export const insertSettingsSchema = createInsertSchema(settings).omit({ id: true });
+export const insertPrayerProgressSchema = createInsertSchema(prayerProgress).omit({ id: true });
+export const insertQuranReadingSessionSchema = createInsertSchema(quranReadingSessions).omit({ id: true, createdAt: true });
 
 export type Favorite = typeof favorites.$inferSelect;
 export type Qada = typeof qada.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
+export type PrayerProgress = typeof prayerProgress.$inferSelect;
+export type QuranReadingSession = typeof quranReadingSessions.$inferSelect;
 
 export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
 export type InsertQada = z.infer<typeof insertQadaSchema>;
 export type InsertSettings = z.infer<typeof insertSettingsSchema>;
+export type InsertPrayerProgress = z.infer<typeof insertPrayerProgressSchema>;
+export type InsertQuranReadingSession = z.infer<typeof insertQuranReadingSessionSchema>;

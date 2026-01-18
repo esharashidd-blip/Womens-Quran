@@ -3,11 +3,15 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
+import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Setup auth before other routes
+  await setupAuth(app);
+  registerAuthRoutes(app);
   // Favorites routes
   app.get(api.favorites.list.path, async (req, res) => {
     const favorites = await storage.getFavorites();
@@ -32,7 +36,8 @@ export async function registerRoutes(
   });
 
   app.delete(api.favorites.delete.path, async (req, res) => {
-    const id = parseInt(req.params.id);
+    const idParam = req.params.id;
+    const id = parseInt(Array.isArray(idParam) ? idParam[0] : idParam);
     if (isNaN(id)) {
       return res.status(400).json({ message: "Invalid ID" });
     }

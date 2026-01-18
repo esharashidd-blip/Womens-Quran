@@ -8,7 +8,7 @@ export function BottomNav() {
   const navItems = [
     { href: "/", icon: Home, label: "Home" },
     { href: "/prayer", icon: Clock, label: "Prayer" },
-    { href: "/foryou", icon: Heart, label: "For You", special: true },
+    { href: "/foryou", icon: Heart, label: "For You" },
     { href: "/quran", icon: BookOpen, label: "Quran" },
     { href: "/more", icon: Menu, label: "More" },
   ];
@@ -29,15 +29,9 @@ export function BottomNav() {
                     : "text-muted-foreground hover:text-primary/70"
                 )}
               >
-                {item.special ? (
-                  <div className="relative">
-                    <item.icon className={cn("w-5 h-5", isActive && "fill-primary/30")} strokeWidth={isActive ? 2.5 : 2} />
-                  </div>
-                ) : (
-                  <item.icon className={cn("w-5 h-5", isActive && "fill-primary/20")} strokeWidth={isActive ? 2.5 : 2} />
-                )}
-                <span className={cn("text-[10px] font-medium", item.special && "flex items-center gap-0.5")}>
-                  {item.label}{item.special && " 🤍"}
+                <item.icon className={cn("w-5 h-5", isActive && "fill-primary/20")} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="text-[10px] font-medium">
+                  {item.label}
                 </span>
               </button>
             </Link>

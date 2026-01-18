@@ -116,10 +116,15 @@ shared/           # Shared types and schemas
 - `DATABASE_URL` - PostgreSQL connection string
 
 ## Recent Changes
-- Restructured navigation: Home | Prayer | For You 🤍 | Quran | More
+- Restructured navigation: Home | Prayer | For You | Quran | More (removed heart emoji from navigation)
 - Added location selector with search/select from 30+ popular cities (no manual typing)
 - Created combined Prayer tab with Times/Qada/Tasbih sub-tabs
-- Built "For You 🤍" feature: Women-focused Quran guidance with 12 emotional/spiritual topics
+- Built "For You" feature: Women-focused Quran guidance with 12 emotional/spiritual topics
+  - Removed action cards - now shows only Ayah → Meaning → Dua sequence
+  - Removed heart emoji from For You heading
 - Added Umrah Guide (8 steps with duas)
 - Added Hajj Guide (day-by-day with tips and common mistakes)
 - Expanded Duas & Adhkar to 68 duas across 9 categories with search
+- Removed "Shop Abayas" external link from More page
+- Added logout button with user info display in More page
+- Integrated Replit Auth for user authentication with LandingPage for logged-out users
