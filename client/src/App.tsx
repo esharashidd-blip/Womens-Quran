@@ -9,6 +9,7 @@ import Home from "@/pages/Home";
 import Quran from "@/pages/Quran";
 import SurahView from "@/pages/SurahView";
 import Favorites from "@/pages/Favorites";
+import Prayer from "@/pages/Prayer";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
         <Route path="/surah/:id" component={SurahView} />
         <Route path="/favorites" component={Favorites} />
         <Route component={NotFound} />
+        <Route path="/prayer" component={Prayer} />
       </Switch>
       <BottomNav />
     </div>
