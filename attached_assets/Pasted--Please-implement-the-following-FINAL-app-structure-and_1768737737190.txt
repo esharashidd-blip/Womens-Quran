@@ -1,0 +1,207 @@
+
+
+Please implement the following FINAL app structure and features exactly as described.
+
+=====================================
+MAIN NAVIGATION (BOTTOM TABS)
+=====================================
+
+Order must be EXACTLY this (For You 🤍 in the middle):
+
+1) Home
+2) Prayer
+3) For You 🤍
+4) Quran
+5) More
+
+=====================================
+HOME TAB (PRAYER-FOCUSED)
+=====================================
+
+PURPOSE:
+Home is the prayer dashboard (similar to Muslim Pro home).
+
+REQUIREMENTS:
+• Show today’s prayer times clearly
+• Highlight the NEXT prayer
+• Show a live countdown:
+  “Next prayer in 1h 20m”
+• Display current selected location at the top
+• Tapping the location allows changing it
+
+LOCATION SELECTION:
+• Users must NOT type location manually
+• Location should be selected by tapping:
+  - Search & select from list
+  - Country/city selector
+  - Optional “Use my location” button
+• Save selected location
+• Prayer times update immediately when location changes
+
+=====================================
+PRAYER TAB
+=====================================
+
+Include:
+• Full prayer times view
+• Qada (missed prayer tracking)
+• Tasbih (digital counter)
+• Prayer-related settings
+
+=====================================
+FOR YOU 🤍 TAB (MAIN FEATURE – WOMEN-FOCUSED)
+=====================================
+
+Tab name MUST be exactly:
+“For You 🤍” (white heart emoji only)
+
+PURPOSE:
+A women-focused, English-led “Quran for real life” space for emotional and spiritual support.
+
+-----------------
+FOR YOU HOME SCREEN
+-----------------
+
+TOP:
+• Title: For You 🤍
+• Subtitle:
+  “Quran guidance for what you’re feeling today.”
+• Search bar placeholder:
+  “Search: anxiety, heartbreak, sleep, protection…”
+
+-----------------
+QUICK PICKS (HORIZONTAL SCROLL)
+-----------------
+
+• Anxiety & Overthinking
+• Heartbreak & Healing
+• Self-Worth
+• Protection
+• Patience
+• Peace & Sleep
+
+-----------------
+MAIN CATEGORIES
+-----------------
+
+Calm & Emotional
+• Anxiety & Overthinking
+• Stress & Pressure
+• Sadness & Crying
+• Peace & Calm
+• Sleep & Night Comfort
+
+Love & Relationships
+• Heartbreak & Healing
+• Marriage & Love
+• Loneliness
+• Family Problems
+• Boundaries
+
+Strength & Self-Worth
+• Confidence
+• Feeling Lost
+• Hope After Failure
+• Motivation
+
+Spiritual Protection
+• Evil Eye / Hasad
+• Fear & Panic
+• Repentance & Forgiveness
+• Protection Duas
+
+Barakah & Growth
+• Gratitude
+• Rizq / Money Worry
+• New Beginnings
+• Trust in Allah
+
+-----------------
+TOPIC EXPERIENCE (SWIPE FEED)
+-----------------
+
+When a topic is opened (e.g. Anxiety & Overthinking), show swipeable cards in this order:
+
+CARD 1 — AYAH
+• Large Arabic ayah
+• English translation
+• Surah + ayah reference
+Buttons: Play | Save | Share
+Text under share:
+“Share this with other sisters 🤍”
+
+CARD 2 — MEANING
+• 2–4 line explanation
+• Simple, comforting English
+• Tone: “What this means for you today…”
+
+CARD 3 — DUA
+• Arabic dua
+• English meaning
+• Optional transliteration toggle
+Buttons: Copy | Share | Listen
+
+CARD 4 — GENTLE ACTION
+Examples:
+• “Repeat this slowly 3 times.”
+• “Read this before sleeping tonight.”
+Button: Set reminder
+
+Then continue to the next ayah/dua set.
+
+KEY NOTES:
+• English-led experience
+• Arabic included but English is primary
+• Entire section is swipe-based
+• Soft, emotionally safe tone
+• Feminine pink UI
+
+=====================================
+QURAN TAB
+=====================================
+
+• Full Quran
+• Surah & ayah navigation
+• Arabic text
+• English translation
+• Clean reading layout
+
+=====================================
+MORE TAB
+=====================================
+
+Include the following sections:
+
+• Dua & Adhkar (classic organised list + search)
+• Tasbih
+• Qada (Missed Prayers)
+• Umrah Guide
+• Hajj Guide
+• Shop (abayas / modest fashion – external links)
+• Settings
+
+UMRAH GUIDE:
+• Step-by-step beginner-friendly guide
+• Preparation, Ihram, Tawaf, Sa’i, Halq/Taqsir
+• Relevant duas included
+• Simple English
+
+HAJJ GUIDE:
+• High-level guide for first-timers
+• Key days & rituals
+• Common mistakes
+• Helpful tips
+• Relevant duas
+
+=====================================
+DESIGN (GLOBAL)
+=====================================
+
+• Soft pink / rose colour palette
+• Feminine, calm, modern
+• Mobile-first
+• Rounded cards
+• Clean typography
+• Emotionally supportive tone
+
+Please fully implement all of the above, ensure navigation order is correct, and confirm when the app preview reflects these changes.

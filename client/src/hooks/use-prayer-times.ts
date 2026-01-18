@@ -16,7 +16,8 @@ interface PrayerData {
     readable: string;
     hijri: {
       date: string;
-      month: { en: string };
+      day: string;
+      month: { en: string; ar: string; number: number };
       weekday: { en: string };
       year: string;
     };

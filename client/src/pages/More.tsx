@@ -1,78 +1,99 @@
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
-import { CircleDot, CalendarCheck, BookHeart, Heart, Settings, ChevronRight } from "lucide-react";
+import { BookHeart, Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, X, BookOpen, ShoppingBag, Plane } from "lucide-react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { MapPin, Navigation, X, Loader2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Search, Check } from "lucide-react";
+
+const POPULAR_LOCATIONS = [
+  { city: "Mecca", country: "Saudi Arabia" },
+  { city: "Medina", country: "Saudi Arabia" },
+  { city: "London", country: "United Kingdom" },
+  { city: "New York", country: "United States" },
+  { city: "Dubai", country: "United Arab Emirates" },
+  { city: "Cairo", country: "Egypt" },
+  { city: "Istanbul", country: "Turkey" },
+  { city: "Jakarta", country: "Indonesia" },
+  { city: "Kuala Lumpur", country: "Malaysia" },
+  { city: "Toronto", country: "Canada" },
+  { city: "Sydney", country: "Australia" },
+  { city: "Paris", country: "France" },
+];
 
 const MENU_ITEMS = [
-  { href: "/tasbih", icon: CircleDot, label: "Tasbih Counter", description: "Digital prayer beads" },
-  { href: "/qada", icon: CalendarCheck, label: "Qada Tracker", description: "Track missed prayers" },
   { href: "/duas", icon: BookHeart, label: "Duas & Adhkar", description: "Daily supplications" },
   { href: "/favorites", icon: Heart, label: "Saved Verses", description: "Your favorite ayahs" },
+  { href: "/umrah", icon: Plane, label: "Umrah Guide", description: "Step-by-step guide" },
+  { href: "/hajj", icon: BookOpen, label: "Hajj Guide", description: "Pilgrimage essentials" },
+];
+
+const EXTERNAL_LINKS = [
+  { url: "https://modanisa.com", label: "Shop Abayas", description: "Modest fashion", icon: ShoppingBag },
 ];
 
 export default function More() {
   const { data: settings, isLoading } = useSettings();
   const updateSettings = useUpdateSettings();
-  const [showLocationEdit, setShowLocationEdit] = useState(false);
-  const [editCity, setEditCity] = useState("");
-  const [editCountry, setEditCountry] = useState("");
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [locationSearch, setLocationSearch] = useState("");
+  const [isDetecting, setIsDetecting] = useState(false);
 
   const city = settings?.city || "Mecca";
   const country = settings?.country || "Saudi Arabia";
 
-  const openLocationEdit = () => {
-    setEditCity(city);
-    setEditCountry(country);
-    setShowLocationEdit(true);
-  };
+  const filteredLocations = useMemo(() => {
+    if (!locationSearch.trim()) return POPULAR_LOCATIONS;
+    const query = locationSearch.toLowerCase();
+    return POPULAR_LOCATIONS.filter(loc => 
+      loc.city.toLowerCase().includes(query) || 
+      loc.country.toLowerCase().includes(query)
+    );
+  }, [locationSearch]);
 
-  const handleSaveLocation = () => {
-    if (editCity && editCountry) {
-      updateSettings.mutate(
-        { city: editCity, country: editCountry },
-        {
-          onSuccess: () => {
-            setShowLocationEdit(false);
-            setEditCity("");
-            setEditCountry("");
-          },
-        }
-      );
-    }
+  const handleSelectLocation = (loc: { city: string; country: string }) => {
+    updateSettings.mutate(
+      { city: loc.city, country: loc.country },
+      { onSuccess: () => {
+        setShowLocationPicker(false);
+        setLocationSearch("");
+      }}
+    );
   };
 
   const handleAutoDetect = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const res = await fetch(
-              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
-            );
-            const data = await res.json();
-            updateSettings.mutate(
-              {
-                city: data.city || data.locality || "Unknown",
-                country: data.countryName || "Unknown",
-                autoLocation: true,
-              },
-              {
-                onSuccess: () => {
-                  setShowLocationEdit(false);
-                },
-              }
-            );
-          } catch (e) {
-            console.error("Geocoding failed", e);
-          }
-        },
-        (err) => console.error("Geolocation error", err)
-      );
-    }
+    if (!navigator.geolocation) return;
+    setIsDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const res = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+          );
+          const data = await res.json();
+          updateSettings.mutate(
+            {
+              city: data.city || data.locality || "Unknown",
+              country: data.countryName || "Unknown",
+              autoLocation: true,
+            },
+            { onSuccess: () => {
+              setShowLocationPicker(false);
+              setLocationSearch("");
+              setIsDetecting(false);
+            }}
+          );
+        } catch (e) {
+          console.error("Geocoding failed", e);
+          setIsDetecting(false);
+        }
+      },
+      (err) => {
+        console.error("Geolocation error", err);
+        setIsDetecting(false);
+      }
+    );
   };
 
   if (isLoading) {
@@ -84,10 +105,10 @@ export default function More() {
   }
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-8 md:px-8 max-w-lg mx-auto space-y-6">
+    <div className="min-h-screen pb-24 px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-5">
       <h1 className="text-2xl font-serif text-center">More</h1>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {MENU_ITEMS.map((item) => {
           const Icon = item.icon;
           return (
@@ -109,6 +130,29 @@ export default function More() {
         })}
       </div>
 
+      <div className="space-y-2">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium px-1">Shop</p>
+        {EXTERNAL_LINKS.map((link) => {
+          const Icon = link.icon;
+          return (
+            <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer">
+              <Card className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer" data-testid={`link-shop`}>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-accent/50 rounded-full flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{link.label}</p>
+                    <p className="text-xs text-muted-foreground">{link.description}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </div>
+              </Card>
+            </a>
+          );
+        })}
+      </div>
+
       <Card className="bg-white/80 border-white/50 p-4 rounded-2xl">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -122,7 +166,7 @@ export default function More() {
         
         <div className="mt-4 pt-4 border-t border-primary/10">
           <button
-            onClick={openLocationEdit}
+            onClick={() => setShowLocationPicker(true)}
             className="flex items-center justify-between w-full text-left"
             data-testid="button-change-location"
           >
@@ -144,50 +188,65 @@ export default function More() {
         </p>
       </Card>
 
-      {showLocationEdit && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center" onClick={() => !updateSettings.isPending && setShowLocationEdit(false)}>
+      {showLocationPicker && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center" onClick={() => !updateSettings.isPending && setShowLocationPicker(false)}>
           <Card 
-            className="w-full max-w-lg bg-background border-t border-white/50 rounded-t-3xl p-6 space-y-4 animate-in slide-in-from-bottom duration-300"
+            className="w-full max-w-lg bg-background border-t border-white/50 rounded-t-3xl p-5 space-y-4 animate-in slide-in-from-bottom duration-300 max-h-[80vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <h3 className="font-serif text-lg">Change Location</h3>
-              <Button variant="ghost" size="icon" onClick={() => !updateSettings.isPending && setShowLocationEdit(false)} disabled={updateSettings.isPending}>
-                <X className="w-5 h-5" />
+              <h3 className="font-serif text-lg">Select Location</h3>
+              <Button variant="ghost" size="sm" onClick={() => setShowLocationPicker(false)} disabled={updateSettings.isPending}>
+                Done
               </Button>
             </div>
             
-            <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="City"
-                value={editCity}
-                onChange={(e) => setEditCity(e.target.value)}
-                data-testid="input-city"
-              />
-              <Input
-                placeholder="Country"
-                value={editCountry}
-                onChange={(e) => setEditCountry(e.target.value)}
-                data-testid="input-country"
+                placeholder="Search city or country..."
+                value={locationSearch}
+                onChange={(e) => setLocationSearch(e.target.value)}
+                className="pl-10 h-11 rounded-xl"
+                data-testid="input-location-search"
               />
             </div>
 
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleSaveLocation} 
-                className="flex-1" 
-                disabled={updateSettings.isPending}
-              >
-                {updateSettings.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Save Location
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleAutoDetect} 
-                disabled={updateSettings.isPending}
-              >
-                <Navigation className="w-4 h-4 mr-2" /> Auto-detect
-              </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleAutoDetect} 
+              disabled={updateSettings.isPending || isDetecting}
+              className="w-full h-11 rounded-xl gap-2"
+              data-testid="button-auto-detect"
+            >
+              {isDetecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
+              Use My Current Location
+            </Button>
+
+            <div className="flex-1 overflow-y-auto -mx-1 px-1 space-y-1">
+              {filteredLocations.map((loc, index) => {
+                const isSelected = loc.city === city && loc.country === country;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleSelectLocation(loc)}
+                    disabled={updateSettings.isPending}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
+                      isSelected ? 'bg-primary/10 border border-primary/20' : 'hover:bg-accent/50'
+                    }`}
+                    data-testid={`location-${loc.city.toLowerCase().replace(' ', '-')}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
+                      <div className="text-left">
+                        <p className="font-medium text-sm">{loc.city}</p>
+                        <p className="text-xs text-muted-foreground">{loc.country}</p>
+                      </div>
+                    </div>
+                    {isSelected && <Check className="w-5 h-5 text-primary" />}
+                  </button>
+                );
+              })}
             </div>
           </Card>
         </div>
