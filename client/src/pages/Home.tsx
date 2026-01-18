@@ -1,6 +1,6 @@
 import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { useSettings } from "@/hooks/use-settings";
-import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock } from "lucide-react";
+import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, CircleDot, CalendarCheck } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
@@ -130,17 +130,17 @@ export default function Home() {
 
       <div className="grid grid-cols-2 gap-4">
         <Link href="/tasbih">
-          <Card className="bg-accent/50 border-white/50 p-4 rounded-2xl text-center hover-elevate cursor-pointer">
+          <Card className="bg-accent/50 border-white/50 p-4 rounded-2xl text-center hover-elevate cursor-pointer" data-testid="link-tasbih">
             <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
-              <span className="text-2xl">📿</span>
+              <CircleDot className="w-5 h-5 text-primary" />
             </div>
             <p className="font-medium text-sm">Tasbih</p>
           </Card>
         </Link>
         <Link href="/more">
-          <Card className="bg-accent/50 border-white/50 p-4 rounded-2xl text-center hover-elevate cursor-pointer">
+          <Card className="bg-accent/50 border-white/50 p-4 rounded-2xl text-center hover-elevate cursor-pointer" data-testid="link-qada">
             <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
-              <span className="text-2xl">🕌</span>
+              <CalendarCheck className="w-5 h-5 text-primary" />
             </div>
             <p className="font-medium text-sm">Qada Tracker</p>
           </Card>

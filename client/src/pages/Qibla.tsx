@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQiblaDirection } from "@/hooks/use-prayer-times";
-import { Loader2, Compass, Navigation } from "lucide-react";
+import { Loader2, Compass, Navigation, Landmark } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -77,7 +77,7 @@ export default function Qibla() {
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2">
                 <div className="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[24px] border-b-primary" />
               </div>
-              <span className="text-6xl">🕋</span>
+              <Landmark className="w-16 h-16 text-primary" />
             </div>
           </Card>
 
