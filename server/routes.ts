@@ -8,6 +8,7 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Favorites routes
   app.get(api.favorites.list.path, async (req, res) => {
     const favorites = await storage.getFavorites();
     res.json(favorites);
@@ -39,46 +40,47 @@ export async function registerRoutes(
     res.status(204).send();
   });
 
+  // Qada routes
   app.get(api.qada.list.path, async (req, res) => {
-    const items = await storage.getQada();
-    res.json(items);
+    const qadaList = await storage.getQada();
+    res.json(qadaList);
   });
 
-  app.post(api.qada.update.path, async (req, res) => {
-    const { prayerName } = req.params;
-    const { count } = req.body;
-    const updated = await storage.updateQada(prayerName, count);
-    res.json(updated);
+  app.post("/api/qada/:prayerName", async (req, res) => {
+    try {
+      const prayerName = req.params.prayerName;
+      const { count } = req.body;
+      const updated = await storage.updateQada(prayerName, count);
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 
+  // Settings routes
   app.get(api.settings.get.path, async (req, res) => {
     const settings = await storage.getSettings();
     res.json(settings);
   });
 
   app.post(api.settings.update.path, async (req, res) => {
-    const settings = await storage.updateSettings(req.body);
-    res.json(settings);
+    try {
+      const updates = req.body;
+      const updated = await storage.updateSettings(updates);
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 
-  // Seeding
-  const existingFavorites = await storage.getFavorites();
-  if (existingFavorites.length === 0) {
-    await storage.createFavorite({
-      surahName: "Al-Fatiha",
-      surahNumber: 1,
-      ayahNumber: 1,
-      arabicText: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
-      translationText: "In the name of God, The Most Gracious, The Dispenser of Grace:"
-    });
-  }
-
+  // Seed qada prayers if empty
   const existingQada = await storage.getQada();
   if (existingQada.length === 0) {
-    const prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+    const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     for (const prayer of prayers) {
       await storage.updateQada(prayer, 0);
     }
+    console.log("Seeded qada tracker");
   }
 
   return httpServer;
