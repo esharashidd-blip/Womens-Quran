@@ -135,6 +135,11 @@ export default function Home() {
         <p className="text-muted-foreground text-sm">
           {format(new Date(), "EEEE, MMMM do")}
         </p>
+        {prayers?.date?.hijri && (
+          <p className="text-xs text-primary font-medium" data-testid="text-hijri-date">
+            {prayers.date.hijri.day} {prayers.date.hijri.month?.en} {prayers.date.hijri.year} AH
+          </p>
+        )}
       </div>
 
       <Card className="bg-gradient-to-br from-primary/10 to-accent/30 border-white/50 p-6 rounded-3xl shadow-lg">

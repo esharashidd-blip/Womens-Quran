@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Clock, Compass, CircleDot, Menu } from "lucide-react";
+import { Home, BookOpen, Clock, Compass, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNav() {
@@ -7,9 +7,9 @@ export function BottomNav() {
 
   const navItems = [
     { href: "/", icon: Home, label: "Home" },
+    { href: "/quran", icon: BookOpen, label: "Quran" },
     { href: "/prayer", icon: Clock, label: "Prayer" },
     { href: "/qibla", icon: Compass, label: "Qibla" },
-    { href: "/tasbih", icon: CircleDot, label: "Tasbih" },
     { href: "/more", icon: Menu, label: "More" },
   ];
 

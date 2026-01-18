@@ -18,7 +18,21 @@ Preferred communication style: Simple, everyday language.
 - **Animations**: Framer Motion for page transitions and micro-interactions
 - **Build Tool**: Vite with HMR support
 
-The frontend follows a page-based structure with shared components. Pages include Home, Prayer, Qibla, Tasbih, More, Quran, SurahView, and Favorites. Custom hooks abstract data fetching logic (use-quran, use-prayer-times, use-favorites, etc.).
+The frontend follows a page-based structure with shared components. Custom hooks abstract data fetching logic (use-quran, use-prayer-times, use-favorites, etc.).
+
+### Navigation Structure
+- **Bottom Navigation**: Home | Quran | Prayer | Qibla | More (5-tab bar)
+- **Pages**:
+  - `Home` - Prayer times widget, next prayer countdown, Hijri date, quick links
+  - `Quran` - Surah list with search
+  - `SurahView` - Individual surah with Arabic + English verses
+  - `Prayer` - Full prayer times display
+  - `Qibla` - Compass direction to Mecca
+  - `Tasbih` - Digital prayer beads counter
+  - `Qada` - Missed prayer tracker (accessible from More)
+  - `Duas` - Daily supplications with 6 categories (Morning, Evening, Food, Sleep, Travel, Protection)
+  - `Favorites` - Saved Quran verses
+  - `More` - Feature hub with links to Tasbih, Qada, Duas, Favorites, and Settings
 
 ### Backend Architecture
 - **Framework**: Express 5 on Node.js
