@@ -2,7 +2,7 @@
 
 ## Overview
 
-Noor is a mobile-first Islamic companion web application built with React and Express. It provides Muslims with essential daily tools including prayer times, Quran reading with favorites, Qibla compass, Tasbih counter, and Qada prayer tracking. The app uses a soft pink feminine theme and fetches Islamic data from external APIs (Al Quran Cloud for Quran, Aladhan for prayer times).
+Noor is a mobile-first Islamic companion web application built with React and Express, designed specifically for Muslim women. It provides essential daily tools including prayer times, Quran reading with favorites, Qibla compass, Tasbih counter, Qada prayer tracking, women-focused Quran guidance ("For You"), and comprehensive pilgrimage guides. The app uses a soft pink feminine theme and fetches Islamic data from external APIs (Al Quran Cloud for Quran, Aladhan for prayer times).
 
 ## User Preferences
 
@@ -21,18 +21,26 @@ Preferred communication style: Simple, everyday language.
 The frontend follows a page-based structure with shared components. Custom hooks abstract data fetching logic (use-quran, use-prayer-times, use-favorites, etc.).
 
 ### Navigation Structure
-- **Bottom Navigation**: Home | Quran | Prayer | Qibla | More (5-tab bar)
+- **Bottom Navigation**: Home | Prayer | For You 🤍 | Quran | More (5-tab bar)
 - **Pages**:
-  - `Home` - Prayer times widget, next prayer countdown, Hijri date, quick links
+  - `Home` - Prayer-focused dashboard with location selector (search/select from popular cities + auto-detect), next prayer countdown, Hijri date, daily inspiration
+  - `PrayerTab` - Combined prayer page with sub-tabs:
+    - Times: Full prayer schedule + Qibla link
+    - Qada: Missed prayer tracker with +/- buttons
+    - Tasbih: Digital prayer beads counter
+  - `ForYou` - Women-focused Quran guidance with:
+    - Search bar for topics
+    - Quick Picks (6 popular topics)
+    - 5 category sections with 12 topics total (Anxiety, Heartbreak, Self-Worth, Protection, Patience, Peace, Stress, Sadness, Loneliness, Gratitude, Forgiveness, Trust)
+    - Swipeable card experience: Ayah → Meaning → Dua → Action
   - `Quran` - Surah list with search
   - `SurahView` - Individual surah with Arabic + English verses
-  - `Prayer` - Full prayer times display
   - `Qibla` - Compass direction to Mecca
-  - `Tasbih` - Digital prayer beads counter
-  - `Qada` - Missed prayer tracker (accessible from More)
-  - `Duas` - Daily supplications with 6 categories (Morning, Evening, Food, Sleep, Travel, Protection)
+  - `Duas` - Daily supplications with 9 categories (68 authentic duas with search)
   - `Favorites` - Saved Quran verses
-  - `More` - Feature hub with links to Tasbih, Qada, Duas, Favorites, and Settings
+  - `UmrahGuide` - 8-step Umrah guide with duas
+  - `HajjGuide` - Day-by-day Hajj guide with tips and common mistakes
+  - `More` - Feature hub with links to Duas, Favorites, Umrah Guide, Hajj Guide, Shop, and Settings
 
 ### Backend Architecture
 - **Framework**: Express 5 on Node.js
@@ -52,7 +60,7 @@ The backend serves API endpoints for user data (favorites, qada tracking, settin
 
 ### External Data Sources
 - Quran text and translations fetched client-side from Al Quran Cloud API
-- Prayer times fetched client-side from Aladhan API
+- Prayer times fetched client-side from Aladhan API (includes Hijri date)
 - Qibla direction calculated using Aladhan API with user coordinates
 - Reverse geocoding via BigDataCloud API for location detection
 
@@ -60,8 +68,19 @@ The backend serves API endpoints for user data (favorites, qada tracking, settin
 ```
 client/           # React frontend
   src/
-    components/   # Reusable UI components
+    components/   # Reusable UI components (BottomNav, etc.)
     pages/        # Route-level page components
+      Home.tsx         # Prayer dashboard
+      PrayerTab.tsx    # Times/Qada/Tasbih sub-tabs
+      ForYou.tsx       # Women's Quran guidance
+      Quran.tsx        # Surah list
+      SurahView.tsx    # Surah reader
+      Qibla.tsx        # Qibla compass
+      Duas.tsx         # Duas & Adhkar
+      Favorites.tsx    # Saved verses
+      UmrahGuide.tsx   # Umrah steps
+      HajjGuide.tsx    # Hajj guide
+      More.tsx         # Settings & links
     hooks/        # Custom React hooks for data fetching
     lib/          # Utilities and query client config
 server/           # Express backend
@@ -77,7 +96,7 @@ shared/           # Shared types and schemas
 
 ### Third-Party APIs
 - **Al Quran Cloud API** (`api.alquran.cloud`) - Quran text in Arabic with English translations
-- **Aladhan API** (`api.aladhan.com`) - Prayer times by city/coordinates and Qibla direction
+- **Aladhan API** (`api.aladhan.com`) - Prayer times by city/coordinates, Qibla direction, Hijri date
 - **BigDataCloud API** - Reverse geocoding for auto-detecting user location
 
 ### Database
@@ -91,6 +110,16 @@ shared/           # Shared types and schemas
 - `wouter` - Client-side routing
 - `zod` - Runtime type validation
 - Full shadcn/ui component library (Radix UI primitives)
+- `date-fns` - Date formatting
 
 ### Environment Variables Required
 - `DATABASE_URL` - PostgreSQL connection string
+
+## Recent Changes
+- Restructured navigation: Home | Prayer | For You 🤍 | Quran | More
+- Added location selector with search/select from 30+ popular cities (no manual typing)
+- Created combined Prayer tab with Times/Qada/Tasbih sub-tabs
+- Built "For You 🤍" feature: Women-focused Quran guidance with 12 emotional/spiritual topics
+- Added Umrah Guide (8 steps with duas)
+- Added Hajj Guide (day-by-day with tips and common mistakes)
+- Expanded Duas & Adhkar to 68 duas across 9 categories with search
