@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationPrompt } from "@/components/NotificationPrompt";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { useAuth } from "@/hooks/use-auth";
 import { useSettings } from "@/hooks/use-settings";
 import { Loader2 } from "lucide-react";
@@ -63,6 +64,7 @@ function AuthenticatedApp() {
       {showNotificationPrompt && (
         <NotificationPrompt onClose={handleCloseNotificationPrompt} />
       )}
+      <PWAInstallPrompt />
     </div>
   );
 }

@@ -7,6 +7,8 @@ interface PrayerTimes {
   Asr: string;
   Maghrib: string;
   Isha: string;
+  Imsak: string;
+  Midnight: string;
   [key: string]: string;
 }
 

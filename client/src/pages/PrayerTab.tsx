@@ -1,7 +1,7 @@
 import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { useSettings } from "@/hooks/use-settings";
 import { useQada, useUpdateQada } from "@/hooks/use-qada";
-import { Loader2, Sunrise, Sun, Sunset, Moon, Plus, Minus, CircleDot, CalendarCheck, Compass, ChevronRight } from "lucide-react";
+import { Loader2, Sunrise, Sun, Sunset, Moon, Plus, Minus, CircleDot, CalendarCheck, Compass, ChevronRight, UtensilsCrossed } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -88,6 +88,31 @@ export default function PrayerTab() {
 
       {activeTab === 'times' && (
         <div className="space-y-4">
+          {settings?.ramadanMode && prayers && (
+            <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-100 p-5 rounded-2xl" data-testid="card-ramadan-times">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <UtensilsCrossed className="w-5 h-5 text-emerald-600" />
+                <span className="font-serif text-lg text-emerald-700">Ramadan Times</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <p className="text-xs uppercase tracking-widest text-emerald-600/70 mb-1">Suhoor Ends</p>
+                  <p className="text-2xl font-serif text-emerald-700" data-testid="text-suhoor-time">
+                    {(prayers.timings.Imsak || prayers.timings.Fajr)?.split(" ")[0] || "--:--"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Stop eating</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs uppercase tracking-widest text-emerald-600/70 mb-1">Iftar</p>
+                  <p className="text-2xl font-serif text-emerald-700" data-testid="text-iftar-time">
+                    {prayers.timings.Maghrib?.split(" ")[0] || "--:--"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Break fast</p>
+                </div>
+              </div>
+            </Card>
+          )}
+
           <Card className="bg-white/80 border-white/50 rounded-2xl overflow-hidden">
             {prayersLoading ? (
               <div className="flex justify-center py-12">

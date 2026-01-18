@@ -1,7 +1,8 @@
 import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
-import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, ChevronRight, ChevronDown, Search, Navigation, Check } from "lucide-react";
-import { format } from "date-fns";
+import { useTodayProgress, useWeeklyProgress, useUpdatePrayerProgress, calculateWeeklyStats } from "@/hooks/use-prayer-progress";
+import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, ChevronRight, ChevronDown, Search, Navigation, Check, TrendingUp } from "lucide-react";
+import { format, getDaysInMonth } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,11 +55,28 @@ export default function Home() {
   const city = settings?.city || "Mecca";
   const country = settings?.country || "Saudi Arabia";
   const { data: prayers, isLoading: prayersLoading } = usePrayerTimes(city, country);
+  const { data: todayProgress } = useTodayProgress();
+  const { data: weeklyProgress } = useWeeklyProgress();
+  const updateProgress = useUpdatePrayerProgress();
   const [countdown, setCountdown] = useState("");
   const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
   const [isDetecting, setIsDetecting] = useState(false);
+  
+  const today = format(new Date(), "yyyy-MM-dd");
+  const weeklyStats = weeklyProgress ? calculateWeeklyStats(weeklyProgress) : { completed: 0, total: 35, percentage: 0 };
+  
+  const isPrayerCompleted = (prayer: string) => {
+    if (!todayProgress) return false;
+    const key = prayer.toLowerCase() as 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+    return todayProgress[key] || false;
+  };
+  
+  const togglePrayer = (prayer: string) => {
+    const completed = !isPrayerCompleted(prayer);
+    updateProgress.mutate({ date: today, prayer, completed });
+  };
 
   const filteredLocations = useMemo(() => {
     if (!locationSearch.trim()) return POPULAR_LOCATIONS;
@@ -208,19 +226,83 @@ export default function Home() {
 
             <div className="grid grid-cols-5 gap-2 w-full pt-5 mt-5 border-t border-white/30">
               {['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map((p) => (
-                <div key={p} className={`flex flex-col items-center gap-1 transition-all ${p === nextPrayer?.name ? 'opacity-100 scale-110' : 'opacity-60'}`}>
-                  {p === 'Fajr' && <Sunrise className="w-4 h-4 text-amber-500" />}
-                  {p === 'Dhuhr' && <Sun className="w-4 h-4 text-orange-400" />}
-                  {p === 'Asr' && <Sun className="w-4 h-4 text-orange-300" />}
-                  {p === 'Maghrib' && <Sunset className="w-4 h-4 text-purple-400" />}
-                  {p === 'Isha' && <Moon className="w-4 h-4 text-blue-400" />}
+                <button 
+                  key={p} 
+                  onClick={() => togglePrayer(p)}
+                  className={`flex flex-col items-center gap-1 transition-all py-2 rounded-xl ${
+                    isPrayerCompleted(p) 
+                      ? 'bg-primary/20 opacity-100' 
+                      : p === nextPrayer?.name 
+                        ? 'opacity-100 scale-105' 
+                        : 'opacity-60'
+                  }`}
+                  data-testid={`button-toggle-prayer-${p.toLowerCase()}`}
+                >
+                  {isPrayerCompleted(p) ? (
+                    <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                  ) : (
+                    <>
+                      {p === 'Fajr' && <Sunrise className="w-4 h-4 text-amber-500" />}
+                      {p === 'Dhuhr' && <Sun className="w-4 h-4 text-orange-400" />}
+                      {p === 'Asr' && <Sun className="w-4 h-4 text-orange-300" />}
+                      {p === 'Maghrib' && <Sunset className="w-4 h-4 text-purple-400" />}
+                      {p === 'Isha' && <Moon className="w-4 h-4 text-blue-400" />}
+                    </>
+                  )}
                   <span className="text-[10px] font-semibold">{p.substring(0, 3)}</span>
                   <span className="text-[9px] text-muted-foreground">{prayers?.timings[p]?.split(" ")[0]}</span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
         )}
+      </Card>
+
+      <Card className="bg-white/80 backdrop-blur-sm border-white/50 p-5 rounded-2xl">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Weekly Progress</p>
+          </div>
+          <span className="text-sm font-medium text-primary" data-testid="text-weekly-percentage">{weeklyStats.percentage}%</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="relative w-16 h-16">
+            <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+              <circle
+                cx="18"
+                cy="18"
+                r="16"
+                fill="none"
+                className="stroke-muted/30"
+                strokeWidth="3"
+              />
+              <circle
+                cx="18"
+                cy="18"
+                r="16"
+                fill="none"
+                className="stroke-primary"
+                strokeWidth="3"
+                strokeDasharray={`${weeklyStats.percentage} 100`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-sm font-medium" data-testid="text-weekly-completed">{weeklyStats.completed}</span>
+            </div>
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-foreground font-medium">
+              {weeklyStats.completed} of {weeklyStats.total} prayers
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Tap prayers above to mark them complete
+            </p>
+          </div>
+        </div>
       </Card>
 
       <Card className="bg-white/80 backdrop-blur-sm border-white/50 p-5 rounded-2xl">

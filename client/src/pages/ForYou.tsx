@@ -262,7 +262,7 @@ export default function ForYou() {
                     <Share2 className="w-4 h-4" /> Share
                   </Button>
                 </div>
-                <p className="text-xs text-center text-muted-foreground pt-2">Share this with other sisters 🤍</p>
+                <p className="text-xs text-center text-muted-foreground pt-2">Share this with other sisters</p>
               </Card>
             )}
 

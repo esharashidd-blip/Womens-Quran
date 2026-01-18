@@ -78,6 +78,73 @@ export async function registerRoutes(
     }
   });
 
+  // Prayer progress routes
+  app.get("/api/prayer-progress", async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "startDate and endDate required" });
+      }
+      const progress = await storage.getPrayerProgress(startDate as string, endDate as string);
+      res.json(progress);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/prayer-progress/:date", async (req, res) => {
+    try {
+      const { date } = req.params;
+      const progress = await storage.getPrayerProgressForDate(date);
+      res.json(progress);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/prayer-progress/:date", async (req, res) => {
+    try {
+      const { date } = req.params;
+      const { prayer, completed } = req.body;
+      const progress = await storage.updatePrayerProgress(date, prayer, completed);
+      res.json(progress);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Quran reading session routes
+  app.get("/api/quran-sessions", async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "startDate and endDate required" });
+      }
+      const sessions = await storage.getQuranReadingSessions(startDate as string, endDate as string);
+      res.json(sessions);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/quran-sessions/today", async (req, res) => {
+    try {
+      const session = await storage.getTodayQuranSession();
+      res.json(session);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/quran-sessions", async (req, res) => {
+    try {
+      const session = await storage.updateQuranSession(req.body);
+      res.json(session);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Seed qada prayers if empty
   const existingQada = await storage.getQada();
   if (existingQada.length === 0) {

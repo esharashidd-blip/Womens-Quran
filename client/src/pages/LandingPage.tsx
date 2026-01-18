@@ -4,27 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import { Moon, Star, Book, Heart, Compass, Clock, Volume2, VolumeX } from "lucide-react";
 
 export default function LandingPage() {
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Create and play "I Rise" nasheed by Muhammad Al Muqit
+    // Create audio element for "I Rise" nasheed by Muhammad Al Muqit
     const audio = new Audio("https://archive.org/download/Muhammad-AlMuqit-nasheed/I%20Am%20Resistant%20-%20Muhammad%20Al%20Muqit.ogg");
     audio.loop = true;
     audio.volume = 0.3;
     audioRef.current = audio;
     
-    // Attempt to autoplay
-    const playAudio = async () => {
-      try {
-        await audio.play();
-      } catch (err) {
-        // Autoplay blocked - user needs to interact first
-        console.log("Autoplay blocked, waiting for user interaction");
-      }
-    };
-    
-    playAudio();
+    audio.addEventListener('play', () => setIsPlaying(true));
+    audio.addEventListener('pause', () => setIsPlaying(false));
 
     return () => {
       audio.pause();
@@ -32,14 +24,17 @@ export default function LandingPage() {
     };
   }, []);
 
-  const toggleMute = () => {
+  const toggleAudio = () => {
     if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-      
-      // Try to play if not already playing
-      if (!isMuted && audioRef.current.paused) {
-        audioRef.current.play().catch(() => {});
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsMuted(true);
+      } else {
+        audioRef.current.play().then(() => {
+          setIsMuted(false);
+        }).catch(() => {
+          console.log("Audio playback failed");
+        });
       }
     }
   };
@@ -56,11 +51,12 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-b from-background via-accent/20 to-primary/10 flex flex-col">
       {/* Audio control button */}
       <button
-        onClick={toggleMute}
-        className="fixed top-4 right-4 z-50 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover-elevate"
+        onClick={toggleAudio}
+        className={`fixed top-4 right-4 z-50 p-3 rounded-full backdrop-blur-sm shadow-md hover-elevate ${isPlaying ? 'bg-primary/20' : 'bg-white/80 animate-pulse'}`}
         data-testid="button-toggle-audio"
+        aria-label={isPlaying ? "Pause nasheed" : "Play nasheed"}
       >
-        {isMuted ? <VolumeX className="w-5 h-5 text-muted-foreground" /> : <Volume2 className="w-5 h-5 text-primary" />}
+        {isPlaying ? <Volume2 className="w-5 h-5 text-primary" /> : <VolumeX className="w-5 h-5 text-muted-foreground" />}
       </button>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 max-w-md mx-auto">

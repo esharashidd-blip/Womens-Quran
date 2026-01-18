@@ -121,7 +121,7 @@ shared/           # Shared types and schemas
 - Created combined Prayer tab with Times/Qada/Tasbih sub-tabs
 - Built "For You" feature: Women-focused Quran guidance with 12 emotional/spiritual topics
   - Removed action cards - now shows only Ayah → Meaning → Dua sequence
-  - Removed heart emoji from For You heading
+  - Removed heart emoji from For You and share text
 - Added Umrah Guide (8 steps with duas)
 - Added Hajj Guide (day-by-day with tips and common mistakes)
 - Expanded Duas & Adhkar to 68 duas across 9 categories with search
@@ -133,3 +133,19 @@ shared/           # Shared types and schemas
   - NotificationPrompt appears after first login (1.5s delay)
   - Toggle in Settings on More page to enable/disable
   - Uses browser Notification API for prayer reminders
+- Added Ramadan mode:
+  - Toggle in Settings on More page
+  - Shows Suhoor (Imsak) and Iftar (Maghrib) times on Prayer tab when enabled
+- Added prayer progress tracking:
+  - Tap prayers on Home page to mark as complete
+  - Weekly progress card with circular indicator
+  - Data stored in prayerProgress database table
+- Added Quran reading tracking:
+  - Reading timer on Quran page with Start/Pause/Reset
+  - Daily goal tracking with circular progress indicator
+  - Weekly minutes summary
+  - Data stored in quranReadingSessions database table
+- Added PWA install prompt:
+  - Shows on first launch after 2 second delay
+  - iOS instructions for Safari installation
+  - Android/desktop native install prompt

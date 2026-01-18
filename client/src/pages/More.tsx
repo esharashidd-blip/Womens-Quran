@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
-import { BookHeart, Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, X, BookOpen, Plane, LogOut, Bell } from "lucide-react";
+import { BookHeart, Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, X, BookOpen, Plane, LogOut, Bell, Moon } from "lucide-react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -173,6 +173,20 @@ export default function More() {
             </div>
             <div className={`w-10 h-6 rounded-full transition-colors ${settings?.prayerNotifications ? 'bg-primary' : 'bg-muted'} flex items-center px-0.5`}>
               <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${settings?.prayerNotifications ? 'translate-x-4' : 'translate-x-0'}`} />
+            </div>
+          </button>
+          
+          <button
+            onClick={() => updateSettings.mutate({ ramadanMode: !settings?.ramadanMode })}
+            className="flex items-center justify-between w-full text-left"
+            data-testid="button-toggle-ramadan"
+          >
+            <div className="flex items-center gap-2">
+              <Moon className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm">Ramadan Mode</span>
+            </div>
+            <div className={`w-10 h-6 rounded-full transition-colors ${settings?.ramadanMode ? 'bg-emerald-500' : 'bg-muted'} flex items-center px-0.5`}>
+              <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${settings?.ramadanMode ? 'translate-x-4' : 'translate-x-0'}`} />
             </div>
           </button>
         </div>
