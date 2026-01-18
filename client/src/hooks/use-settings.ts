@@ -14,8 +14,16 @@ export function useUpdateSettings() {
       const res = await apiRequest("POST", "/api/settings", updates);
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+    onSuccess: (_data, variables) => {
+      queryClient.setQueryData<Settings>(["/api/settings"], (old) => {
+        return { id: old?.id ?? 1, city: null, country: null, tasbihCount: null, autoLocation: null, ...old, ...variables };
+      });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && (key[0] === "prayer-times" || key[0] === "prayer-times-coords");
+        }
+      });
     },
   });
 }

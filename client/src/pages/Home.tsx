@@ -1,9 +1,11 @@
 import { usePrayerTimes } from "@/hooks/use-prayer-times";
-import { useSettings } from "@/hooks/use-settings";
-import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, CircleDot, CalendarCheck } from "lucide-react";
+import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
+import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, CircleDot, CalendarCheck, Navigation, ChevronRight, X } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 
 const QUOTES = [
@@ -16,11 +18,15 @@ const QUOTES = [
 
 export default function Home() {
   const { data: settings } = useSettings();
+  const updateSettings = useUpdateSettings();
   const city = settings?.city || "Mecca";
   const country = settings?.country || "Saudi Arabia";
   const { data: prayers, isLoading: prayersLoading } = usePrayerTimes(city, country);
   const [countdown, setCountdown] = useState("");
   const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+  const [showLocationEdit, setShowLocationEdit] = useState(false);
+  const [editCity, setEditCity] = useState("");
+  const [editCountry, setEditCountry] = useState("");
 
   const getNextPrayer = () => {
     if (!prayers) return null;
@@ -69,6 +75,57 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [nextPrayer?.timeVal]);
 
+  const handleSaveLocation = () => {
+    if (editCity && editCountry) {
+      updateSettings.mutate(
+        { city: editCity, country: editCountry },
+        {
+          onSuccess: () => {
+            setShowLocationEdit(false);
+            setEditCity("");
+            setEditCountry("");
+          },
+        }
+      );
+    }
+  };
+
+  const handleAutoDetect = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const res = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+            );
+            const data = await res.json();
+            updateSettings.mutate(
+              {
+                city: data.city || data.locality || "Unknown",
+                country: data.countryName || "Unknown",
+                autoLocation: true,
+              },
+              {
+                onSuccess: () => {
+                  setShowLocationEdit(false);
+                },
+              }
+            );
+          } catch (e) {
+            console.error("Geocoding failed", e);
+          }
+        },
+        (err) => console.error("Geolocation error", err)
+      );
+    }
+  };
+
+  const openLocationEdit = () => {
+    setEditCity(city);
+    setEditCountry(country);
+    setShowLocationEdit(true);
+  };
+
   return (
     <div className="min-h-screen pb-24 px-4 pt-8 md:px-8 max-w-lg mx-auto space-y-6">
       <div className="text-center space-y-1">
@@ -87,9 +144,14 @@ export default function Home() {
           </div>
         ) : (
           <div className="flex flex-col items-center">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 bg-white/60 px-3 py-1 rounded-full">
+            <button
+              onClick={openLocationEdit}
+              className="flex items-center gap-2 text-xs text-muted-foreground mb-4 bg-white/60 px-3 py-1.5 rounded-full hover-elevate cursor-pointer transition-all"
+              data-testid="button-change-location"
+            >
               <MapPin className="w-3 h-3" /> {city}, {country}
-            </div>
+              <ChevronRight className="w-3 h-3" />
+            </button>
             
             <div className="text-center mb-4">
               <span className="text-xs uppercase tracking-widest text-muted-foreground">Next Prayer</span>
@@ -146,6 +208,57 @@ export default function Home() {
           </Card>
         </Link>
       </div>
+
+      {showLocationEdit && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center" onClick={() => !updateSettings.isPending && setShowLocationEdit(false)}>
+          <Card 
+            className="w-full max-w-lg bg-background border-t border-white/50 rounded-t-3xl p-6 space-y-4 animate-in slide-in-from-bottom duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-serif text-lg">Change Location</h3>
+              <Button variant="ghost" size="icon" onClick={() => !updateSettings.isPending && setShowLocationEdit(false)} disabled={updateSettings.isPending} data-testid="button-close-location">
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            <div className="space-y-3">
+              <Input
+                placeholder="City"
+                value={editCity}
+                onChange={(e) => setEditCity(e.target.value)}
+                data-testid="input-city"
+              />
+              <Input
+                placeholder="Country"
+                value={editCountry}
+                onChange={(e) => setEditCountry(e.target.value)}
+                data-testid="input-country"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleSaveLocation} 
+                className="flex-1" 
+                disabled={updateSettings.isPending}
+                data-testid="button-save-location"
+              >
+                {updateSettings.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Save Location
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleAutoDetect} 
+                disabled={updateSettings.isPending}
+                data-testid="button-auto-detect"
+              >
+                <Navigation className="w-4 h-4 mr-2" /> Auto-detect
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

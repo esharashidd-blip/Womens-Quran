@@ -1,17 +1,11 @@
 import { usePrayerTimes } from "@/hooks/use-prayer-times";
-import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
-import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Navigation } from "lucide-react";
+import { useSettings } from "@/hooks/use-settings";
+import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { Link } from "wouter";
 
 export default function Prayer() {
   const { data: settings, isLoading: settingsLoading } = useSettings();
-  const updateSettings = useUpdateSettings();
-  const [editMode, setEditMode] = useState(false);
-  const [city, setCity] = useState("");
-  const [country, setCountry] = useState("");
 
   const currentCity = settings?.city || "Mecca";
   const currentCountry = settings?.country || "Saudi Arabia";
@@ -26,34 +20,6 @@ export default function Prayer() {
     { name: "Isha", icon: Moon, color: "text-blue-400", bg: "bg-blue-50" },
   ];
 
-  const handleSaveLocation = () => {
-    if (city && country) {
-      updateSettings.mutate({ city, country });
-      setEditMode(false);
-    }
-  };
-
-  const handleAutoDetect = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const res = await fetch(
-              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
-            );
-            const data = await res.json();
-            const detectedCity = data.city || data.locality || "Unknown";
-            const detectedCountry = data.countryName || "Unknown";
-            updateSettings.mutate({ city: detectedCity, country: detectedCountry, autoLocation: true });
-          } catch (e) {
-            console.error("Geocoding failed", e);
-          }
-        },
-        (err) => console.error("Geolocation error", err)
-      );
-    }
-  };
-
   if (settingsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -66,47 +32,15 @@ export default function Prayer() {
     <div className="min-h-screen pb-24 px-4 pt-8 md:px-8 max-w-lg mx-auto">
       <h1 className="text-2xl font-serif text-center mb-6">Prayer Times</h1>
 
-      <Card className="bg-accent/30 border-white/50 p-4 rounded-2xl mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 text-sm">
+      <Link href="/">
+        <Card className="bg-accent/30 border-white/50 p-3 rounded-2xl mb-6 hover-elevate cursor-pointer">
+          <div className="flex items-center justify-center gap-2 text-sm">
             <MapPin className="w-4 h-4 text-primary" />
-            <span className="font-medium">{currentCity}, {currentCountry}</span>
+            <span className="font-medium" data-testid="text-location">{currentCity}, {currentCountry}</span>
+            <span className="text-xs text-muted-foreground">(tap to change)</span>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setEditMode(!editMode)}
-            data-testid="button-edit-location"
-          >
-            Edit
-          </Button>
-        </div>
-
-        {editMode && (
-          <div className="space-y-3 pt-3 border-t border-white/30">
-            <Input
-              placeholder="City"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              data-testid="input-city"
-            />
-            <Input
-              placeholder="Country"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              data-testid="input-country"
-            />
-            <div className="flex gap-2">
-              <Button onClick={handleSaveLocation} className="flex-1" data-testid="button-save-location">
-                Save
-              </Button>
-              <Button variant="outline" onClick={handleAutoDetect} data-testid="button-auto-detect">
-                <Navigation className="w-4 h-4 mr-1" /> Auto
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
+        </Card>
+      </Link>
 
       {isLoading ? (
         <div className="flex justify-center py-12">
