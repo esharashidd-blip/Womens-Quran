@@ -8,9 +8,8 @@ export default function LandingPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Create and play Quran audio when the page loads
-    // Using Surah Al-Alaq (96:1-5) - corresponds to the hadith about learning
-    const audio = new Audio("https://cdn.islamic.network/quran/audio/128/ar.alafasy/5820.mp3");
+    // Create and play "I Rise" nasheed by Muhammad Al Muqit
+    const audio = new Audio("https://archive.org/download/Muhammad-AlMuqit-nasheed/I%20Am%20Resistant%20-%20Muhammad%20Al%20Muqit.ogg");
     audio.loop = true;
     audio.volume = 0.3;
     audioRef.current = audio;
