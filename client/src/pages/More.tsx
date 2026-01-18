@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
-import { BookHeart, Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, X, BookOpen, Plane, LogOut } from "lucide-react";
+import { BookHeart, Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, X, BookOpen, Plane, LogOut, Bell } from "lucide-react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -139,7 +139,7 @@ export default function More() {
           </div>
         </div>
         
-        <div className="mt-4 pt-4 border-t border-primary/10">
+        <div className="mt-4 pt-4 border-t border-primary/10 space-y-3">
           <button
             onClick={() => setShowLocationPicker(true)}
             className="flex items-center justify-between w-full text-left"
@@ -150,6 +150,30 @@ export default function More() {
               <span className="text-sm">{city}, {country}</span>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+          
+          <button
+            onClick={async () => {
+              const newValue = !settings?.prayerNotifications;
+              if (newValue && "Notification" in window && Notification.permission !== "granted") {
+                try {
+                  await Notification.requestPermission();
+                } catch (e) {
+                  console.log("Notification permission error:", e);
+                }
+              }
+              updateSettings.mutate({ prayerNotifications: newValue });
+            }}
+            className="flex items-center justify-between w-full text-left"
+            data-testid="button-toggle-notifications"
+          >
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm">Prayer Notifications</span>
+            </div>
+            <div className={`w-10 h-6 rounded-full transition-colors ${settings?.prayerNotifications ? 'bg-primary' : 'bg-muted'} flex items-center px-0.5`}>
+              <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${settings?.prayerNotifications ? 'translate-x-4' : 'translate-x-0'}`} />
+            </div>
           </button>
         </div>
       </Card>

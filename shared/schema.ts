@@ -29,6 +29,7 @@ export const settings = pgTable("settings", {
   tasbihCount: integer("tasbih_count").notNull().default(0),
   ramadanMode: boolean("ramadan_mode").notNull().default(false),
   quranGoalMinutes: integer("quran_goal_minutes").notNull().default(10),
+  prayerNotifications: boolean("prayer_notifications").notNull().default(false),
 });
 
 // Prayer progress tracking

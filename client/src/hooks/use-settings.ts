@@ -16,7 +16,8 @@ export function useUpdateSettings() {
     },
     onSuccess: (_data, variables) => {
       queryClient.setQueryData<Settings>(["/api/settings"], (old) => {
-        return { id: old?.id ?? 1, city: null, country: null, tasbihCount: null, autoLocation: null, ...old, ...variables };
+        if (!old) return old;
+        return { ...old, ...variables };
       });
       queryClient.invalidateQueries({ 
         predicate: (query) => {

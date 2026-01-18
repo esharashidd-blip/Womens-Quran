@@ -4,8 +4,11 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomNav } from "@/components/BottomNav";
+import { NotificationPrompt } from "@/components/NotificationPrompt";
 import { useAuth } from "@/hooks/use-auth";
+import { useSettings } from "@/hooks/use-settings";
 import { Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import PrayerTab from "@/pages/PrayerTab";
@@ -21,6 +24,25 @@ import More from "@/pages/More";
 import LandingPage from "@/pages/LandingPage";
 
 function AuthenticatedApp() {
+  const { data: settings, isLoading: settingsLoading } = useSettings();
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+  const [hasCheckedNotifications, setHasCheckedNotifications] = useState(false);
+
+  useEffect(() => {
+    if (!settingsLoading && settings && !hasCheckedNotifications) {
+      const hasSeenPrompt = localStorage.getItem("noor_notification_prompt_seen");
+      if (!hasSeenPrompt && settings.prayerNotifications === false) {
+        setTimeout(() => setShowNotificationPrompt(true), 1500);
+      }
+      setHasCheckedNotifications(true);
+    }
+  }, [settings, settingsLoading, hasCheckedNotifications]);
+
+  const handleCloseNotificationPrompt = () => {
+    setShowNotificationPrompt(false);
+    localStorage.setItem("noor_notification_prompt_seen", "true");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-accent/20 text-foreground font-sans">
       <Switch>
@@ -38,6 +60,9 @@ function AuthenticatedApp() {
         <Route component={NotFound} />
       </Switch>
       <BottomNav />
+      {showNotificationPrompt && (
+        <NotificationPrompt onClose={handleCloseNotificationPrompt} />
+      )}
     </div>
   );
 }

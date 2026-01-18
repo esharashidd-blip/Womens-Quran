@@ -128,3 +128,8 @@ shared/           # Shared types and schemas
 - Removed "Shop Abayas" external link from More page
 - Added logout button with user info display in More page
 - Integrated Replit Auth for user authentication with LandingPage for logged-out users
+- Updated landing page audio to "I Rise" by Muhammad Al Muqit
+- Added prayer notification preference:
+  - NotificationPrompt appears after first login (1.5s delay)
+  - Toggle in Settings on More page to enable/disable
+  - Uses browser Notification API for prayer reminders
