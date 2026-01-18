@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertFavoriteSchema, favorites } from './schema';
+import { insertFavoriteSchema, favorites, qada, settings, insertQadaSchema, insertSettingsSchema } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -38,6 +38,40 @@ export const api = {
       responses: {
         204: z.void(),
         404: errorSchemas.notFound,
+      },
+    },
+  },
+  qada: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/qada',
+      responses: {
+        200: z.array(z.custom<typeof qada.$inferSelect>()),
+      },
+    },
+    update: {
+      method: 'POST' as const,
+      path: '/api/qada/:prayerName',
+      input: z.object({ count: z.number() }),
+      responses: {
+        200: z.custom<typeof qada.$inferSelect>(),
+      },
+    },
+  },
+  settings: {
+    get: {
+      method: 'GET' as const,
+      path: '/api/settings',
+      responses: {
+        200: z.custom<typeof settings.$inferSelect>(),
+      },
+    },
+    update: {
+      method: 'POST' as const,
+      path: '/api/settings',
+      input: insertSettingsSchema.partial(),
+      responses: {
+        200: z.custom<typeof settings.$inferSelect>(),
       },
     },
   },

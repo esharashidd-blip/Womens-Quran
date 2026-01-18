@@ -39,6 +39,28 @@ export async function registerRoutes(
     res.status(204).send();
   });
 
+  app.get(api.qada.list.path, async (req, res) => {
+    const items = await storage.getQada();
+    res.json(items);
+  });
+
+  app.post(api.qada.update.path, async (req, res) => {
+    const { prayerName } = req.params;
+    const { count } = req.body;
+    const updated = await storage.updateQada(prayerName, count);
+    res.json(updated);
+  });
+
+  app.get(api.settings.get.path, async (req, res) => {
+    const settings = await storage.getSettings();
+    res.json(settings);
+  });
+
+  app.post(api.settings.update.path, async (req, res) => {
+    const settings = await storage.updateSettings(req.body);
+    res.json(settings);
+  });
+
   // Seeding
   const existingFavorites = await storage.getFavorites();
   if (existingFavorites.length === 0) {
@@ -49,7 +71,14 @@ export async function registerRoutes(
       arabicText: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
       translationText: "In the name of God, The Most Gracious, The Dispenser of Grace:"
     });
-    console.log("Seeded database with one favorite");
+  }
+
+  const existingQada = await storage.getQada();
+  if (existingQada.length === 0) {
+    const prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+    for (const prayer of prayers) {
+      await storage.updateQada(prayer, 0);
+    }
   }
 
   return httpServer;
