@@ -8,6 +8,7 @@ interface AuthContextType extends AuthState {
   signInWithApple: () => Promise<{ provider: string; url: string | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<object>;
+  updateDisplayName: (displayName: string) => Promise<object>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

@@ -9,6 +9,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useMemo } from "react";
+import { NamePrompt } from "@/components/NamePrompt";
+import { useAuth } from "@/hooks/use-auth";
 
 const POPULAR_LOCATIONS = [
   { city: "Mecca", country: "Saudi Arabia" },
@@ -53,6 +55,7 @@ const QUOTES = [
 
 export default function Home() {
   const { data: settings } = useSettings();
+  const { user } = useAuth();
   const updateSettings = useUpdateSettings();
   const city = settings?.city || "Mecca";
   const country = settings?.country || "Saudi Arabia";
@@ -66,6 +69,18 @@ export default function Home() {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
   const [isDetecting, setIsDetecting] = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+
+  // Get display name from auth user
+  const displayName = user?.firstName;
+
+  // Show name prompt if user hasn't set their name yet (only once per session)
+  useEffect(() => {
+    if (user && !displayName && !sessionStorage.getItem('namePromptShown')) {
+      setShowNamePrompt(true);
+      sessionStorage.setItem('namePromptShown', 'true');
+    }
+  }, [user, displayName]);
 
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -232,7 +247,7 @@ export default function Home() {
     <div className="min-h-screen pb-24 px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-5">
       <div className="text-center space-y-1">
         <h1 className="text-2xl font-serif text-foreground">
-          Salam{settings?.userName ? `, ${settings.userName}` : ''} <span className="text-primary">🤍</span>
+          Salam{displayName ? `, ${displayName}` : ''} <span className="text-primary">🤍</span>
         </h1>
         <p className="text-muted-foreground text-sm">
           {format(new Date(), "EEEE, MMMM do")}
@@ -434,6 +449,10 @@ export default function Home() {
             </div>
           </Card>
         </div>
+      )}
+
+      {showNamePrompt && (
+        <NamePrompt onComplete={() => setShowNamePrompt(false)} />
       )}
 
     </div>

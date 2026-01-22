@@ -1,24 +1,21 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { supabase } from "./supabase";
 
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    return {
+      Authorization: `Bearer ${session.access_token}`,
+    };
+  }
+  return {};
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
-}
-
-// Get the current session token for API requests
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (session?.access_token) {
-    return {
-      "Authorization": `Bearer ${session.access_token}`,
-    };
-  }
-
-  return {};
 }
 
 export async function apiRequest(
@@ -35,6 +32,7 @@ export async function apiRequest(
       ...(data ? { "Content-Type": "application/json" } : {}),
     },
     body: data ? JSON.stringify(data) : undefined,
+    credentials: "include",
   });
 
   await throwIfResNotOk(res);
@@ -50,6 +48,7 @@ export const getQueryFn: <T>(options: {
     const authHeaders = await getAuthHeaders();
 
     const res = await fetch(queryKey.join("/") as string, {
+      credentials: "include",
       headers: authHeaders,
     });
 

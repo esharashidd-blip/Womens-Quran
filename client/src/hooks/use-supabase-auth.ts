@@ -76,6 +76,15 @@ export function useSupabaseAuth() {
     return data;
   };
 
+  const updateDisplayName = async (displayName: string) => {
+    const { data, error } = await supabase.auth.updateUser({
+      data: { display_name: displayName }
+    });
+    if (error) throw error;
+    setUser(data.user);
+    return data;
+  };
+
   return {
     user,
     session,
@@ -86,5 +95,6 @@ export function useSupabaseAuth() {
     signInWithApple,
     signOut,
     resetPassword,
+    updateDisplayName,
   };
 }

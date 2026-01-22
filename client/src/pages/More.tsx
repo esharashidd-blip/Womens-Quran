@@ -2,8 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
 import { Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, BookOpen, Plane, LogOut, Bell, Moon, Flower2, MessageCircle, User, Edit2, Shirt, HandHeart } from "lucide-react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUpdateProgrammeProgress } from "@/hooks/use-programme-progress";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
@@ -40,16 +39,16 @@ const MENU_ITEMS = [
 
 export default function More() {
   const { data: settings, isLoading } = useSettings();
-  const { user, signOut } = useAuth();
+  const { user, logout, updateDisplayName } = useAuth();
   const updateSettings = useUpdateSettings();
-  const updateProgrammeProgress = useUpdateProgrammeProgress();
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
   const [isDetecting, setIsDetecting] = useState(false);
   const [showCycleModeModal, setShowCycleModeModal] = useState(false);
   const [showNameEditor, setShowNameEditor] = useState(false);
   const [showClothingComingSoon, setShowClothingComingSoon] = useState(false);
-  const [nameInput, setNameInput] = useState(settings?.userName || "");
+  const [nameInput, setNameInput] = useState("");
+  const [isSavingName, setIsSavingName] = useState(false);
 
   const city = settings?.city || "Mecca";
   const country = settings?.country || "Saudi Arabia";
@@ -172,7 +171,7 @@ export default function More() {
           {/* Name Setting */}
           <button
             onClick={() => {
-              setNameInput(settings?.userName || "");
+              setNameInput(user?.firstName || "");
               setShowNameEditor(true);
             }}
             className="flex items-center justify-between w-full text-left"
@@ -180,7 +179,7 @@ export default function More() {
           >
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm">{settings?.userName || "Set your name"}</span>
+              <span className="text-sm">{user?.firstName || "Set your name"}</span>
             </div>
             <Edit2 className="w-4 h-4 text-muted-foreground" />
           </button>
@@ -259,19 +258,6 @@ export default function More() {
                   updateSettings.mutate({ cycleMode: newValue });
                 }
 
-                // Reset Menstrual Guide progress whenever Cycle Mode is turned ON
-                if (newValue) {
-                  updateProgrammeProgress.mutate({
-                    programmeId: "menstrual-guide",
-                    updates: {
-                      currentDay: 0,
-                      completedDays: "[]",
-                      journalEntries: "{}",
-                      emotionalCheckIns: "{}",
-                      startedAt: new Date().toISOString() as any
-                    }
-                  });
-                }
               }}
               className={`w-12 h-7 rounded-full transition-colors cursor-pointer ${settings?.cycleMode ? 'bg-purple-500' : 'bg-muted'} flex items-center px-1 shadow-inner`}
               data-testid="button-toggle-cycle-mode"
@@ -295,7 +281,7 @@ export default function More() {
         <Card
           className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer"
           data-testid="button-logout"
-          onClick={() => signOut()}
+          onClick={() => logout()}
         >
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center">
@@ -399,9 +385,18 @@ export default function More() {
               onChange={(e) => setNameInput(e.target.value)}
               className="h-12 rounded-xl text-center text-lg"
               autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  updateSettings.mutate({ userName: nameInput.trim() || null });
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter' && !isSavingName) {
+                  const firstName = nameInput.trim().split(/\s+/)[0];
+                  if (firstName) {
+                    setIsSavingName(true);
+                    try {
+                      await updateDisplayName(firstName);
+                    } catch (err) {
+                      console.error("Failed to save name:", err);
+                    }
+                    setIsSavingName(false);
+                  }
                   setShowNameEditor(false);
                 }
               }}
@@ -411,17 +406,28 @@ export default function More() {
                 variant="outline"
                 className="w-full rounded-xl"
                 onClick={() => setShowNameEditor(false)}
+                disabled={isSavingName}
               >
                 Cancel
               </Button>
               <Button
                 className="w-full rounded-xl"
-                onClick={() => {
-                  updateSettings.mutate({ userName: nameInput.trim() || null });
+                disabled={isSavingName}
+                onClick={async () => {
+                  const firstName = nameInput.trim().split(/\s+/)[0];
+                  if (firstName) {
+                    setIsSavingName(true);
+                    try {
+                      await updateDisplayName(firstName);
+                    } catch (err) {
+                      console.error("Failed to save name:", err);
+                    }
+                    setIsSavingName(false);
+                  }
                   setShowNameEditor(false);
                 }}
               >
-                Save
+                {isSavingName ? "Saving..." : "Save"}
               </Button>
             </div>
           </Card>

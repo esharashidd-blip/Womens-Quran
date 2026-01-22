@@ -1,464 +1,451 @@
-import { supabaseAdmin } from "./supabase";
-import type { Favorite, InsertFavorite, Qada, Settings, InsertSettings, PrayerProgress, InsertPrayerProgress, QuranReadingSession, InsertQuranReadingSession, ProgrammeProgress } from "@shared/schema";
+import { supabaseAdmin as supabase } from "./supabase";
+
+// Types matching the database schema
+export interface Favorite {
+  id: number;
+  user_id: string | null;
+  surah_name: string;
+  surah_number: number;
+  ayah_number: number;
+  arabic_text: string;
+  translation_text: string;
+  created_at: string | null;
+}
+
+export interface Qada {
+  id: number;
+  user_id: string | null;
+  prayer_name: string;
+  count: number;
+}
+
+export interface Settings {
+  id: number;
+  user_id: string | null;
+  city: string;
+  country: string;
+  auto_location: boolean;
+  tasbih_count: number;
+  ramadan_mode: boolean;
+  quran_goal_minutes: number;
+  prayer_notifications: boolean;
+  cycle_mode: boolean;
+  cycle_mode_first_time: boolean;
+  user_name: string | null;
+}
+
+export interface PrayerProgress {
+  id: number;
+  user_id: string | null;
+  date: string;
+  fajr: boolean;
+  dhuhr: boolean;
+  asr: boolean;
+  maghrib: boolean;
+  isha: boolean;
+}
+
+export interface QuranReadingSession {
+  id: number;
+  user_id: string | null;
+  date: string;
+  minutes_read: number;
+  last_surah_number: number | null;
+  last_ayah_number: number | null;
+  created_at: string | null;
+}
+
+export interface CoachConversation {
+  id: number;
+  user_id: string;
+  title: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface CoachMessage {
+  id: number;
+  conversation_id: number;
+  role: string;
+  content: string;
+  tokens_used: number | null;
+  created_at: string | null;
+}
+
+export interface TokenUsage {
+  id: number;
+  user_id: string;
+  date: string;
+  tokens_used: number;
+  request_count: number;
+}
 
 export interface IStorage {
-  // Favorites
-  getFavorites(userId: string): Promise<Favorite[]>;
-  createFavorite(userId: string, favorite: Omit<InsertFavorite, 'userId'>): Promise<Favorite>;
-  deleteFavorite(userId: string, id: number): Promise<void>;
+  getFavorites(): Promise<Favorite[]>;
+  createFavorite(favorite: Omit<Favorite, "id" | "created_at">): Promise<Favorite>;
+  deleteFavorite(id: number): Promise<void>;
 
-  // Qada
-  getQada(userId: string): Promise<Qada[]>;
-  updateQada(userId: string, prayerName: string, count: number): Promise<Qada>;
+  getQada(): Promise<Qada[]>;
+  updateQada(prayerName: string, count: number): Promise<Qada>;
 
-  // Settings
   getSettings(userId: string): Promise<Settings>;
-  updateSettings(userId: string, updates: Partial<InsertSettings>): Promise<Settings>;
+  updateSettings(userId: string, updates: Partial<Settings>): Promise<Settings>;
 
-  // Prayer Progress
   getPrayerProgress(userId: string, startDate: string, endDate: string): Promise<PrayerProgress[]>;
   getPrayerProgressForDate(userId: string, date: string): Promise<PrayerProgress | null>;
   updatePrayerProgress(userId: string, date: string, prayer: string, completed: boolean): Promise<PrayerProgress>;
 
-  // Quran Sessions
   getQuranReadingSessions(userId: string, startDate: string, endDate: string): Promise<QuranReadingSession[]>;
   getTodayQuranSession(userId: string): Promise<QuranReadingSession | null>;
-  updateQuranSession(userId: string, data: Omit<InsertQuranReadingSession, 'userId'>): Promise<QuranReadingSession>;
+  updateQuranSession(userId: string, data: Partial<QuranReadingSession>): Promise<QuranReadingSession>;
+
+  // Coach chat methods
+  getConversations(userId: string): Promise<CoachConversation[]>;
+  getConversation(id: number, userId: string): Promise<CoachConversation | null>;
+  createConversation(userId: string, title?: string): Promise<CoachConversation>;
+  updateConversationTitle(id: number, title: string): Promise<CoachConversation>;
+  deleteConversation(id: number): Promise<void>;
+
+  getMessages(conversationId: number): Promise<CoachMessage[]>;
+  createMessage(message: Omit<CoachMessage, "id" | "created_at">): Promise<CoachMessage>;
+
+  // Token usage methods
+  getDailyTokenUsage(userId: string, date: string): Promise<TokenUsage | null>;
+  updateTokenUsage(userId: string, tokensUsed: number): Promise<TokenUsage>;
+  checkTokenLimit(userId: string, dailyLimit: number): Promise<{ allowed: boolean; remaining: number; used: number }>;
 }
 
 export class SupabaseStorage implements IStorage {
-  // ============ FAVORITES ============
-  async getFavorites(userId: string): Promise<Favorite[]> {
-    const { data, error } = await supabaseAdmin
-      .from('favorites')
-      .select('*')
-      .eq('user_id', userId);
-
+  async getFavorites(): Promise<Favorite[]> {
+    const { data, error } = await supabase
+      .from("favorites")
+      .select("*");
     if (error) throw error;
-    return (data || []).map(this.mapFavorite);
+    return data || [];
   }
 
-  async createFavorite(userId: string, insertFavorite: Omit<InsertFavorite, 'userId'>): Promise<Favorite> {
-    const { data, error } = await supabaseAdmin
-      .from('favorites')
-      .insert({
-        user_id: userId,
-        surah_number: insertFavorite.surahNumber,
-        ayah_number: insertFavorite.ayahNumber,
-        surah_name: insertFavorite.surahName,
-        arabic_text: insertFavorite.arabicText,
-        translation_text: insertFavorite.translationText,
-      })
+  async createFavorite(favorite: Omit<Favorite, "id" | "created_at">): Promise<Favorite> {
+    const { data, error } = await supabase
+      .from("favorites")
+      .insert(favorite)
       .select()
       .single();
-
     if (error) throw error;
-    return this.mapFavorite(data);
+    return data;
   }
 
-  async deleteFavorite(userId: string, id: number): Promise<void> {
-    const { error } = await supabaseAdmin
-      .from('favorites')
+  async deleteFavorite(id: number): Promise<void> {
+    const { error } = await supabase
+      .from("favorites")
       .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
-
+      .eq("id", id);
     if (error) throw error;
   }
 
-  // ============ QADA ============
-  async getQada(userId: string): Promise<Qada[]> {
-    const { data, error } = await supabaseAdmin
-      .from('qada')
-      .select('*')
-      .eq('user_id', userId);
-
+  async getQada(): Promise<Qada[]> {
+    const { data, error } = await supabase
+      .from("qada")
+      .select("*");
     if (error) throw error;
-    return (data || []).map(this.mapQada);
+    return data || [];
   }
 
-  async updateQada(userId: string, prayerName: string, count: number): Promise<Qada> {
-    // Try to update first
-    const { data: existing } = await supabaseAdmin
-      .from('qada')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('prayer_name', prayerName)
+  async updateQada(prayerName: string, count: number): Promise<Qada> {
+    // Check if exists
+    const { data: existing } = await supabase
+      .from("qada")
+      .select("*")
+      .eq("prayer_name", prayerName)
       .single();
 
-    if (existing) {
-      const { data, error } = await supabaseAdmin
-        .from('qada')
-        .update({ count })
-        .eq('user_id', userId)
-        .eq('prayer_name', prayerName)
+    if (!existing) {
+      const { data, error } = await supabase
+        .from("qada")
+        .insert({ prayer_name: prayerName, count })
         .select()
         .single();
-
       if (error) throw error;
-      return this.mapQada(data);
-    } else {
-      const { data, error } = await supabaseAdmin
-        .from('qada')
-        .insert({ user_id: userId, prayer_name: prayerName, count })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return this.mapQada(data);
-    }
-  }
-
-  // ============ SETTINGS ============
-  async getSettings(userId: string): Promise<Settings> {
-    const { data, error } = await supabaseAdmin
-      .from('settings')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (error && error.code === 'PGRST116') {
-      // No settings found, create default
-      const { data: newSettings, error: insertError } = await supabaseAdmin
-        .from('settings')
-        .insert({ user_id: userId })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-      return this.mapSettings(newSettings);
+      return data;
     }
 
-    if (error) throw error;
-    return this.mapSettings(data);
-  }
-
-  async updateSettings(userId: string, updates: Partial<InsertSettings>): Promise<Settings> {
-    // Ensure settings exist first
-    await this.getSettings(userId);
-
-    const dbUpdates: Record<string, any> = {};
-    if (updates.city !== undefined) dbUpdates.city = updates.city;
-    if (updates.country !== undefined) dbUpdates.country = updates.country;
-    if (updates.autoLocation !== undefined) dbUpdates.auto_location = updates.autoLocation;
-    if (updates.prayerNotifications !== undefined) dbUpdates.prayer_notifications = updates.prayerNotifications;
-    if (updates.tasbihCount !== undefined) dbUpdates.tasbih_count = updates.tasbihCount;
-    if (updates.ramadanMode !== undefined) dbUpdates.ramadan_mode = updates.ramadanMode;
-    if (updates.cycleMode !== undefined) dbUpdates.cycle_mode = updates.cycleMode;
-    if (updates.cycleModeFirstTime !== undefined) dbUpdates.cycle_mode_first_time = updates.cycleModeFirstTime;
-    if (updates.quranGoalMinutes !== undefined) dbUpdates.quran_goal_minutes = updates.quranGoalMinutes;
-    if (updates.prayerNotifications !== undefined) dbUpdates.prayer_notifications = updates.prayerNotifications;
-    if (updates.userName !== undefined) dbUpdates.user_name = updates.userName;
-
-    const { data, error } = await supabaseAdmin
-      .from('settings')
-      .update(dbUpdates)
-      .eq('user_id', userId)
+    const { data, error } = await supabase
+      .from("qada")
+      .update({ count })
+      .eq("prayer_name", prayerName)
       .select()
       .single();
-
     if (error) throw error;
-    return this.mapSettings(data);
+    return data;
   }
 
-  // ============ PRAYER PROGRESS ============
-  async getPrayerProgress(userId: string, startDate: string, endDate: string): Promise<PrayerProgress[]> {
-    const { data, error } = await supabaseAdmin
-      .from('prayer_progress')
-      .select('*')
-      .eq('user_id', userId)
-      .gte('date', startDate)
-      .lte('date', endDate);
+  async getSettings(userId: string): Promise<Settings> {
+    const { data: existing } = await supabase
+      .from("settings")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
 
+    if (!existing) {
+      const { data, error } = await supabase
+        .from("settings")
+        .insert({
+          user_id: userId,
+          city: "Mecca",
+          country: "Saudi Arabia",
+          auto_location: false,
+          tasbih_count: 0,
+          ramadan_mode: false,
+          quran_goal_minutes: 10,
+          prayer_notifications: false,
+          cycle_mode: false,
+          cycle_mode_first_time: true,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    }
+    return existing;
+  }
+
+  async updateSettings(userId: string, updates: Partial<Settings>): Promise<Settings> {
+    const existing = await this.getSettings(userId);
+    const { data, error } = await supabase
+      .from("settings")
+      .update(updates)
+      .eq("id", existing.id)
+      .select()
+      .single();
     if (error) throw error;
-    return (data || []).map(this.mapPrayerProgress);
+    return data;
+  }
+
+  async getPrayerProgress(userId: string, startDate: string, endDate: string): Promise<PrayerProgress[]> {
+    const { data, error } = await supabase
+      .from("prayer_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .gte("date", startDate)
+      .lte("date", endDate);
+    if (error) throw error;
+    return data || [];
   }
 
   async getPrayerProgressForDate(userId: string, date: string): Promise<PrayerProgress | null> {
-    const { data, error } = await supabaseAdmin
-      .from('prayer_progress')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', date)
+    const { data } = await supabase
+      .from("prayer_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("date", date)
       .single();
-
-    if (error && error.code === 'PGRST116') {
-      return null;
-    }
-
-    if (error) throw error;
-    return this.mapPrayerProgress(data);
+    return data || null;
   }
 
   async updatePrayerProgress(userId: string, date: string, prayer: string, completed: boolean): Promise<PrayerProgress> {
-    const prayerKey = prayer.toLowerCase();
     const existing = await this.getPrayerProgressForDate(userId, date);
+    const prayerKey = prayer.toLowerCase() as 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 
     if (!existing) {
-      const insertData: Record<string, any> = {
-        user_id: userId,
-        date,
-        [prayerKey]: completed,
-      };
-
-      const { data, error } = await supabaseAdmin
-        .from('prayer_progress')
-        .insert(insertData)
+      const { data, error } = await supabase
+        .from("prayer_progress")
+        .insert({ user_id: userId, date, [prayerKey]: completed })
         .select()
         .single();
-
       if (error) throw error;
-      return this.mapPrayerProgress(data);
+      return data;
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('prayer_progress')
+    const { data, error } = await supabase
+      .from("prayer_progress")
       .update({ [prayerKey]: completed })
-      .eq('user_id', userId)
-      .eq('date', date)
+      .eq("id", existing.id)
       .select()
       .single();
-
     if (error) throw error;
-    return this.mapPrayerProgress(data);
+    return data;
   }
 
-  // ============ PROGRAMME PROGRESS ============
-  async getAllProgrammeProgress(userId: string): Promise<ProgrammeProgress[]> {
-    const { data, error } = await supabaseAdmin
-      .from('programme_progress')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (error) {
-      console.error("[getAllProgrammeProgressError]", error);
-      return [];
-    }
-
-    return (data || []).map(d => ({
-      id: d.id,
-      userId: d.user_id,
-      programmeId: d.programme_id,
-      currentDay: d.current_day,
-      completedDays: d.completed_days,
-      startedAt: d.started_at ? new Date(d.started_at) : null,
-      lastAccessedAt: d.last_accessed_at ? new Date(d.last_accessed_at) : null,
-      journalEntries: d.journal_entries,
-      emotionalCheckIns: d.emotional_check_ins,
-    }));
-  }
-
-  async getProgrammeProgress(userId: string, programmeId: string): Promise<ProgrammeProgress | undefined> {
-    const { data, error } = await supabaseAdmin
-      .from('programme_progress')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('programme_id', programmeId)
-      .maybeSingle();
-
-    if (error) {
-      console.error("[getProgrammeProgressError]", error);
-      return undefined;
-    }
-
-    if (!data) return undefined;
-
-    return {
-      id: data.id,
-      userId: data.user_id,
-      programmeId: data.programme_id,
-      currentDay: data.current_day,
-      completedDays: data.completed_days,
-      startedAt: data.started_at ? new Date(data.started_at) : null,
-      lastAccessedAt: data.last_accessed_at ? new Date(data.last_accessed_at) : null,
-      journalEntries: data.journal_entries,
-      emotionalCheckIns: data.emotional_check_ins,
-    };
-  }
-
-  async updateProgrammeProgress(userId: string, programmeId: string, updates: Partial<ProgrammeProgress>): Promise<ProgrammeProgress> {
-    const existing = await this.getProgrammeProgress(userId, programmeId);
-
-    const dbUpdates: Record<string, any> = {
-      user_id: userId,
-      programme_id: programmeId,
-      last_accessed_at: new Date().toISOString(),
-    };
-
-    if (updates.currentDay !== undefined) dbUpdates.current_day = updates.currentDay;
-    if (updates.completedDays !== undefined) dbUpdates.completed_days = updates.completedDays;
-    if (updates.journalEntries !== undefined) dbUpdates.journal_entries = updates.journalEntries;
-    if (updates.emotionalCheckIns !== undefined) dbUpdates.emotional_check_ins = updates.emotionalCheckIns;
-
-    if (!existing && !updates.startedAt) {
-      dbUpdates.started_at = new Date().toISOString();
-    }
-
-    const { data, error } = await supabaseAdmin
-      .from('programme_progress')
-      .upsert(dbUpdates, { onConflict: 'user_id,programme_id' })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("[updateProgrammeProgressError]", error);
-      throw error;
-    }
-
-    return {
-      id: data.id,
-      userId: data.user_id,
-      programmeId: data.programme_id,
-      currentDay: data.current_day,
-      completedDays: data.completed_days,
-      startedAt: data.started_at ? new Date(data.started_at) : null,
-      lastAccessedAt: data.last_accessed_at ? new Date(data.last_accessed_at) : null,
-      journalEntries: data.journal_entries,
-      emotionalCheckIns: data.emotional_check_ins,
-    };
-  }
-
-  // ============ QURAN SESSIONS ============
   async getQuranReadingSessions(userId: string, startDate: string, endDate: string): Promise<QuranReadingSession[]> {
-    const { data, error } = await supabaseAdmin
-      .from('quran_reading_sessions')
-      .select('*')
-      .eq('user_id', userId)
-      .gte('date', startDate)
-      .lte('date', endDate);
-
+    const { data, error } = await supabase
+      .from("quran_reading_sessions")
+      .select("*")
+      .eq("user_id", userId)
+      .gte("date", startDate)
+      .lte("date", endDate);
     if (error) throw error;
-    return (data || []).map(this.mapQuranSession);
+    return data || [];
   }
 
   async getTodayQuranSession(userId: string): Promise<QuranReadingSession | null> {
     const today = new Date().toISOString().split('T')[0];
-    const { data, error } = await supabaseAdmin
-      .from('quran_reading_sessions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', today)
+    const { data } = await supabase
+      .from("quran_reading_sessions")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("date", today)
       .single();
-
-    if (error && error.code === 'PGRST116') {
-      return null;
-    }
-
-    if (error) throw error;
-    return this.mapQuranSession(data);
+    return data || null;
   }
 
-  async updateQuranSession(userId: string, sessionData: Omit<InsertQuranReadingSession, 'userId'>): Promise<QuranReadingSession> {
+  async updateQuranSession(userId: string, sessionData: Partial<QuranReadingSession>): Promise<QuranReadingSession> {
     const existing = await this.getTodayQuranSession(userId);
+    const today = new Date().toISOString().split('T')[0];
 
     if (!existing) {
-      const { data, error } = await supabaseAdmin
-        .from('quran_reading_sessions')
-        .insert({
-          user_id: userId,
-          date: sessionData.date,
-          minutes_read: sessionData.minutesRead,
-          last_surah_number: sessionData.lastSurahNumber,
-          last_ayah_number: sessionData.lastAyahNumber,
-        })
+      const { data, error } = await supabase
+        .from("quran_reading_sessions")
+        .insert({ user_id: userId, date: today, ...sessionData })
         .select()
         .single();
-
       if (error) throw error;
-      return this.mapQuranSession(data);
+      return data;
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('quran_reading_sessions')
+    const { data, error } = await supabase
+      .from("quran_reading_sessions")
       .update({
-        minutes_read: sessionData.minutesRead,
-        last_surah_number: sessionData.lastSurahNumber,
-        last_ayah_number: sessionData.lastAyahNumber,
+        minutes_read: sessionData.minutes_read,
+        last_surah_number: sessionData.last_surah_number,
+        last_ayah_number: sessionData.last_ayah_number,
       })
-      .eq('user_id', userId)
-      .eq('date', sessionData.date)
+      .eq("id", existing.id)
       .select()
       .single();
-
     if (error) throw error;
-    return this.mapQuranSession(data);
+    return data;
   }
 
-  // ============ SEED QADA FOR USER ============
-  async seedQadaForUser(userId: string): Promise<void> {
-    const existingQada = await this.getQada(userId);
-    if (existingQada.length === 0) {
-      const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-      for (const prayer of prayers) {
-        await this.updateQada(userId, prayer, 0);
-      }
+  // Coach chat methods
+  async getConversations(userId: string): Promise<CoachConversation[]> {
+    const { data, error } = await supabase
+      .from("coach_conversations")
+      .select("*")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getConversation(id: number, userId: string): Promise<CoachConversation | null> {
+    const { data } = await supabase
+      .from("coach_conversations")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .single();
+    return data || null;
+  }
+
+  async createConversation(userId: string, title?: string): Promise<CoachConversation> {
+    const { data, error } = await supabase
+      .from("coach_conversations")
+      .insert({ user_id: userId, title: title || "New Conversation" })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  async updateConversationTitle(id: number, title: string): Promise<CoachConversation> {
+    const { data, error } = await supabase
+      .from("coach_conversations")
+      .update({ title, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  async deleteConversation(id: number): Promise<void> {
+    // Delete messages first
+    await supabase
+      .from("coach_messages")
+      .delete()
+      .eq("conversation_id", id);
+
+    // Then delete conversation
+    const { error } = await supabase
+      .from("coach_conversations")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+  }
+
+  async getMessages(conversationId: number): Promise<CoachMessage[]> {
+    const { data, error } = await supabase
+      .from("coach_messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return data || [];
+  }
+
+  async createMessage(message: Omit<CoachMessage, "id" | "created_at">): Promise<CoachMessage> {
+    const { data, error } = await supabase
+      .from("coach_messages")
+      .insert(message)
+      .select()
+      .single();
+    if (error) throw error;
+
+    // Update conversation's updated_at timestamp
+    await supabase
+      .from("coach_conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", message.conversation_id);
+
+    return data;
+  }
+
+  // Token usage methods
+  async getDailyTokenUsage(userId: string, date: string): Promise<TokenUsage | null> {
+    const { data } = await supabase
+      .from("token_usage")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("date", date)
+      .single();
+    return data || null;
+  }
+
+  async updateTokenUsage(userId: string, tokensUsed: number): Promise<TokenUsage> {
+    const today = new Date().toISOString().split('T')[0];
+    const existing = await this.getDailyTokenUsage(userId, today);
+
+    if (!existing) {
+      const { data, error } = await supabase
+        .from("token_usage")
+        .insert({ user_id: userId, date: today, tokens_used: tokensUsed, request_count: 1 })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
     }
+
+    const { data, error } = await supabase
+      .from("token_usage")
+      .update({
+        tokens_used: existing.tokens_used + tokensUsed,
+        request_count: existing.request_count + 1,
+      })
+      .eq("id", existing.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   }
 
-  // ============ MAPPERS (snake_case to camelCase) ============
-  private mapFavorite(row: any): Favorite {
+  async checkTokenLimit(userId: string, dailyLimit: number): Promise<{ allowed: boolean; remaining: number; used: number }> {
+    const today = new Date().toISOString().split('T')[0];
+    const usage = await this.getDailyTokenUsage(userId, today);
+    const used = usage?.tokens_used || 0;
+    const remaining = Math.max(0, dailyLimit - used);
     return {
-      id: row.id,
-      userId: row.user_id,
-      surahName: row.surah_name,
-      surahNumber: row.surah_number,
-      ayahNumber: row.ayah_number,
-      arabicText: row.arabic_text,
-      translationText: row.translation_text,
-      createdAt: row.created_at ? new Date(row.created_at) : null,
-    };
-  }
-
-  private mapQada(row: any): Qada {
-    return {
-      id: row.id,
-      userId: row.user_id,
-      prayerName: row.prayer_name,
-      count: row.count,
-    };
-  }
-
-  private mapSettings(row: any): Settings {
-    return {
-      id: row.id,
-      userId: row.user_id,
-      userName: row.user_name || null,
-      city: row.city || "Mecca",
-      country: row.country || "Saudi Arabia",
-      autoLocation: row.auto_location || false,
-      tasbihCount: row.tasbih_count || 0,
-      ramadanMode: row.ramadan_mode || false,
-      cycleMode: row.cycle_mode || false,
-      cycleModeFirstTime: row.cycle_mode_first_time !== false, // default true
-      quranGoalMinutes: row.quran_goal_minutes || 10,
-      prayerNotifications: row.prayer_notifications || false,
-      coachQuestionsToday: row.coach_questions_today || 0,
-      coachLastQuestionDate: row.coach_last_question_date || null,
-    };
-  }
-
-  private mapPrayerProgress(row: any): PrayerProgress {
-    return {
-      id: row.id,
-      userId: row.user_id,
-      date: row.date,
-      fajr: row.fajr,
-      dhuhr: row.dhuhr,
-      asr: row.asr,
-      maghrib: row.maghrib,
-      isha: row.isha,
-    };
-  }
-
-  private mapQuranSession(row: any): QuranReadingSession {
-    return {
-      id: row.id,
-      userId: row.user_id,
-      date: row.date,
-      minutesRead: row.minutes_read,
-      lastSurahNumber: row.last_surah_number,
-      lastAyahNumber: row.last_ayah_number,
-      createdAt: row.created_at ? new Date(row.created_at) : null,
+      allowed: used < dailyLimit,
+      remaining,
+      used,
     };
   }
 }
