@@ -138,6 +138,9 @@
 }
 
 @layer utilities {
+  .font-arabic {
+    font-family: 'Amiri', 'Scheherazade New', serif;
+  }
   input[type="search"]::-webkit-search-cancel-button {
     @apply hidden;
   }

@@ -6,7 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationPrompt } from "@/components/NotificationPrompt";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
-import { useAuth } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { QuranTimerProvider } from "@/contexts/QuranTimerContext";
 import { useSettings } from "@/hooks/use-settings";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -18,11 +19,15 @@ import Quran from "@/pages/Quran";
 import SurahView from "@/pages/SurahView";
 import Favorites from "@/pages/Favorites";
 import Qibla from "@/pages/Qibla";
-import Duas from "@/pages/Duas";
+import Kalimas from "@/pages/Kalimas";
 import UmrahGuide from "@/pages/UmrahGuide";
 import HajjGuide from "@/pages/HajjGuide";
 import More from "@/pages/More";
+import IslamicCoach from "@/pages/IslamicCoach";
+import MenstrualGuide from "@/pages/MenstrualGuide";
+import Duas from "@/pages/Duas";
 import LandingPage from "@/pages/LandingPage";
+import AuthCallback from "@/pages/AuthCallback";
 
 function AuthenticatedApp() {
   const { data: settings, isLoading: settingsLoading } = useSettings();
@@ -45,27 +50,34 @@ function AuthenticatedApp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-accent/20 text-foreground font-sans">
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/prayer" component={PrayerTab} />
-        <Route path="/foryou" component={ForYou} />
-        <Route path="/quran" component={Quran} />
-        <Route path="/surah/:id" component={SurahView} />
-        <Route path="/favorites" component={Favorites} />
-        <Route path="/qibla" component={Qibla} />
-        <Route path="/duas" component={Duas} />
-        <Route path="/umrah" component={UmrahGuide} />
-        <Route path="/hajj" component={HajjGuide} />
-        <Route path="/more" component={More} />
-        <Route component={NotFound} />
-      </Switch>
-      <BottomNav />
-      {showNotificationPrompt && (
-        <NotificationPrompt onClose={handleCloseNotificationPrompt} />
-      )}
-      <PWAInstallPrompt />
-    </div>
+    <QuranTimerProvider>
+      <div className="min-h-screen bg-gradient-to-b from-background to-accent/20 text-foreground font-sans">
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/home" component={Home} />
+          <Route path="/prayer" component={PrayerTab} />
+          <Route path="/foryou" component={ForYou} />
+          <Route path="/quran" component={Quran} />
+          <Route path="/surah/:id" component={SurahView} />
+          <Route path="/favorites" component={Favorites} />
+          <Route path="/qibla" component={Qibla} />
+          <Route path="/kalimas" component={Kalimas} />
+          <Route path="/umrah" component={UmrahGuide} />
+          <Route path="/hajj" component={HajjGuide} />
+          <Route path="/more" component={More} />
+          <Route path="/coach" component={IslamicCoach} />
+          <Route path="/menstrual-guide" component={MenstrualGuide} />
+          <Route path="/duas" component={Duas} />
+          <Route path="/auth/callback" component={AuthCallback} />
+          <Route component={NotFound} />
+        </Switch>
+        <BottomNav />
+        {showNotificationPrompt && (
+          <NotificationPrompt onClose={handleCloseNotificationPrompt} />
+        )}
+        <PWAInstallPrompt />
+      </div>
+    </QuranTimerProvider>
   );
 }
 
@@ -93,10 +105,12 @@ function AppContent() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <AppContent />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <AppContent />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

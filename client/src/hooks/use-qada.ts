@@ -14,7 +14,29 @@ export function useUpdateQada() {
       const res = await apiRequest("POST", `/api/qada/${prayerName}`, { count });
       return res.json();
     },
-    onSuccess: () => {
+    onMutate: async ({ prayerName, count }) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/qada"] });
+      const previousQada = queryClient.getQueryData<Qada[]>(["/api/qada"]);
+
+      if (previousQada) {
+        queryClient.setQueryData<Qada[]>(["/api/qada"], (old) => {
+          if (!old) return [];
+          const exists = old.find(q => q.prayerName === prayerName);
+          if (exists) {
+            return old.map(q => q.prayerName === prayerName ? { ...q, count } : q);
+          }
+          return [...old, { id: Math.random(), userId: "temp", prayerName, count }];
+        });
+      }
+
+      return { previousQada };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousQada) {
+        queryClient.setQueryData(["/api/qada"], context.previousQada);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/qada"] });
     },
   });

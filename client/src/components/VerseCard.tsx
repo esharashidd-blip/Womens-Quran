@@ -1,4 +1,4 @@
-import { Heart } from "lucide-react";
+import { Heart, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QuoteGenerator } from "./QuoteGenerator";
@@ -12,9 +12,11 @@ interface VerseCardProps {
   arabicText: string;
   translationText: string;
   index: number;
+  isCurrentlyPlaying?: boolean;
+  onPlayAyah?: () => void;
 }
 
-export function VerseCard({ surahName, surahNumber, ayahNumber, arabicText, translationText, index }: VerseCardProps) {
+export function VerseCard({ surahName, surahNumber, ayahNumber, arabicText, translationText, index, isCurrentlyPlaying, onPlayAyah }: VerseCardProps) {
   const { data: favorites } = useFavorites();
   const addMutation = useAddFavorite();
   const deleteMutation = useDeleteFavorite();
@@ -40,25 +42,48 @@ export function VerseCard({ surahName, surahNumber, ayahNumber, arabicText, tran
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      className="bg-white/60 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-sm border border-white/50 hover:shadow-md transition-all duration-300"
+      className={cn(
+        "bg-white/60 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-sm border hover:shadow-md transition-all duration-300",
+        isCurrentlyPlaying ? "border-primary/50 bg-primary/5" : "border-white/50"
+      )}
     >
       <div className="flex justify-between items-center mb-6 border-b border-pink-100 pb-4">
-        <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold tracking-wider">
+        <span className={cn(
+          "px-3 py-1 rounded-full text-xs font-bold tracking-wider",
+          isCurrentlyPlaying ? "bg-primary text-white" : "bg-primary/10 text-primary"
+        )}>
           {surahNumber}:{ayahNumber}
         </span>
         <div className="flex gap-1">
-          <QuoteGenerator 
+          {onPlayAyah && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onPlayAyah}
+              className={cn(
+                "transition-colors hover:bg-primary/10",
+                isCurrentlyPlaying ? "text-primary" : "text-gray-400 hover:text-primary"
+              )}
+            >
+              {isCurrentlyPlaying ? (
+                <Pause className="w-5 h-5" />
+              ) : (
+                <Play className="w-5 h-5" />
+              )}
+            </Button>
+          )}
+          <QuoteGenerator
             surahName={surahName}
             ayahNumber={ayahNumber}
             arabicText={arabicText}
             translationText={translationText}
           />
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={handleFavorite}
             className={cn(

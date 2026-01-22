@@ -1,8 +1,10 @@
 import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
-import { useTodayProgress, useWeeklyProgress, useUpdatePrayerProgress, calculateWeeklyStats } from "@/hooks/use-prayer-progress";
-import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, ChevronRight, ChevronDown, Search, Navigation, Check, TrendingUp } from "lucide-react";
-import { format, getDaysInMonth } from "date-fns";
+import { useTodayProgress, useWeeklyProgress, useUpdatePrayerProgress } from "@/hooks/use-prayer-progress";
+import { useProgrammeProgress } from "@/hooks/use-programme-progress";
+import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, ChevronDown, Search, Navigation, Check, Flame, Heart, ArrowRight } from "lucide-react";
+import { Link } from "wouter";
+import { format, subDays } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,31 +60,75 @@ export default function Home() {
   const { data: todayProgress } = useTodayProgress();
   const { data: weeklyProgress } = useWeeklyProgress();
   const updateProgress = useUpdatePrayerProgress();
+  const { data: menstrualProgress } = useProgrammeProgress("menstrual-guide");
   const [countdown, setCountdown] = useState("");
   const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
   const [isDetecting, setIsDetecting] = useState(false);
-  
+
   const today = format(new Date(), "yyyy-MM-dd");
-  const weeklyStats = weeklyProgress ? calculateWeeklyStats(weeklyProgress) : { completed: 0, total: 35, percentage: 0 };
-  
+
+  // Calculate prayer streak (consecutive days with all 5 prayers completed)
+  const prayerStreak = useMemo(() => {
+    if (!weeklyProgress) return 0;
+
+    let streak = 0;
+    const todayDate = new Date();
+
+    // Check from today backwards - no limit on streak length
+    for (let i = 0; i < 366; i++) {
+      const checkDate = subDays(todayDate, i);
+      const dateStr = format(checkDate, 'yyyy-MM-dd');
+      const dayProgress = weeklyProgress.find(p => p.date === dateStr);
+
+      if (!dayProgress) {
+        // If checking today and no progress yet, skip to yesterday
+        if (i === 0) continue;
+        break;
+      }
+
+      const allCompleted = dayProgress.fajr && dayProgress.dhuhr && dayProgress.asr && dayProgress.maghrib && dayProgress.isha;
+
+      if (allCompleted) {
+        streak++;
+      } else if (i > 0) {
+        // If not today and not all completed, streak breaks
+        break;
+      }
+    }
+
+    return streak;
+  }, [weeklyProgress]);
+
   const isPrayerCompleted = (prayer: string) => {
     if (!todayProgress) return false;
     const key = prayer.toLowerCase() as 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
     return todayProgress[key] || false;
   };
-  
+
   const togglePrayer = (prayer: string) => {
     const completed = !isPrayerCompleted(prayer);
     updateProgress.mutate({ date: today, prayer, completed });
   };
 
+  // Auto-complete prayers in Cycle Mode
+  useEffect(() => {
+    if (settings?.cycleMode && prayers) {
+      const pNames = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+      pNames.forEach(p => {
+        if (!isPrayerCompleted(p)) {
+          updateProgress.mutate({ date: today, prayer: p, completed: true });
+        }
+      });
+    }
+  }, [settings?.cycleMode, prayers, todayProgress]);
+
   const filteredLocations = useMemo(() => {
     if (!locationSearch.trim()) return POPULAR_LOCATIONS;
     const query = locationSearch.toLowerCase();
-    return POPULAR_LOCATIONS.filter(loc => 
-      loc.city.toLowerCase().includes(query) || 
+    return POPULAR_LOCATIONS.filter(loc =>
+      loc.city.toLowerCase().includes(query) ||
       loc.country.toLowerCase().includes(query)
     );
   }, [locationSearch]);
@@ -117,18 +163,18 @@ export default function Home() {
 
   useEffect(() => {
     if (!nextPrayer) return;
-    
+
     const updateCountdown = () => {
       const now = new Date();
       const currentMins = now.getHours() * 60 + now.getMinutes();
       let diff = nextPrayer.timeVal - currentMins;
       if (diff < 0) diff += 24 * 60;
-      
+
       const hours = Math.floor(diff / 60);
       const mins = diff % 60;
       setCountdown(`${hours}h ${mins}m`);
     };
-    
+
     updateCountdown();
     const interval = setInterval(updateCountdown, 60000);
     return () => clearInterval(interval);
@@ -137,10 +183,12 @@ export default function Home() {
   const handleSelectLocation = (loc: { city: string; country: string }) => {
     updateSettings.mutate(
       { city: loc.city, country: loc.country },
-      { onSuccess: () => {
-        setShowLocationPicker(false);
-        setLocationSearch("");
-      }}
+      {
+        onSuccess: () => {
+          setShowLocationPicker(false);
+          setLocationSearch("");
+        }
+      }
     );
   };
 
@@ -160,11 +208,13 @@ export default function Home() {
               country: data.countryName || "Unknown",
               autoLocation: true,
             },
-            { onSuccess: () => {
-              setShowLocationPicker(false);
-              setLocationSearch("");
-              setIsDetecting(false);
-            }}
+            {
+              onSuccess: () => {
+                setShowLocationPicker(false);
+                setLocationSearch("");
+                setIsDetecting(false);
+              }
+            }
           );
         } catch (e) {
           console.error("Geocoding failed", e);
@@ -182,7 +232,7 @@ export default function Home() {
     <div className="min-h-screen pb-24 px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-5">
       <div className="text-center space-y-1">
         <h1 className="text-2xl font-serif text-foreground">
-          Salam, <span className="text-primary italic">Sister</span>
+          Salam{settings?.userName ? `, ${settings.userName}` : ''} <span className="text-primary">🤍</span>
         </h1>
         <p className="text-muted-foreground text-sm">
           {format(new Date(), "EEEE, MMMM do")}
@@ -214,28 +264,38 @@ export default function Home() {
             <div className="text-center mb-4">
               <span className="text-xs uppercase tracking-widest text-muted-foreground">Next Prayer</span>
               <h2 className="text-4xl font-serif text-foreground mt-1 font-medium" data-testid="text-next-prayer">
-                {nextPrayer?.name}
+                {settings?.cycleMode ? "Time to Relax" : nextPrayer?.name}
               </h2>
-              <p className="text-xl text-muted-foreground font-light">{nextPrayer?.time.split(" ")[0]}</p>
+              <p className="text-xl text-muted-foreground font-light">
+                {settings?.cycleMode ? "Your streak is protected" : nextPrayer?.time.split(" ")[0]}
+              </p>
             </div>
 
-            <div className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-medium shadow-md">
-              <Clock className="w-4 h-4" />
-              <span data-testid="text-countdown">in {countdown}</span>
+            <div className={`flex items-center gap-2 ${settings?.cycleMode ? 'bg-rose-100 text-rose-700' : 'bg-primary text-primary-foreground'} px-5 py-2.5 rounded-full text-sm font-medium shadow-md`}>
+              {settings?.cycleMode ? (
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
+                  <span>Cycle Mode Active</span>
+                </div>
+              ) : (
+                <>
+                  <Clock className="w-4 h-4" />
+                  <span data-testid="text-countdown">in {countdown}</span>
+                </>
+              )}
             </div>
 
             <div className="grid grid-cols-5 gap-2 w-full pt-5 mt-5 border-t border-white/30">
               {['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map((p) => (
-                <button 
-                  key={p} 
+                <button
+                  key={p}
                   onClick={() => togglePrayer(p)}
-                  className={`flex flex-col items-center gap-1 transition-all py-2 rounded-xl ${
-                    isPrayerCompleted(p) 
-                      ? 'bg-primary/20 opacity-100' 
-                      : p === nextPrayer?.name 
-                        ? 'opacity-100 scale-105' 
-                        : 'opacity-60'
-                  }`}
+                  className={`flex flex-col items-center gap-1 transition-all py-2 rounded-xl ${isPrayerCompleted(p)
+                    ? 'bg-primary/20 opacity-100'
+                    : p === nextPrayer?.name
+                      ? 'opacity-100 scale-105'
+                      : 'opacity-60'
+                    }`}
                   data-testid={`button-toggle-prayer-${p.toLowerCase()}`}
                 >
                   {isPrayerCompleted(p) ? (
@@ -260,49 +320,27 @@ export default function Home() {
         )}
       </Card>
 
-      <Card className="bg-white/80 backdrop-blur-sm border-white/50 p-5 rounded-2xl">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Weekly Progress</p>
-          </div>
-          <span className="text-sm font-medium text-primary" data-testid="text-weekly-percentage">{weeklyStats.percentage}%</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative w-16 h-16">
-            <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
-              <circle
-                cx="18"
-                cy="18"
-                r="16"
-                fill="none"
-                className="stroke-muted/30"
-                strokeWidth="3"
-              />
-              <circle
-                cx="18"
-                cy="18"
-                r="16"
-                fill="none"
-                className="stroke-primary"
-                strokeWidth="3"
-                strokeDasharray={`${weeklyStats.percentage} 100`}
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-sm font-medium" data-testid="text-weekly-completed">{weeklyStats.completed}</span>
+      {/* Streak Section - Updated for Cycle Mode */}
+      <Card className={`bg-gradient-to-br ${settings?.cycleMode ? 'from-rose-50 to-orange-50 border-rose-100 shadow-sm' : 'from-primary/10 to-accent/30 border-white/50 shadow-md'} p-5 rounded-3xl transition-all duration-500`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-muted-foreground text-sm">{settings?.cycleMode ? "Streak Protection" : "Prayer Streak"}</p>
+            <div className="flex items-baseline gap-1 mt-1">
+              <span className={`text-4xl font-serif ${settings?.cycleMode ? 'text-rose-600' : 'text-foreground'}`} data-testid="text-prayer-streak">{prayerStreak}</span>
+              <span className="text-muted-foreground text-sm">days</span>
             </div>
           </div>
-          <div className="flex-1">
-            <p className="text-sm text-foreground font-medium">
-              {weeklyStats.completed} of {weeklyStats.total} prayers
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Tap prayers above to mark them complete
-            </p>
+          <div className={`w-14 h-14 ${settings?.cycleMode ? 'bg-rose-100' : 'bg-primary/20'} rounded-full flex items-center justify-center`}>
+            {settings?.cycleMode ? <Heart className="w-7 h-7 text-rose-500 fill-rose-500" /> : <Flame className="w-7 h-7 text-primary" />}
           </div>
         </div>
+        <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
+          {settings?.cycleMode
+            ? "Allah knows your body better than you do. Your streak is protected while you rest. ✨"
+            : prayerStreak === 0
+              ? "Complete all 5 prayers today to start your streak!"
+              : `Keep it up! You've completed all prayers for ${prayerStreak} day${prayerStreak !== 1 ? 's' : ''} in a row.`}
+        </p>
       </Card>
 
       <Card className="bg-white/80 backdrop-blur-sm border-white/50 p-5 rounded-2xl">
@@ -312,9 +350,32 @@ export default function Home() {
         </p>
       </Card>
 
+      {settings?.cycleMode && (
+        <Link href="/menstrual-guide">
+          <Card className="bg-gradient-to-br from-purple-50 to-rose-50 border-purple-100 p-5 rounded-3xl shadow-sm cursor-pointer hover:shadow-md transition-all group overflow-hidden relative">
+            <div className="absolute right-[-10px] top-[-10px] opacity-10 group-hover:scale-110 transition-transform duration-700">
+              <Heart className="w-24 h-24 text-purple-600 fill-purple-600" />
+            </div>
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-2xl">
+                🌸
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] uppercase tracking-widest text-purple-400 font-bold">Recommended for you</p>
+                <h3 className="text-xl font-serif text-purple-900">Menstrual Guide</h3>
+                <p className="text-xs text-purple-600/70 mt-0.5">
+                  Day {menstrualProgress?.currentDay !== undefined ? (menstrualProgress.currentDay + 1) : 1} — Gentle faith-based support
+                </p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-purple-400 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Card>
+        </Link>
+      )}
+
       {showLocationPicker && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center" onClick={() => !updateSettings.isPending && setShowLocationPicker(false)}>
-          <Card 
+          <Card
             className="w-full max-w-lg bg-background border-t border-white/50 rounded-t-3xl p-5 space-y-4 animate-in slide-in-from-bottom duration-300 max-h-[80vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
@@ -324,7 +385,7 @@ export default function Home() {
                 Done
               </Button>
             </div>
-            
+
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -336,9 +397,9 @@ export default function Home() {
               />
             </div>
 
-            <Button 
-              variant="outline" 
-              onClick={handleAutoDetect} 
+            <Button
+              variant="outline"
+              onClick={handleAutoDetect}
               disabled={updateSettings.isPending || isDetecting}
               className="w-full h-11 rounded-xl gap-2"
               data-testid="button-auto-detect"
@@ -355,9 +416,8 @@ export default function Home() {
                     key={index}
                     onClick={() => handleSelectLocation(loc)}
                     disabled={updateSettings.isPending}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
-                      isSelected ? 'bg-primary/10 border border-primary/20' : 'hover:bg-accent/50'
-                    }`}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${isSelected ? 'bg-primary/10 border border-primary/20' : 'hover:bg-accent/50'
+                      }`}
                     data-testid={`location-${loc.city.toLowerCase().replace(' ', '-')}`}
                   >
                     <div className="flex items-center gap-3">
@@ -375,6 +435,7 @@ export default function Home() {
           </Card>
         </div>
       )}
+
     </div>
   );
 }

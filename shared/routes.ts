@@ -14,6 +14,9 @@ export const errorSchemas = {
   }),
 };
 
+// Input schema for favorites - userId comes from auth token, not client
+const favoriteInputSchema = insertFavoriteSchema;
+
 export const api = {
   favorites: {
     list: {
@@ -26,7 +29,7 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/favorites',
-      input: insertFavoriteSchema,
+      input: favoriteInputSchema,
       responses: {
         201: z.custom<typeof favorites.$inferSelect>(),
         400: errorSchemas.validation,

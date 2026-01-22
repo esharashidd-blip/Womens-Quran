@@ -1,13 +1,27 @@
 import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { useSettings } from "@/hooks/use-settings";
 import { useQada, useUpdateQada } from "@/hooks/use-qada";
-import { Loader2, Sunrise, Sun, Sunset, Moon, Plus, Minus, CircleDot, CalendarCheck, Compass, ChevronRight, UtensilsCrossed } from "lucide-react";
+import { useTodayProgress, useWeeklyProgress, useUpdatePrayerProgress, calculateWeeklyStats } from "@/hooks/use-prayer-progress";
+import { Loader2, Sunrise, Sun, Sunset, Moon, Plus, Minus, CircleDot, CalendarCheck, Compass, ChevronRight, ChevronLeft, UtensilsCrossed, Check, BellOff, Share2, Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { cn } from "@/lib/utils";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay, startOfMonth, endOfMonth, addMonths, subMonths, isSameMonth } from "date-fns";
 
 const PRAYERS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+
+const getPrayerEmoji = (name: string) => {
+  switch (name) {
+    case 'Fajr': return '✨';
+    case 'Dhuhr': return '🌞';
+    case 'Asr': return '🌤️';
+    case 'Maghrib': return '🌅';
+    case 'Isha': return '🌙';
+    default: return '☀️';
+  }
+};
 
 const getPrayerIcon = (name: string) => {
   switch (name) {
@@ -29,10 +43,92 @@ export default function PrayerTab() {
   const { data: prayers, isLoading: prayersLoading } = usePrayerTimes(city, country);
   const { data: qadaList } = useQada();
   const updateQada = useUpdateQada();
-  
+  const { data: todayProgress } = useTodayProgress();
+  const { data: weeklyProgress } = useWeeklyProgress();
+  const updateProgress = useUpdatePrayerProgress();
+
   const [activeTab, setActiveTab] = useState<Tab>('times');
   const [tasbihCount, setTasbihCount] = useState(0);
   const tasbihTarget = settings?.tasbihCount || 33;
+  const [viewMode, setViewMode] = useState<'Week' | 'Month'>('Week');
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+
+  const today = format(new Date(), "yyyy-MM-dd");
+  const todayDate = new Date();
+
+  // Get days for the current view
+  const displayDays = useMemo(() => {
+    if (viewMode === 'Week') {
+      const start = currentWeekStart;
+      const end = endOfWeek(start, { weekStartsOn: 1 });
+      return eachDayOfInterval({ start, end });
+    } else {
+      const start = startOfMonth(currentWeekStart);
+      const end = endOfMonth(currentWeekStart);
+      return eachDayOfInterval({ start, end });
+    }
+  }, [currentWeekStart, viewMode]);
+
+  // Calculate prayer completion for each day
+  // In Cycle Mode, show all prayers as completed to remove guilt
+  const getDayCompletion = (date: Date): number => {
+    if (settings?.cycleMode) return 5; // Show full completion in Cycle Mode
+    if (!weeklyProgress) return 0;
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const dayProgress = weeklyProgress.find(p => p.date === dateStr);
+    if (!dayProgress) return 0;
+    let count = 0;
+    if (dayProgress.fajr) count++;
+    if (dayProgress.dhuhr) count++;
+    if (dayProgress.asr) count++;
+    if (dayProgress.maghrib) count++;
+    if (dayProgress.isha) count++;
+    return count;
+  };
+
+  const isPrayerCompleted = (prayer: string) => {
+    if (!todayProgress) return false;
+    const key = prayer.toLowerCase() as 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+    return todayProgress[key] || false;
+  };
+
+  const togglePrayer = (prayer: string) => {
+    // If in cycle mode, we still allow tracking but it's optional
+    const completed = !isPrayerCompleted(prayer);
+    updateProgress.mutate({ date: today, prayer, completed });
+  };
+
+  const markAllAsPrayed = () => {
+    PRAYERS.forEach(prayer => {
+      if (!isPrayerCompleted(prayer)) {
+        updateProgress.mutate({ date: today, prayer, completed: true });
+      }
+    });
+  };
+
+  const completedCount = PRAYERS.filter(p => isPrayerCompleted(p)).length;
+  const allCompleted = completedCount === 5;
+
+  // Get the next prayer
+  const getNextPrayer = () => {
+    if (!prayers) return null;
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
+    const currentTimeVal = currentHour * 60 + currentMin;
+
+    for (const p of PRAYERS) {
+      const timeStr = prayers.timings[p];
+      if (!timeStr) continue;
+      const timeClean = timeStr.split(" ")[0];
+      const [h, m] = timeClean.split(":").map(Number);
+      const pVal = h * 60 + m;
+      if (pVal > currentTimeVal) return p;
+    }
+    return null;
+  };
+
+  const nextPrayer = getNextPrayer();
 
   const getQadaCount = (prayer: string) => {
     return qadaList?.find((q) => q.prayerName === prayer)?.count || 0;
@@ -64,6 +160,20 @@ export default function PrayerTab() {
     <div className="min-h-screen pb-24 px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-5">
       <h1 className="text-2xl font-serif text-center">Prayer</h1>
 
+      {settings?.cycleMode && (
+        <Card className="bg-gradient-to-br from-rose-50 to-orange-50 border-rose-100 p-5 rounded-2xl animate-in fade-in slide-in-from-top duration-500">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <Heart className="w-6 h-6 text-rose-500 fill-rose-500" />
+            </div>
+            <div>
+              <p className="font-serif text-rose-800 text-lg leading-tight">Relax & Restore</p>
+              <p className="text-rose-600/80 text-sm mt-0.5">Take this time to care for yourself. Your prayers are marked as complete and your streak is safe.</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <div className="flex gap-2 p-1 bg-accent/30 rounded-2xl">
         {[
           { id: 'times' as Tab, label: 'Times', icon: Sun },
@@ -73,11 +183,10 @@ export default function PrayerTab() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
-              activeTab === tab.id 
-                ? 'bg-white shadow-sm text-foreground' 
-                : 'text-muted-foreground'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id
+              ? 'bg-white shadow-sm text-foreground'
+              : 'text-muted-foreground'
+              }`}
             data-testid={`tab-${tab.id}`}
           >
             <tab.icon className="w-4 h-4" />
@@ -113,6 +222,7 @@ export default function PrayerTab() {
             </Card>
           )}
 
+          {/* Prayer Times List with Checkboxes */}
           <Card className="bg-white/80 border-white/50 rounded-2xl overflow-hidden">
             {prayersLoading ? (
               <div className="flex justify-center py-12">
@@ -120,29 +230,206 @@ export default function PrayerTab() {
               </div>
             ) : (
               <div className="divide-y divide-primary/5">
-                {PRAYERS.map((prayer) => (
-                  <div key={prayer} className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-3">
-                      {getPrayerIcon(prayer)}
-                      <span className="font-medium">{prayer}</span>
-                    </div>
-                    <span className="text-lg font-light text-muted-foreground">
-                      {prayers?.timings[prayer]?.split(" ")[0]}
-                    </span>
+                {/* Sunrise info */}
+                {prayers && (
+                  <div className="px-4 py-2 bg-accent/20 text-center text-sm text-muted-foreground">
+                    Imsak {(prayers.timings.Imsak || prayers.timings.Fajr)?.split(" ")[0]} | Sunrise {prayers.timings.Sunrise?.split(" ")[0]}
                   </div>
-                ))}
-                <div className="flex items-center justify-between p-4 bg-accent/20">
-                  <div className="flex items-center gap-3">
-                    <Sunrise className="w-5 h-5 text-yellow-500" />
-                    <span className="font-medium text-muted-foreground">Sunrise</span>
-                  </div>
-                  <span className="text-lg font-light text-muted-foreground">
-                    {prayers?.timings.Sunrise?.split(" ")[0]}
-                  </span>
-                </div>
+                )}
+
+                {PRAYERS.map((prayer) => {
+                  const isCompleted = isPrayerCompleted(prayer);
+                  const isNext = prayer === nextPrayer;
+
+                  return (
+                    <button
+                      key={prayer}
+                      onClick={() => togglePrayer(prayer)}
+                      className={`w-full flex items-center justify-between p-4 transition-all ${isCompleted ? 'bg-primary/5' : ''
+                        } ${isNext && !settings?.cycleMode ? 'bg-primary/10' : ''} ${settings?.cycleMode ? 'opacity-80' : ''}`}
+                      data-testid={`prayer-row-${prayer.toLowerCase()}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Checkbox circle */}
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isCompleted
+                          ? settings?.cycleMode ? 'bg-rose-400 border-rose-400' : 'bg-primary border-primary'
+                          : 'border-muted-foreground/30'
+                          }`}>
+                          {isCompleted && <Check className="w-4 h-4 text-white" />}
+                        </div>
+
+                        <span className={`font-medium ${isCompleted ? 'text-muted-foreground' : ''}`}>
+                          {prayer}
+                        </span>
+                        <span className="text-lg">{getPrayerEmoji(prayer)}</span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {isNext && !settings?.cycleMode && (
+                          <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full">
+                            Now
+                          </span>
+                        )}
+                        {settings?.cycleMode && (
+                          <span className="text-[10px] bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full font-medium">
+                            Cycle Mode
+                          </span>
+                        )}
+                        <span className={`text-lg font-light ${isCompleted ? 'text-muted-foreground/50' : 'text-foreground'}`}>
+                          {prayers?.timings[prayer]?.split(" ")[0]}
+                        </span>
+                        <BellOff className="w-5 h-5 text-muted-foreground/40" />
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </Card>
+
+          {/* Mark All as Prayed Button - Hidden in Cycle Mode */}
+          {!settings?.cycleMode && !allCompleted && (
+            <Button
+              onClick={markAllAsPrayed}
+              className="w-full rounded-full bg-primary hover:bg-primary/90"
+              data-testid="button-mark-all-prayed"
+            >
+              Mark all as prayed
+            </Button>
+          )}
+
+          {settings?.cycleMode ? (
+            <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-100 p-4 rounded-2xl text-center">
+              <p className="text-purple-700 font-serif italic text-sm">
+                "Allah knows your body better than you do. Resting is not falling behind."
+              </p>
+              <p className="text-xs text-purple-500 mt-2">
+                Focus on dhikr, du'a, and listening to Quran
+              </p>
+            </Card>
+          ) : allCompleted && (
+            <div className="text-center py-2">
+              <p className="text-primary font-medium">MashaAllah! All prayers completed today</p>
+            </div>
+          )}
+
+          {/* Your Progress Section */}
+          <div className="pt-2">
+            <p className="text-foreground font-medium mb-4">Your Progress</p>
+
+            <Card className="bg-gradient-to-br from-primary/10 to-accent/30 border-white/50 p-5 rounded-3xl">
+              <div className="flex items-center justify-between mb-4">
+                {/* Week/Month Toggle */}
+                <div className="flex bg-white/60 rounded-full p-1">
+                  <button
+                    onClick={() => setViewMode('Week')}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${viewMode === 'Week' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground'
+                      }`}
+                  >
+                    Week
+                  </button>
+                  <button
+                    onClick={() => setViewMode('Month')}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${viewMode === 'Month' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground'
+                      }`}
+                  >
+                    Month
+                  </button>
+                </div>
+
+                {/* Navigation Arrows */}
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => {
+                      if (viewMode === 'Week') setCurrentWeekStart(prev => subWeeks(prev, 1));
+                      else setCurrentWeekStart(prev => subMonths(prev, 1));
+                    }}
+                    className="p-1.5 rounded-full hover:bg-white/50 transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (viewMode === 'Week') setCurrentWeekStart(prev => addWeeks(prev, 1));
+                      else setCurrentWeekStart(prev => addMonths(prev, 1));
+                    }}
+                    className="p-1.5 rounded-full hover:bg-white/50 transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className={`grid ${viewMode === 'Week' ? 'grid-cols-7' : 'grid-cols-7'} gap-y-4 gap-x-2 mb-4`}>
+                {viewMode === 'Week' && ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                  <div key={day} className="text-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                    {day}
+                  </div>
+                ))}
+                {displayDays.map((day) => {
+                  const dayNum = format(day, 'd');
+                  const completion = getDayCompletion(day);
+                  const isToday = isSameDay(day, todayDate);
+                  const isDiffMonth = !isSameMonth(day, currentWeekStart);
+                  const completionPercent = (completion / 5) * 100;
+
+                  return (
+                    <div key={day.toISOString()} className={`flex flex-col items-center gap-1.5 ${isDiffMonth ? 'opacity-20' : ''}`}>
+                      <span className={`text-[10px] font-bold ${isToday ? 'text-primary' : 'text-foreground/60'}`}>
+                        {dayNum}
+                      </span>
+                      {/* Circular progress indicator */}
+                      <div className="relative w-7 h-7">
+                        <svg className="w-7 h-7 -rotate-90" viewBox="0 0 36 36">
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="14"
+                            fill="none"
+                            className="stroke-primary/10"
+                            strokeWidth="4"
+                          />
+                          {completion > 0 && (
+                            <circle
+                              cx="18"
+                              cy="18"
+                              r="14"
+                              fill="none"
+                              className={cn(
+                                "transition-all duration-1000 ease-out",
+                                settings?.cycleMode ? "stroke-rose-400" : "stroke-primary"
+                              )}
+                              strokeWidth="4"
+                              strokeDasharray={`${completionPercent * 0.88} 100`}
+                              strokeLinecap="round"
+                            />
+                          )}
+                        </svg>
+                        {completion === 5 && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Check className={`w-3 h-3 ${settings?.cycleMode ? 'text-rose-500' : 'text-primary'}`} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Month label and share button */}
+              <div className="flex items-center justify-between pt-3 border-t border-primary/10">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {format(currentWeekStart, 'MMMM yyyy')}
+                  </span>
+                </div>
+                <button className="p-2 rounded-full hover:bg-white/50 transition-colors">
+                  <Share2 className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
+            </Card>
+          </div>
 
           <Link href="/qibla">
             <Card className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer">
@@ -165,10 +452,20 @@ export default function PrayerTab() {
 
       {activeTab === 'qada' && (
         <div className="space-y-4">
-          <Card className="bg-gradient-to-br from-primary/10 to-accent/30 border-white/50 p-5 rounded-2xl text-center">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Total Missed</p>
-            <p className="text-5xl font-serif text-foreground" data-testid="text-total-missed">{totalMissed}</p>
-            <p className="text-sm text-muted-foreground mt-1">prayers to make up</p>
+          <Card className={`bg-gradient-to-br ${settings?.cycleMode ? 'from-rose-50 to-orange-50 border-rose-100' : 'from-primary/10 to-accent/30 border-white/50'} p-5 rounded-2xl text-center`}>
+            {settings?.cycleMode ? (
+              <div className="py-2">
+                <Heart className="w-10 h-10 text-rose-500 fill-rose-500 mx-auto mb-3" />
+                <p className="text-xs uppercase tracking-widest text-rose-600 mb-1">Focus on Heart</p>
+                <p className="text-lg font-serif text-rose-800 italic">No makeup prayers today</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Total Missed</p>
+                <p className="text-5xl font-serif text-foreground" data-testid="text-total-missed">{totalMissed}</p>
+                <p className="text-sm text-muted-foreground mt-1">prayers to make up</p>
+              </>
+            )}
           </Card>
 
           <Card className="bg-white/80 border-white/50 p-4 rounded-2xl">
@@ -220,7 +517,7 @@ export default function PrayerTab() {
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Count</p>
             <p className="text-7xl font-serif text-foreground mb-2" data-testid="text-tasbih-count">{tasbihCount}</p>
             <p className="text-sm text-muted-foreground">Target: {tasbihTarget}</p>
-            
+
             {tasbihCount >= tasbihTarget && (
               <p className="text-primary font-medium mt-2">Target reached! MashaAllah</p>
             )}

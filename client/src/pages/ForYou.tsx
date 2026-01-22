@@ -1,339 +1,672 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Play, Bookmark, Share2, Copy, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useState, useMemo } from "react";
+import { cn } from "@/lib/utils";
+import { Search, Play, Pause, Bookmark, Share2, Copy, ChevronLeft, ChevronRight, X, Sun, Moon, Bed, Shield, Heart, HandHeart, Sparkles, Car, BookOpen, Clock, Volume2, CheckCircle2, Circle, Mic, Image, PenLine, Smile } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
+import { Link } from "wouter";
+import { GUIDED_PROGRAMS, type GuidedProgram, type DayContent } from "@/data/guided-programs";
 
-interface TopicContent {
-  type: 'ayah' | 'meaning' | 'dua';
-  arabic?: string;
-  english: string;
-  reference?: string;
-  transliteration?: string;
-}
-
-interface Topic {
-  id: string;
-  title: string;
-  category: string;
-  content: TopicContent[];
-}
-
-const TOPICS: Topic[] = [
-  {
-    id: "anxiety",
-    title: "Anxiety & Overthinking",
-    category: "Calm & Emotional",
-    content: [
-      { type: 'ayah', arabic: "أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ", english: "Verily, in the remembrance of Allah do hearts find rest.", reference: "Surah Ar-Ra'd 13:28" },
-      { type: 'meaning', english: "When anxiety overwhelms you, know that turning to Allah brings true peace. Your racing thoughts can find stillness in His remembrance. This isn't about suppressing your feelings—it's about anchoring yourself in something greater than your worries." },
-      { type: 'dua', arabic: "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ", english: "O Allah, I seek refuge in You from anxiety and sorrow.", transliteration: "Allahumma inni a'udhu bika minal-hammi wal-hazan" },
-      { type: 'ayah', arabic: "لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا", english: "Allah does not burden a soul beyond that it can bear.", reference: "Surah Al-Baqarah 2:286" },
-      { type: 'meaning', english: "Whatever you're facing right now, Allah knows you can handle it. He sees your strength even when you can't. Trust that He wouldn't give you this test if you weren't capable of passing it." },
-    ]
-  },
-  {
-    id: "heartbreak",
-    title: "Heartbreak & Healing",
-    category: "Love & Relationships",
-    content: [
-      { type: 'ayah', arabic: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا", english: "For indeed, with hardship comes ease.", reference: "Surah Ash-Sharh 94:5" },
-      { type: 'meaning', english: "Your heart may feel shattered right now, but healing is coming. Allah promises that ease accompanies every hardship—not after it, but with it. Even in your pain, blessings are unfolding." },
-      { type: 'dua', arabic: "اللَّهُمَّ اجْبُرْ كَسْرِي", english: "O Allah, mend my brokenness.", transliteration: "Allahumma-jbur kasri" },
-      { type: 'ayah', arabic: "وَعَسَىٰ أَن تَكْرَهُوا شَيْئًا وَهُوَ خَيْرٌ لَّكُمْ", english: "Perhaps you hate a thing and it is good for you.", reference: "Surah Al-Baqarah 2:216" },
-      { type: 'meaning', english: "What feels like loss today may be protection tomorrow. Allah sees the full picture when we only see a fragment. Trust His plan for your heart." },
-    ]
-  },
-  {
-    id: "selfworth",
-    title: "Self-Worth",
-    category: "Strength & Self-Worth",
-    content: [
-      { type: 'ayah', arabic: "لَقَدْ خَلَقْنَا الْإِنسَانَ فِي أَحْسَنِ تَقْوِيمٍ", english: "We have certainly created man in the best of stature.", reference: "Surah At-Tin 95:4" },
-      { type: 'meaning', english: "Allah created you with intention and beauty. Your worth isn't determined by others' opinions or your achievements—it was established by your Creator. You are enough because He made you enough." },
-      { type: 'dua', arabic: "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ", english: "O Allah, help me remember You, be grateful to You, and worship You beautifully.", transliteration: "Allahumma a'inni 'ala dhikrika wa shukrika wa husni 'ibadatik" },
-    ]
-  },
-  {
-    id: "protection",
-    title: "Protection",
-    category: "Spiritual Protection",
-    content: [
-      { type: 'ayah', arabic: "وَمَن يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ", english: "And whoever relies upon Allah - then He is sufficient for him.", reference: "Surah At-Talaq 65:3" },
-      { type: 'meaning', english: "When you feel vulnerable or threatened, remember that Allah's protection surrounds you. He is the ultimate guardian—nothing reaches you except by His will, and He never abandons those who trust Him." },
-      { type: 'dua', arabic: "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ", english: "In the name of Allah, with whose name nothing on earth or in heaven can cause harm.", transliteration: "Bismillahilladhi la yadurru ma'asmihi shay'un fil-ardi wa la fis-sama" },
-    ]
-  },
-  {
-    id: "patience",
-    title: "Patience",
-    category: "Calm & Emotional",
-    content: [
-      { type: 'ayah', arabic: "إِنَّ اللَّهَ مَعَ الصَّابِرِينَ", english: "Indeed, Allah is with the patient.", reference: "Surah Al-Baqarah 2:153" },
-      { type: 'meaning', english: "Patience isn't passive waiting—it's active trust. When you choose sabr, you're choosing to believe that Allah's timing is perfect even when yours feels unbearable. He is WITH you in this wait." },
-      { type: 'dua', arabic: "رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا", english: "Our Lord, pour upon us patience.", transliteration: "Rabbana afrigh 'alayna sabra" },
-    ]
-  },
-  {
-    id: "peace",
-    title: "Peace & Sleep",
-    category: "Calm & Emotional",
-    content: [
-      { type: 'ayah', arabic: "هُوَ الَّذِي أَنزَلَ السَّكِينَةَ فِي قُلُوبِ الْمُؤْمِنِينَ", english: "It is He who sent down tranquility into the hearts of the believers.", reference: "Surah Al-Fath 48:4" },
-      { type: 'meaning', english: "Peace isn't something you have to chase—it's a gift Allah places in your heart when you turn to Him. As you prepare for sleep, release your worries into His hands. He watches over you." },
-      { type: 'dua', arabic: "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا", english: "In Your name, O Allah, I die and I live.", transliteration: "Bismika Allahumma amutu wa ahya" },
-    ]
-  },
-  {
-    id: "stress",
-    title: "Stress & Pressure",
-    category: "Calm & Emotional",
-    content: [
-      { type: 'ayah', arabic: "وَمَا أَصَابَكُم مِّن مُّصِيبَةٍ فَبِمَا كَسَبَتْ أَيْدِيكُمْ وَيَعْفُو عَن كَثِيرٍ", english: "And whatever strikes you of disaster - it is for what your hands have earned; but He pardons much.", reference: "Surah Ash-Shura 42:30" },
-      { type: 'meaning', english: "Stress often comes when we feel we must control everything. Remember that your efforts matter, but the outcome belongs to Allah. Do your best, then trust Him with the rest." },
-      { type: 'dua', arabic: "اللَّهُمَّ لَا سَهْلَ إِلَّا مَا جَعَلْتَهُ سَهْلًا", english: "O Allah, there is no ease except in what You have made easy.", transliteration: "Allahumma la sahla illa ma ja'altahu sahla" },
-    ]
-  },
-  {
-    id: "sadness",
-    title: "Sadness & Crying",
-    category: "Calm & Emotional",
-    content: [
-      { type: 'ayah', arabic: "إِنَّمَا أَشْكُو بَثِّي وَحُزْنِي إِلَى اللَّهِ", english: "I only complain of my suffering and my grief to Allah.", reference: "Surah Yusuf 12:86" },
-      { type: 'meaning', english: "Your tears are not weakness—they are a form of release that Allah understands. Prophet Yaqub cried until he lost his sight, yet his faith never wavered. Let yourself feel, then let yourself heal." },
-      { type: 'dua', arabic: "اللَّهُمَّ رَحْمَتَكَ أَرْجُو فَلَا تَكِلْنِي إِلَىٰ نَفْسِي طَرْفَةَ عَيْنٍ", english: "O Allah, it is Your mercy I hope for. Do not leave me to myself for even the blink of an eye.", transliteration: "Allahumma rahmataka arju fala takilni ila nafsi tarfata 'ayn" },
-    ]
-  },
-  {
-    id: "loneliness",
-    title: "Loneliness",
-    category: "Love & Relationships",
-    content: [
-      { type: 'ayah', arabic: "وَنَحْنُ أَقْرَبُ إِلَيْهِ مِنْ حَبْلِ الْوَرِيدِ", english: "And We are closer to him than his jugular vein.", reference: "Surah Qaf 50:16" },
-      { type: 'meaning', english: "You may feel alone, but you never truly are. Allah is closer to you than you can imagine—closer than your own breath. He hears every unspoken word in your heart." },
-      { type: 'dua', arabic: "اللَّهُمَّ آنِسْ وَحْشَتِي", english: "O Allah, comfort my loneliness.", transliteration: "Allahumma anis wahshati" },
-    ]
-  },
-  {
-    id: "gratitude",
-    title: "Gratitude",
-    category: "Barakah & Growth",
-    content: [
-      { type: 'ayah', arabic: "لَئِن شَكَرْتُمْ لَأَزِيدَنَّكُمْ", english: "If you are grateful, I will surely increase you.", reference: "Surah Ibrahim 14:7" },
-      { type: 'meaning', english: "Gratitude isn't just saying thank you—it's a state of the heart that recognizes Allah's blessings in every moment. When you practice gratitude, you open the door for more blessings to flow in." },
-      { type: 'dua', arabic: "الْحَمْدُ لِلَّهِ عَلَىٰ كُلِّ حَالٍ", english: "Praise be to Allah in every circumstance.", transliteration: "Alhamdulillahi 'ala kulli hal" },
-    ]
-  },
-  {
-    id: "forgiveness",
-    title: "Repentance & Forgiveness",
-    category: "Spiritual Protection",
-    content: [
-      { type: 'ayah', arabic: "قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ", english: "Say, 'O My servants who have transgressed against themselves, do not despair of the mercy of Allah.'", reference: "Surah Az-Zumar 39:53" },
-      { type: 'meaning', english: "No matter what you've done, Allah's mercy is greater. He loves to forgive, and He is waiting for you to turn back. Your past doesn't define your future with Him." },
-      { type: 'dua', arabic: "أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ الَّذِي لَا إِلَٰهَ إِلَّا هُوَ الْحَيَّ الْقَيُّومَ وَأَتُوبُ إِلَيْهِ", english: "I seek forgiveness from Allah, the Magnificent, there is no god but He, the Ever-Living, the Self-Sustaining, and I repent to Him.", transliteration: "Astaghfirullah al-'Azim alladhi la ilaha illa huwa al-Hayy al-Qayyum wa atubu ilayh" },
-    ]
-  },
-  {
-    id: "trust",
-    title: "Trust in Allah",
-    category: "Barakah & Growth",
-    content: [
-      { type: 'ayah', arabic: "وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا وَيَرْزُقْهُ مِنْ حَيْثُ لَا يَحْتَسِبُ", english: "And whoever fears Allah - He will make for him a way out and will provide for him from where he does not expect.", reference: "Surah At-Talaq 65:2-3" },
-      { type: 'meaning', english: "When all doors seem closed, trust that Allah is opening one you cannot yet see. His provision comes in unexpected ways, at unexpected times. Keep your trust in Him unwavering." },
-      { type: 'dua', arabic: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ", english: "Allah is sufficient for us, and He is the best disposer of affairs.", transliteration: "Hasbunallahu wa ni'mal wakeel" },
-    ]
-  },
-];
-
-const QUICK_PICKS = [
-  { id: "anxiety", label: "Anxiety & Overthinking" },
-  { id: "heartbreak", label: "Heartbreak & Healing" },
-  { id: "selfworth", label: "Self-Worth" },
-  { id: "protection", label: "Protection" },
-  { id: "patience", label: "Patience" },
-  { id: "peace", label: "Peace & Sleep" },
+// Daily Adhkar Categories
+const ADHKAR_CATEGORIES = [
+  { id: "morning", title: "Morning Adhkar", icon: Sun, color: "text-amber-500", bg: "bg-amber-50", description: "Start your day protected" },
+  { id: "evening", title: "Evening Adhkar", icon: Moon, color: "text-indigo-500", bg: "bg-indigo-50", description: "End your day in peace" },
+  { id: "sleep", title: "Sleep & Waking", icon: Bed, color: "text-purple-500", bg: "bg-purple-50", description: "Rest in Allah's care" },
+  { id: "protection", title: "Protection Duas", icon: Shield, color: "text-blue-500", bg: "bg-blue-50", description: "Shield yourself daily" },
+  { id: "gratitude", title: "Gratitude", icon: Sparkles, color: "text-yellow-500", bg: "bg-yellow-50", description: "Thank Allah always" },
+  { id: "forgiveness", title: "Forgiveness", icon: HandHeart, color: "text-emerald-500", bg: "bg-emerald-50", description: "Seek His mercy" },
+  { id: "travel", title: "Travel Duas", icon: Car, color: "text-cyan-500", bg: "bg-cyan-50", description: "Journey safely" },
 ];
 
 const CATEGORIES = [
   {
     name: "Calm & Emotional",
-    topics: ["anxiety", "stress", "sadness", "peace", "patience"]
+    programs: ["anxiety", "overthinking", "sadness", "stress", "grief", "anger"]
+  },
+  {
+    name: "Spiritual Growth",
+    programs: ["lowiman", "patience", "gratitude", "confusion", "envy"]
   },
   {
     name: "Love & Relationships",
-    topics: ["heartbreak", "loneliness"]
-  },
-  {
-    name: "Strength & Self-Worth",
-    topics: ["selfworth"]
-  },
-  {
-    name: "Spiritual Protection",
-    topics: ["protection", "forgiveness"]
-  },
-  {
-    name: "Barakah & Growth",
-    topics: ["gratitude", "trust"]
+    programs: ["heartbreak", "loneliness"]
   },
 ];
 
+// Section types for the premium 7-step structure
+type SectionType = 'intro' | 'ayah' | 'story' | 'reflection' | 'action' | 'journal' | 'closing';
+
+import { useProgrammeProgress, useUpdateProgrammeProgress, useAllProgrammeProgress } from "@/hooks/use-programme-progress";
+
 export default function ForYou() {
-  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const { data: settings } = useSettings();
+  const updateSettings = useUpdateSettings();
+  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  const selectedProgram = useMemo(() =>
+    GUIDED_PROGRAMS.find(p => p.id === selectedProgramId) || null,
+    [selectedProgramId]);
+
+  const { data: programProgress } = useProgrammeProgress(selectedProgramId);
+  const { data: allProgress } = useAllProgrammeProgress();
+  const updateProgress = useUpdateProgrammeProgress();
+
+  const [currentDay, setCurrentDay] = useState(0);
+  const [currentSection, setCurrentSection] = useState<SectionType>('ayah');
   const [searchQuery, setSearchQuery] = useState("");
   const [showTransliteration, setShowTransliteration] = useState(false);
+  const [activeTab, setActiveTab] = useState<'foryou' | 'adhkar'>('foryou');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
+  const [journalEntries, setJournalEntries] = useState<Record<string, string>>({});
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const filteredTopics = useMemo(() => {
+  // Sync local state with progress when program is first opened
+  useEffect(() => {
+    if (programProgress && selectedProgram) {
+      // Set current day from progress if we just opened the program or it's not set
+      if (programProgress.currentDay !== undefined) {
+        const dayIndex = Math.min(programProgress.currentDay, selectedProgram.days.length - 1);
+        // Only jump to progress day if we haven't started interacting (still Day 0) or if program changed
+        setCurrentDay(dayIndex);
+      }
+
+      // Load journal entries
+      if (programProgress.journalEntries) {
+        try {
+          const entries = JSON.parse(programProgress.journalEntries);
+          setJournalEntries(prev => {
+            // Merge or replace? Replace is safer to ensure consistency with server
+            return entries;
+          });
+        } catch (e) {
+          console.error("Failed to parse journal entries", e);
+        }
+      }
+
+      // Load emotional check-ins if needed
+      if (programProgress.emotionalCheckIns) {
+        try {
+          const checkIns = JSON.parse(programProgress.emotionalCheckIns);
+          // If we had a state for this, we'd set it here
+        } catch (e) {
+          console.error("Failed to parse emotional check-ins", e);
+        }
+      }
+    }
+  }, [selectedProgramId, !!programProgress]);
+
+  const filteredPrograms = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const query = searchQuery.toLowerCase();
-    return TOPICS.filter(topic =>
-      topic.title.toLowerCase().includes(query) ||
-      topic.category.toLowerCase().includes(query) ||
-      topic.content.some(c => c.english.toLowerCase().includes(query))
+    return GUIDED_PROGRAMS.filter(program =>
+      program.title.toLowerCase().includes(query) ||
+      program.subtitle.toLowerCase().includes(query) ||
+      program.category.toLowerCase().includes(query) ||
+      program.description.toLowerCase().includes(query)
     );
   }, [searchQuery]);
 
   const isSearching = searchQuery.trim().length > 0;
 
-  const openTopic = (topicId: string) => {
-    const topic = TOPICS.find(t => t.id === topicId);
-    if (topic) {
-      setSelectedTopic(topic);
-      setCurrentCardIndex(0);
+  const openProgram = (programId: string) => {
+    setSelectedProgramId(programId);
+    setCurrentSection('ayah');
+    setSelectedEmotions([]);
+    setJournalEntries({});
+  };
+
+  const closeProgram = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setIsPlaying(false);
+    setSelectedProgramId(null);
+    setCurrentDay(0);
+    setCurrentSection('ayah');
+    setSelectedEmotions([]);
+    setJournalEntries({});
+  };
+
+  const saveProgress = (dayOffset: number = 0) => {
+    if (selectedProgram && programProgress) {
+      const currentCompleted = programProgress.completedDays ? JSON.parse(programProgress.completedDays) : [];
+
+      const updates: any = {
+        journalEntries: JSON.stringify(journalEntries),
+        completedDays: JSON.stringify(currentCompleted),
+      };
+
+      if (dayOffset > 0) {
+        const newDay = Math.min(currentDay + dayOffset, selectedProgram.daysCount);
+        updates.currentDay = Math.max(programProgress.currentDay || 0, newDay);
+      }
+
+      updateProgress.mutate({
+        programmeId: selectedProgram.id,
+        updates
+      });
+    } else if (selectedProgram) {
+      // First time starting the program
+      updateProgress.mutate({
+        programmeId: selectedProgram.id,
+        updates: {
+          currentDay: dayOffset > 0 ? currentDay + dayOffset : currentDay,
+          journalEntries: JSON.stringify(journalEntries),
+          completedDays: dayOffset > 0 ? JSON.stringify([currentDay]) : "[]"
+        }
+      });
     }
   };
 
-  const closeTopic = () => {
-    setSelectedTopic(null);
-    setCurrentCardIndex(0);
-  };
+  const nextSection = () => {
+    const currentIndex = availableSections.findIndex(s => s.key === currentSection);
 
-  const nextCard = () => {
-    if (selectedTopic && currentCardIndex < selectedTopic.content.length - 1) {
-      setCurrentCardIndex(prev => prev + 1);
+    // Auto-save when moving from certain sections
+    if (currentSection === 'journal' || currentSection === 'action') {
+      saveProgress();
+    }
+
+    if (currentIndex < availableSections.length - 1) {
+      setCurrentSection(availableSections[currentIndex + 1].key);
+    } else if (currentSection === 'closing') {
+      // Do nothing, let completeDay handle it
     }
   };
 
-  const prevCard = () => {
-    if (currentCardIndex > 0) {
-      setCurrentCardIndex(prev => prev - 1);
+  const prevSection = () => {
+    const currentIndex = availableSections.findIndex(s => s.key === currentSection);
+
+    if (currentSection === 'journal') {
+      saveProgress();
+    }
+
+    if (currentIndex > 0) {
+      setCurrentSection(availableSections[currentIndex - 1].key);
     }
   };
 
-  const currentCard = selectedTopic?.content[currentCardIndex];
+  const completeDay = () => {
+    if (selectedProgram) {
+      const isLastDay = currentDay === selectedProgram.days.length - 1;
 
-  if (selectedTopic) {
+      // Update completed days list in our save helper
+      const currentCompleted = programProgress?.completedDays ? JSON.parse(programProgress.completedDays) : [];
+      if (!currentCompleted.includes(currentDay)) {
+        currentCompleted.push(currentDay);
+      }
+
+      const updates: any = {
+        completedDays: JSON.stringify(currentCompleted),
+        journalEntries: JSON.stringify(journalEntries)
+      };
+
+      if (!isLastDay) {
+        const newDay = currentDay + 1;
+        setCurrentDay(newDay);
+        setCurrentSection('intro'); // Start next day with intro
+        setSelectedEmotions([]);
+
+        // Advance progress to newDay (but don't decrease if user is re-reading)
+        updates.currentDay = Math.max(programProgress?.currentDay || 0, newDay);
+
+        updateProgress.mutate({
+          programmeId: selectedProgram.id,
+          updates
+        });
+      } else {
+        // Handle program completion
+        updates.currentDay = selectedProgram.daysCount;
+        updateProgress.mutate({
+          programmeId: selectedProgram.id,
+          updates
+        });
+        closeProgram();
+      }
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+  };
+
+  const nextDay = () => {
+    // legacy function replaced by completeDay logic or section navigation
+    nextSection();
+  };
+
+  const prevDay = () => {
+    // legacy function replaced by section navigation
+    prevSection();
+  };
+
+  const currentDayContent = selectedProgram?.days[currentDay];
+
+  // Normalize day content to ensure new UI doesn't crash with legacy data
+  const normalizedDayContent = useMemo(() => {
+    if (!currentDayContent) return null;
+
+    const base = currentDayContent as any;
+
+    const normalized: any = {
+      dayNumber: base.dayNumber,
+      title: base.title,
+      isWeeklyDepth: base.isWeeklyDepth,
+      introAudio: base.introAudio || {
+        title: base.openingAudio?.title || base.title || "Introduction",
+        duration: base.openingAudio?.duration || base.quranAudio?.duration || "3:00",
+        audioUrl: base.openingAudio?.audioUrl || base.quranAudio?.audioUrl || "",
+        description: base.openingAudio?.transcript || base.ayah?.emotionalRelevance || "Welcome to today's session."
+      },
+      ayahStudy: base.ayahStudy || {
+        arabic: base.ayah?.arabic || "",
+        translation: base.ayah?.english || "",
+        reference: base.ayah?.reference || "",
+        emotionalExplanation: base.ayah?.emotionalRelevance || "",
+        context: "Daily Quranic Guidance",
+        revelationContext: "Quran",
+        audioUrl: base.ayah?.audioUrl || ""
+      },
+      multiPartStory: base.multiPartStory || {
+        audioUrl: base.quranAudio?.audioUrl || "",
+        quranicStory: {
+          title: base.story?.title || "Story of Reflection",
+          content: typeof base.story === 'string' ? base.story : (base.story?.content || "")
+        },
+        sisterScenario: {
+          content: base.visualReflection?.prompt || "A modern day reflection on this lesson."
+        },
+        connection: base.story?.lesson || base.application || ""
+      },
+      reflectionPrompts: base.reflectionPrompts || (base.guidedReflection?.prompt
+        ? [base.guidedReflection.prompt]
+        : ["How does this ayah speak to your heart today?", "What is one thing you can let go of?", "How can you draw closer to Allah?"]),
+      realLifeAction: base.realLifeAction || {
+        emotional: "Take 3 deep breaths of Sakina.",
+        spiritual: base.actionStep?.reminder || "Seek peace in Dhikr.",
+        practical: base.actionStep?.description || "Notice one blessing today."
+      },
+      journalPrompts: base.journalPrompts || base.guidedReflection?.journalPrompts || ["Reflections on today's ayah..."],
+      closingRitual: base.closingRitual || {
+        dua: base.dua?.arabic || "SubhanAllah",
+        reassurance: base.closingReassurance || "Allah is with you.",
+        restPermission: "You have done enough for today. Rest in His care."
+      }
+    };
+
+    return normalized as Required<DayContent>;
+  }, [currentDayContent]);
+
+  const toggleAudio = () => {
+    if (!normalizedDayContent) return;
+
+    let audioUrl = '';
+    if (currentSection === 'intro') audioUrl = normalizedDayContent.introAudio.audioUrl || '';
+    else if (currentSection === 'ayah') audioUrl = normalizedDayContent.ayahStudy.audioUrl || '';
+    else if (currentSection === 'story') audioUrl = normalizedDayContent.multiPartStory.audioUrl || '';
+
+    if (audioUrl) {
+      if (isPlaying && audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        if (!audioRef.current) {
+          audioRef.current = new Audio(audioUrl);
+          audioRef.current.onended = () => setIsPlaying(false);
+        } else if (audioRef.current.src !== audioUrl) {
+          audioRef.current.pause();
+          audioRef.current = new Audio(audioUrl);
+          audioRef.current.onended = () => setIsPlaying(false);
+        }
+        audioRef.current.play();
+        setIsPlaying(true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setIsPlaying(false);
+  }, [currentDay, currentSection, selectedProgramId]);
+
+  const availableSections: { key: SectionType; label: string; icon: React.ReactNode }[] = [
+    { key: 'intro', label: 'Intro', icon: <Volume2 className="w-3 h-3" /> },
+    { key: 'ayah', label: 'Ayah', icon: <BookOpen className="w-3 h-3" /> },
+    { key: 'story', label: 'Story', icon: <BookOpen className="w-3 h-3" /> },
+    { key: 'reflection', label: 'Reflect', icon: <Sparkles className="w-3 h-3" /> },
+    { key: 'action', label: 'Action', icon: <Heart className="w-3 h-3" /> },
+    { key: 'journal', label: 'Journal', icon: <PenLine className="w-3 h-3" /> },
+    { key: 'closing', label: 'Closing', icon: <HandHeart className="w-3 h-3" /> },
+  ];
+
+  if (selectedProgram && normalizedDayContent) {
+    const isWeeklyDepth = normalizedDayContent.isWeeklyDepth;
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-accent/20 pb-24">
+        {/* Header with Progress */}
         <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg px-4 py-4 border-b border-primary/5">
-          <div className="max-w-lg mx-auto flex items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={closeTopic} className="rounded-full" data-testid="button-close-topic">
-              <X className="w-5 h-5" />
-            </Button>
-            <div className="text-center">
-              <p className="font-serif text-lg">{selectedTopic.title}</p>
-              <p className="text-xs text-muted-foreground">{currentCardIndex + 1} of {selectedTopic.content.length}</p>
+          <div className="max-w-lg mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              <Button variant="ghost" size="icon" onClick={closeProgram} className="rounded-full" data-testid="button-close-program">
+                <X className="w-5 h-5" />
+              </Button>
+              <div className="text-center flex-1">
+                <p className="font-serif text-lg">{selectedProgram.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  Day {normalizedDayContent.dayNumber} of {selectedProgram.daysCount}
+                  {isWeeklyDepth && <span className="ml-2 text-amber-600">Weekly Depth</span>}
+                </p>
+              </div>
+              <div className="w-9" />
             </div>
-            <div className="w-9" />
+
+            {/* Progress Bar */}
+            <div className="relative h-2 bg-primary/10 rounded-full overflow-hidden">
+              <div
+                className="absolute left-0 top-0 h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${(currentDay / selectedProgram.daysCount) * 100}%` }}
+              />
+            </div>
+            <p className="text-xs text-center text-muted-foreground mt-1">
+              Your Daily Journey
+            </p>
           </div>
         </div>
 
-        <div className="px-4 pt-6 max-w-lg mx-auto">
-          <div className="relative min-h-[400px]">
-            {currentCard?.type === 'ayah' && (
-              <Card className="bg-white/90 border-white/50 p-6 rounded-3xl space-y-4" data-testid="card-ayah">
-                <span className="text-xs uppercase tracking-widest text-primary font-medium">Ayah</span>
-                <p className="text-3xl font-arabic text-right leading-loose" dir="rtl">
-                  {currentCard.arabic}
-                </p>
-                <p className="text-lg text-foreground leading-relaxed italic">
-                  "{currentCard.english}"
-                </p>
-                <p className="text-sm text-muted-foreground">{currentCard.reference}</p>
-                <div className="flex items-center gap-2 pt-4">
-                  <Button variant="outline" size="sm" className="rounded-full gap-2">
-                    <Play className="w-4 h-4" /> Play
-                  </Button>
-                  <Button variant="outline" size="sm" className="rounded-full gap-2">
-                    <Bookmark className="w-4 h-4" /> Save
-                  </Button>
-                  <Button variant="outline" size="sm" className="rounded-full gap-2">
-                    <Share2 className="w-4 h-4" /> Share
-                  </Button>
-                </div>
-                <p className="text-xs text-center text-muted-foreground pt-2">Share this with other sisters</p>
-              </Card>
-            )}
-
-            {currentCard?.type === 'meaning' && (
-              <Card className="bg-gradient-to-br from-primary/5 to-accent/20 border-white/50 p-6 rounded-3xl space-y-4" data-testid="card-meaning">
-                <span className="text-xs uppercase tracking-widest text-primary font-medium">What this means for you today</span>
-                <p className="text-lg text-foreground leading-relaxed">
-                  {currentCard.english}
-                </p>
-              </Card>
-            )}
-
-            {currentCard?.type === 'dua' && (
-              <Card className="bg-white/90 border-white/50 p-6 rounded-3xl space-y-4" data-testid="card-dua">
-                <span className="text-xs uppercase tracking-widest text-primary font-medium">Dua</span>
-                <p className="text-2xl font-arabic text-right leading-loose" dir="rtl">
-                  {currentCard.arabic}
-                </p>
-                {showTransliteration && currentCard.transliteration && (
-                  <p className="text-sm text-primary italic">{currentCard.transliteration}</p>
+        <div className="max-w-lg mx-auto px-4 pt-6 space-y-8">
+          {/* Section Selector */}
+          <div className="flex gap-2 p-1 bg-white/40 rounded-2xl overflow-x-auto no-scrollbar scroll-smooth">
+            {availableSections.map(({ key, label, icon }) => (
+              <button
+                key={key}
+                onClick={() => setCurrentSection(key)}
+                className={cn(
+                  "flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                  currentSection === key
+                    ? "bg-white shadow-sm text-primary scale-105"
+                    : "text-muted-foreground hover:bg-white/30"
                 )}
-                <p className="text-lg text-foreground leading-relaxed">
-                  {currentCard.english}
-                </p>
-                <div className="flex flex-wrap items-center gap-2 pt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-full"
-                    onClick={() => setShowTransliteration(!showTransliteration)}
-                  >
-                    {showTransliteration ? 'Hide' : 'Show'} Transliteration
-                  </Button>
-                  <Button variant="outline" size="sm" className="rounded-full gap-2">
-                    <Copy className="w-4 h-4" /> Copy
-                  </Button>
-                  <Button variant="outline" size="sm" className="rounded-full gap-2">
-                    <Share2 className="w-4 h-4" /> Share
-                  </Button>
-                </div>
-              </Card>
-            )}
-
+                data-testid={`section-tab-${key}`}
+              >
+                {icon}
+                {label}
+              </button>
+            ))}
           </div>
 
-          <div className="flex items-center justify-between mt-6">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={prevCard} 
-              disabled={currentCardIndex === 0}
-              className="rounded-full w-12 h-12"
-              data-testid="button-prev-card"
+          <div className="min-h-[400px]">
+            {/* 1. GUIDED AUDIO INTRO */}
+            {currentSection === 'intro' && (
+              <Card className="bg-white/95 border-white/50 p-8 rounded-3xl space-y-8 text-center animate-in fade-in zoom-in duration-500" data-testid="card-intro">
+                <div className="space-y-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mic className="w-8 h-8 text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-serif text-foreground">{normalizedDayContent.introAudio.title}</h2>
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={toggleAudio}
+                      className="rounded-full gap-2 px-8 h-12 text-lg shadow-lg shadow-primary/20"
+                    >
+                      {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                      {isPlaying ? 'Pause Intro' : 'Listen to Intro'}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest">{normalizedDayContent.introAudio.duration} mins • Human Guidance</p>
+                </div>
+                <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                  <p className="text-sm text-foreground leading-relaxed italic">
+                    {normalizedDayContent.introAudio.description}
+                  </p>
+                </div>
+              </Card>
+            )}
+
+            {/* 2. QUR’AN AYAH STUDY */}
+            {currentSection === 'ayah' && (
+              <Card className="bg-white/90 border-white/50 p-6 rounded-3xl space-y-6" data-testid="card-ayah">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs uppercase tracking-widest text-primary font-bold">Qur'an Ayah Study</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-full gap-2 text-primary hover:bg-primary/10"
+                    onClick={toggleAudio}
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    Listen
+                  </Button>
+                </div>
+                <div className="space-y-6 bg-accent/10 p-6 rounded-2xl">
+                  <p className="text-4xl font-arabic text-right leading-[2]" dir="rtl">
+                    {normalizedDayContent.ayahStudy.arabic}
+                  </p>
+                  <p className="text-lg text-foreground leading-relaxed font-serif italic border-l-4 border-primary/20 pl-4 py-2">
+                    "{normalizedDayContent.ayahStudy.translation}"
+                  </p>
+                  <div className="flex justify-between items-center text-xs text-muted-foreground">
+                    <span>{normalizedDayContent.ayahStudy.reference}</span>
+                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full capitalize">{normalizedDayContent.ayahStudy.revelationContext}</span>
+                  </div>
+                </div>
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-widest text-primary/60">Emotional Explanation</p>
+                    <p className="text-sm text-foreground leading-relaxed">{normalizedDayContent.ayahStudy.emotionalExplanation}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-primary/5">
+                    <p className="text-xs text-muted-foreground italic">Context: {normalizedDayContent.ayahStudy.context}</p>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* 3. MULTI-PART STORY */}
+            {currentSection === 'story' && (
+              <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-100 p-6 rounded-3xl space-y-6" data-testid="card-story">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-amber-600" />
+                    <span className="text-xs uppercase tracking-widest text-amber-700 font-bold">The Lesson</span>
+                  </div>
+                  {normalizedDayContent.multiPartStory.audioUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full gap-2 text-amber-700 hover:bg-amber-100"
+                      onClick={toggleAudio}
+                    >
+                      {isPlaying ? <Pause className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                      {isPlaying ? 'Pause Audio' : 'Listen to Story'}
+                    </Button>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-serif text-amber-900">{normalizedDayContent.multiPartStory.quranicStory.title}</h3>
+                  <div className="space-y-4 text-base text-amber-900/80 leading-relaxed font-serif text-justify">
+                    {(normalizedDayContent.multiPartStory.quranicStory.content || '').split('\n\n').map((para: string, i: number) => (
+                      <p key={i}>{para}</p>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-amber-200/50 space-y-4">
+                  <div className="bg-white/60 p-5 rounded-2xl border border-amber-200/50">
+                    <p className="text-xs font-bold text-amber-700 uppercase tracking-widest mb-3">Modern Day Context</p>
+                    <p className="text-sm text-foreground leading-relaxed italic">
+                      {normalizedDayContent.multiPartStory.sisterScenario.content}
+                    </p>
+                  </div>
+                  <div className="bg-amber-600/90 text-white p-4 rounded-2xl text-sm font-medium">
+                    {normalizedDayContent.multiPartStory.connection}
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* 4. GUIDED REFLECTION */}
+            {currentSection === 'reflection' && (
+              <Card className="bg-gradient-to-br from-sky-50 to-indigo-50 border-sky-100 p-6 rounded-3xl space-y-6" data-testid="card-reflection">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-sky-600" />
+                  <span className="text-xs uppercase tracking-widest text-sky-700 font-bold">Deep Reflection</span>
+                </div>
+                <div className="space-y-4">
+                  {normalizedDayContent.reflectionPrompts.map((prompt: string, idx: number) => (
+                    <div key={idx} className="bg-white p-4 rounded-2xl border border-sky-100 shadow-sm flex gap-4">
+                      <div className="w-6 h-6 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                        {idx + 1}
+                      </div>
+                      <p className="text-sm text-foreground leading-relaxed">{prompt}</p>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* 5. REAL-LIFE ACTION */}
+            {currentSection === 'action' && (
+              <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-100 p-6 rounded-3xl space-y-6" data-testid="card-action">
+                <div className="flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-emerald-600" />
+                  <span className="text-xs uppercase tracking-widest text-emerald-700 font-bold">Today's Actions</span>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm space-y-1">
+                    <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Emotional Action</span>
+                    <p className="text-sm text-foreground leading-relaxed">{normalizedDayContent.realLifeAction.emotional}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm space-y-1">
+                    <span className="text-[10px] text-teal-600 font-bold uppercase tracking-widest">Spiritual Action</span>
+                    <p className="text-sm text-foreground leading-relaxed">{normalizedDayContent.realLifeAction.spiritual}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm space-y-1">
+                    <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-widest">Practical Action</span>
+                    <p className="text-sm text-foreground leading-relaxed">{normalizedDayContent.realLifeAction.practical}</p>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* 6. JOURNAL */}
+            {currentSection === 'journal' && (
+              <Card className="bg-white/95 border-white/50 p-6 rounded-3xl space-y-6" data-testid="card-journal">
+                <div className="flex items-center gap-2">
+                  <PenLine className="w-5 h-5 text-primary" />
+                  <span className="text-xs uppercase tracking-widest text-primary font-bold">Guided Journaling</span>
+                </div>
+                <div className="space-y-6">
+                  {normalizedDayContent.journalPrompts.map((prompt: string, idx: number) => (
+                    <div key={idx} className="space-y-2">
+                      <p className="text-sm font-medium text-foreground">{prompt}</p>
+                      <textarea
+                        className="w-full p-4 rounded-2xl border border-primary/10 bg-accent/5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-serif"
+                        rows={4}
+                        placeholder="Begin typing here..."
+                        value={journalEntries[`${currentDay}-${idx}`] || ''}
+                        onChange={(e) => setJournalEntries(prev => ({
+                          ...prev,
+                          [`${currentDay}-${idx}`]: e.target.value
+                        }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* 7. CLOSING RITUAL */}
+            {currentSection === 'closing' && (
+              <Card className="bg-gradient-to-br from-primary/10 to-accent/30 border-primary/20 p-8 rounded-3xl space-y-8 text-center" data-testid="card-closing">
+                <div className="w-20 h-20 bg-white/60 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                  <HandHeart className="w-10 h-10 text-primary" />
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-primary uppercase tracking-widest">A Final Reflection</p>
+                    <p className="text-xl font-serif text-foreground italic leading-relaxed">
+                      "{normalizedDayContent.closingRitual.reassurance}"
+                    </p>
+                  </div>
+
+                  <div className="bg-white/40 p-6 rounded-2xl border border-white/20">
+                    <p className="text-2xl font-arabic text-primary leading-loose" dir="rtl">{normalizedDayContent.closingRitual.dua}</p>
+                  </div>
+
+                  <p className="text-sm font-medium text-primary/70">{normalizedDayContent.closingRitual.restPermission}</p>
+                </div>
+
+                <Button
+                  onClick={completeDay}
+                  className="w-full bg-primary text-white py-8 rounded-2xl text-lg font-bold hover:scale-[1.02] transition-all shadow-lg shadow-primary/20"
+                >
+                  {currentDay === selectedProgram.days.length - 1 ? 'Finish Program' : 'Complete Session'}
+                </Button>
+              </Card>
+            )}
+          </div>
+
+          {/* Day Navigation */}
+          <div className="flex items-center justify-between mt-8">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={prevSection}
+              disabled={availableSections.findIndex(s => s.key === currentSection) === 0}
+              className="rounded-full w-12 h-12 hover:bg-white/50"
+              data-testid="button-prev-section"
             >
               <ChevronLeft className="w-6 h-6" />
             </Button>
-            <div className="flex gap-1.5">
-              {selectedTopic.content.map((_, idx) => (
-                <div 
-                  key={idx} 
-                  className={`w-2 h-2 rounded-full transition-all ${idx === currentCardIndex ? 'bg-primary w-6' : 'bg-primary/30'}`}
-                />
-              ))}
+            <div className="flex gap-1.5 flex-wrap justify-center max-w-[280px]">
+              {selectedProgram.days.map((day: any, idx: number) => {
+                const isPast = idx < (programProgress?.currentDay || 0);
+                const isActive = idx === currentDay;
+
+                // Calendar unlocking: 
+                // Next day is only unlocked if completed AND real calendar day has passed since startedAt
+                const startedAt = programProgress?.startedAt ? new Date(programProgress.startedAt) : new Date();
+                const now = new Date();
+                const daysSinceStart = Math.floor((now.getTime() - startedAt.getTime()) / (1000 * 60 * 60 * 24));
+                const isUnlockableCalendar = idx <= daysSinceStart;
+                const isLocked = idx > (programProgress?.currentDay || 0) || !isUnlockableCalendar;
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      if (!isLocked) {
+                        setCurrentDay(idx);
+                        setCurrentSection('intro');
+                      }
+                    }}
+                    disabled={isLocked}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${isActive
+                      ? 'bg-primary ring-4 ring-primary/20 w-6'
+                      : isPast
+                        ? 'bg-primary/40'
+                        : isLocked ? 'bg-muted/40 cursor-not-allowed' : 'bg-primary/20 hover:bg-primary/30'
+                      }`}
+                    title={`Day ${idx + 1}${isLocked ? ' (Will unlock tomorrow)' : ''}`}
+                  />
+                );
+              })}
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={nextCard}
-              disabled={currentCardIndex === selectedTopic.content.length - 1}
-              className="rounded-full w-12 h-12"
-              data-testid="button-next-card"
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={nextSection}
+              disabled={availableSections.findIndex(s => s.key === currentSection) === availableSections.length - 1}
+              className="rounded-full w-12 h-12 hover:bg-white/50"
+              data-testid="button-next-section"
             >
               <ChevronRight className="w-6 h-6" />
             </Button>
@@ -346,93 +679,178 @@ export default function ForYou() {
   return (
     <div className="min-h-screen pb-24 px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-6">
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-serif">For You</h1>
-        <p className="text-sm text-muted-foreground">
-          Quran guidance for what you're feeling today.
-        </p>
+        <h1 className="text-2xl font-serif text-foreground">
+          Salam{settings?.userName ? `, ${settings.userName}` : ''} <span className="text-primary">🤍</span>
+        </h1>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Search: anxiety, heartbreak, sleep, protection..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 pr-10 h-12 rounded-2xl bg-white/80 border-pink-100 focus:border-primary focus:ring-primary/20"
-          data-testid="input-search-foryou"
-        />
-        {searchQuery && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full"
-            onClick={() => setSearchQuery("")}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        )}
+      {/* Tabs */}
+      <div className="flex gap-2 p-1 bg-accent/30 rounded-2xl">
+        <button
+          onClick={() => setActiveTab('foryou')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === 'foryou'
+            ? 'bg-white shadow-sm text-foreground'
+            : 'text-muted-foreground'
+            }`}
+        >
+          Guided Programs
+        </button>
+        <button
+          onClick={() => setActiveTab('adhkar')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === 'adhkar'
+            ? 'bg-white shadow-sm text-foreground'
+            : 'text-muted-foreground'
+            }`}
+        >
+          Daily Adhkar
+        </button>
       </div>
 
-      {isSearching ? (
-        <div className="space-y-3">
-          {filteredTopics.length === 0 ? (
-            <Card className="bg-white/60 border-white/50 p-6 rounded-2xl text-center">
-              <p className="text-muted-foreground">No topics found for "{searchQuery}"</p>
-            </Card>
-          ) : (
-            filteredTopics.map(topic => (
-              <Card
-                key={topic.id}
-                onClick={() => openTopic(topic.id)}
-                className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer"
-                data-testid={`search-result-${topic.id}`}
-              >
-                <p className="font-medium">{topic.title}</p>
-                <p className="text-xs text-muted-foreground">{topic.category}</p>
-              </Card>
-            ))
-          )}
-        </div>
-      ) : (
+      {activeTab === 'foryou' && (
         <>
-          <div className="space-y-2">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Quick Picks</p>
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-              {QUICK_PICKS.map(pick => (
-                <button
-                  key={pick.id}
-                  onClick={() => openTopic(pick.id)}
-                  className="flex-shrink-0 bg-white/80 border border-primary/10 px-4 py-2.5 rounded-full text-sm font-medium hover-elevate transition-all"
-                  data-testid={`quick-pick-${pick.id}`}
-                >
-                  {pick.label}
-                </button>
-              ))}
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search: anxiety, heartbreak, healing..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10 h-12 rounded-2xl bg-white/80 border-pink-100 focus:border-primary focus:ring-primary/20"
+              data-testid="input-search-foryou"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full"
+                onClick={() => setSearchQuery("")}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
           </div>
 
-          {CATEGORIES.map(category => (
-            <div key={category.name} className="space-y-3">
-              <p className="text-sm font-medium text-foreground">{category.name}</p>
-              <div className="space-y-2">
-                {category.topics.map(topicId => {
-                  const topic = TOPICS.find(t => t.id === topicId);
-                  if (!topic) return null;
-                  return (
-                    <Card
-                      key={topicId}
-                      onClick={() => openTopic(topicId)}
-                      className="bg-white/70 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer"
-                      data-testid={`topic-${topicId}`}
-                    >
-                      <p className="font-medium text-sm">{topic.title}</p>
-                    </Card>
-                  );
-                })}
-              </div>
+          {isSearching ? (
+            <div className="space-y-3">
+              {filteredPrograms.length === 0 ? (
+                <Card className="bg-white/60 border-white/50 p-6 rounded-2xl text-center">
+                  <p className="text-muted-foreground">No programs found for "{searchQuery}"</p>
+                </Card>
+              ) : (
+                filteredPrograms.map(program => (
+                  <Card
+                    key={program.id}
+                    onClick={() => openProgram(program.id)}
+                    className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer"
+                    data-testid={`search-result-${program.id}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <BookOpen className="w-6 h-6 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">{program.title}</p>
+                        <p className="text-sm text-muted-foreground">{program.subtitle}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                            {program.duration}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{program.category}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
-          ))}
+          ) : (
+            <>
+              {CATEGORIES.map(category => (
+                <div key={category.name} className="space-y-3">
+                  <p className="text-sm font-medium text-foreground px-1">{category.name}</p>
+                  <div className="space-y-2">
+                    {category.programs.map(programId => {
+                      const program = GUIDED_PROGRAMS.find(p => p.id === programId);
+                      if (!program) return null;
+
+                      // Calculate progress from server data
+                      const progress = allProgress?.find(p => p.programmeId === programId);
+                      const hasStarted = !!progress;
+                      const currentDayVal = progress?.currentDay || 0;
+
+                      // Progress reflects completed days
+                      const displayDay = Math.min(currentDayVal + 1, program.daysCount);
+                      const progressPercentage = hasStarted ? Math.min((currentDayVal / program.daysCount) * 100, 100) : 0;
+
+                      return (
+                        <Card
+                          key={programId}
+                          onClick={() => openProgram(programId)}
+                          className="bg-white/80 border-white/50 p-4 rounded-3xl hover-elevate cursor-pointer overflow-hidden group"
+                          data-testid={`program-${programId}`}
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="w-14 h-14 bg-gradient-to-br from-primary/20 to-accent/40 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                              <Heart className="w-7 h-7 text-primary" />
+                            </div>
+                            <div className="flex-1 space-y-2">
+                              <div>
+                                <p className="font-serif text-lg text-foreground">{program.title}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-1">{program.subtitle}</p>
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <div className="flex justify-between items-end text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+                                  <span>{currentDayVal >= program.daysCount ? 'Completed' : `Day ${displayDay} of ${program.daysCount}`}</span>
+                                  <span>{Math.round(progressPercentage)}%</span>
+                                </div>
+                                <div className="h-1.5 w-full bg-primary/5 rounded-full overflow-hidden border border-primary/5">
+                                  <div
+                                    className="h-full bg-gradient-to-r from-primary/60 to-primary rounded-full transition-all duration-700"
+                                    style={{ width: `${progressPercentage}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="self-center">
+                              <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
         </>
+      )}
+
+      {activeTab === 'adhkar' && (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground text-center">
+            Protect yourself with daily remembrance of Allah.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {ADHKAR_CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              return (
+                <Link key={cat.id} href={`/duas?category=${cat.id}`}>
+                  <Card
+                    className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer h-full"
+                    data-testid={`adhkar-${cat.id}`}
+                  >
+                    <div className={`w-10 h-10 ${cat.bg} rounded-full flex items-center justify-center mb-3`}>
+                      <Icon className={`w-5 h-5 ${cat.color}`} />
+                    </div>
+                    <p className="font-medium text-sm">{cat.title}</p>
+                    <p className="text-xs text-muted-foreground">{cat.description}</p>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -2,8 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Sun, Moon, Bed, Car, Shield, Heart, HandHeart, Sparkles, Search, X } from "lucide-react";
-import { Link } from "wouter";
-import { useState, useMemo } from "react";
+import { Link, useLocation } from "wouter";
+import { useState, useMemo, useEffect } from "react";
 
 interface Dua {
   title: string;
@@ -23,7 +23,7 @@ const DUAS_DATA: Dua[] = [
   { category: "morning", title: "Contentment with Allah", arabic: "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا", translation: "I am pleased with Allah as my Lord, with Islam as my religion, and with Muhammad (peace be upon him) as my Prophet. (Say 3 times)" },
   { category: "morning", title: "Seeking Guidance and Wellbeing", arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ", translation: "O Allah, I ask You for pardon and well-being in this life and the next." },
   { category: "morning", title: "Entering the Day Under Protection", arabic: "اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لَا إِلَٰهَ إِلَّا أَنْتَ", translation: "O Allah, grant me health in my body. O Allah, grant me health in my hearing. O Allah, grant me health in my sight. There is no god but You. (Say 3 times)" },
-  
+
   // Evening Adhkar
   { category: "evening", title: "Evening Remembrance", arabic: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَـٰهَ إِلَّا اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ", translation: "We have entered the evening and the whole kingdom belongs to Allah. All praise is due to Allah. None has the right to be worshipped except Allah alone, having no partner." },
   { category: "evening", title: "Seeking Refuge - Evening", arabic: "اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ", translation: "O Allah, by Your grace we have reached the evening, by Your grace we reach the morning, by Your grace we live and die, and unto You is our final destination." },
@@ -113,15 +113,24 @@ const DUAS_CATEGORIES = [
 ];
 
 export default function Duas() {
+  const [location] = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const categoryParam = params.get("category");
+    if (categoryParam && DUAS_CATEGORIES.some(c => c.id === categoryParam)) {
+      setSelectedCategory(categoryParam);
+    }
+  }, []);
+
   const category = DUAS_CATEGORIES.find(c => c.id === selectedCategory);
-  
+
   const filteredDuas = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const query = searchQuery.toLowerCase();
-    return DUAS_DATA.filter(dua => 
+    return DUAS_DATA.filter(dua =>
       dua.title.toLowerCase().includes(query) ||
       dua.translation.toLowerCase().includes(query) ||
       dua.category.toLowerCase().includes(query)
@@ -221,7 +230,7 @@ export default function Duas() {
             const Icon = cat.icon;
             const count = DUAS_DATA.filter(d => d.category === cat.id).length;
             return (
-              <Card 
+              <Card
                 key={cat.id}
                 className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer"
                 onClick={() => setSelectedCategory(cat.id)}
