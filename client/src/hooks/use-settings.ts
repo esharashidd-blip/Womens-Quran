@@ -5,6 +5,8 @@ import type { Settings } from "@shared/schema";
 export function useSettings() {
   return useQuery<Settings>({
     queryKey: ["/api/settings"],
+    staleTime: Infinity, // Don't auto-refetch
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -29,7 +31,7 @@ export function useUpdateSettings() {
         });
       }
 
-      return { previousSettings };
+      return { previousSettings, updates };
     },
     onError: (_err, _updates, context) => {
       // Roll back on error
@@ -37,11 +39,17 @@ export function useUpdateSettings() {
         queryClient.setQueryData(["/api/settings"], context.previousSettings);
       }
     },
-    // No onSuccess needed - optimistic update already set the correct value
-    // Only roll back on error
+    onSuccess: (serverData, _updates, context) => {
+      // Merge server response with optimistic update to avoid flicker
+      if (context?.previousSettings) {
+        queryClient.setQueryData<Settings>(["/api/settings"], {
+          ...context.previousSettings,
+          ...serverData,
+        });
+      }
+    },
     onSettled: () => {
       // Only invalidate prayer times if location settings changed
-      // Don't refetch settings - we already have the server response from onSuccess
       queryClient.invalidateQueries({
         predicate: (query) => {
           const key = query.queryKey;
