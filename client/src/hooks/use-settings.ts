@@ -39,14 +39,9 @@ export function useUpdateSettings() {
         queryClient.setQueryData(["/api/settings"], context.previousSettings);
       }
     },
-    onSuccess: (serverData, _updates, context) => {
-      // Merge server response with optimistic update to avoid flicker
-      if (context?.previousSettings) {
-        queryClient.setQueryData<Settings>(["/api/settings"], {
-          ...context.previousSettings,
-          ...serverData,
-        });
-      }
+    onSuccess: (serverData) => {
+      // Just set the server data directly - no merge needed
+      queryClient.setQueryData<Settings>(["/api/settings"], serverData);
     },
     onSettled: () => {
       // Only invalidate prayer times if location settings changed
