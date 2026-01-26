@@ -1,5 +1,15 @@
 import { supabaseAdmin as supabase } from "./supabase";
 
+// Helper to convert camelCase to snake_case for database columns
+function toSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const key of Object.keys(obj)) {
+    const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+    result[snakeKey] = obj[key];
+  }
+  return result;
+}
+
 // Types matching the database schema
 export interface Favorite {
   id: number;
@@ -210,9 +220,11 @@ export class SupabaseStorage implements IStorage {
 
   async updateSettings(userId: string, updates: Partial<Settings>): Promise<Settings> {
     const existing = await this.getSettings(userId);
+    // Convert camelCase keys to snake_case for database
+    const snakeCaseUpdates = toSnakeCase(updates as Record<string, unknown>);
     const { data, error } = await supabase
       .from("settings")
-      .update(updates)
+      .update(snakeCaseUpdates)
       .eq("id", existing.id)
       .select()
       .single();

@@ -43,6 +43,35 @@ function transformMessage(msg: CoachMessage) {
   };
 }
 
+// Helper to transform settings from snake_case to camelCase
+function transformSettings(settings: {
+  id: number;
+  user_id: string | null;
+  city: string;
+  country: string;
+  auto_location: boolean;
+  tasbih_count: number;
+  ramadan_mode: boolean;
+  quran_goal_minutes: number;
+  prayer_notifications: boolean;
+  cycle_mode: boolean;
+  cycle_mode_first_time: boolean;
+}) {
+  return {
+    id: settings.id,
+    userId: settings.user_id,
+    city: settings.city,
+    country: settings.country,
+    autoLocation: settings.auto_location,
+    tasbihCount: settings.tasbih_count,
+    ramadanMode: settings.ramadan_mode,
+    quranGoalMinutes: settings.quran_goal_minutes,
+    prayerNotifications: settings.prayer_notifications,
+    cycleMode: settings.cycle_mode,
+    cycleModeFirstTime: settings.cycle_mode_first_time,
+  };
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -116,7 +145,7 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Unauthorized" });
       }
       const settings = await storage.getSettings(userId);
-      res.json(settings);
+      res.json(transformSettings(settings));
     } catch (err) {
       console.error("Internal Server Error:", err);
       res.status(500).json({ message: (err as Error).message || "Internal server error" });
@@ -130,9 +159,11 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Unauthorized" });
       }
       const updates = req.body;
+      console.log("Updating settings for user:", userId, "with:", updates);
       const updated = await storage.updateSettings(userId, updates);
-      res.json(updated);
+      res.json(transformSettings(updated));
     } catch (err) {
+      console.error("Error updating settings:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -311,14 +342,17 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Message content is required" });
       }
 
-      // Verify the conversation belongs to the user
-      const conversation = await storage.getConversation(conversationId, userId);
+      // Run initial checks in parallel for speed
+      const [conversation, tokenCheck, history] = await Promise.all([
+        storage.getConversation(conversationId, userId),
+        storage.checkTokenLimit(userId, DAILY_TOKEN_LIMIT),
+        storage.getMessages(conversationId),
+      ]);
+
       if (!conversation) {
         return res.status(404).json({ message: "Conversation not found" });
       }
 
-      // Check token limit before processing
-      const tokenCheck = await storage.checkTokenLimit(userId, DAILY_TOKEN_LIMIT);
       if (!tokenCheck.allowed) {
         return res.status(429).json({
           message: "Daily token limit reached. Please try again tomorrow.",
@@ -327,43 +361,57 @@ export async function registerRoutes(
         });
       }
 
-      // Save user message
-      const userMessage = await storage.createMessage({
+      // Call Gemini immediately - save user message in background
+      const userName = req.user?.firstName;
+      const now = new Date().toISOString();
+
+      // Start user message save (don't wait)
+      const userMessagePromise = storage.createMessage({
         conversation_id: conversationId,
         role: "user",
         content,
         tokens_used: 0,
       });
 
-      // Get conversation history for context
-      const history = await storage.getMessages(conversationId);
+      // Get AI response - this is the only thing we wait for
+      const coachResponse = await sendCoachMessage(content, history, userName);
 
-      // Get user's name from auth metadata (display_name)
-      const userName = req.user?.firstName;
-      const coachResponse = await sendCoachMessage(content, history.slice(0, -1), userName); // Exclude the message we just added
-
-      // Save assistant response
-      const assistantMessage = await storage.createMessage({
-        conversation_id: conversationId,
-        role: "assistant",
-        content: coachResponse.content,
-        tokens_used: coachResponse.tokensUsed,
-      });
-
-      // Update token usage
-      await storage.updateTokenUsage(userId, coachResponse.tokensUsed);
-
-      // Update conversation title if this is the first message
-      if (history.length === 1) {
-        const title = generateConversationTitle(content);
-        await storage.updateConversationTitle(conversationId, title);
-      }
-
+      // Send response IMMEDIATELY with temporary IDs - don't wait for DB
       res.json({
-        userMessage: transformMessage(userMessage),
-        assistantMessage: transformMessage(assistantMessage),
+        userMessage: {
+          id: -1, // Temporary ID
+          conversationId,
+          role: "user",
+          content,
+          tokensUsed: 0,
+          createdAt: now,
+        },
+        assistantMessage: {
+          id: -2, // Temporary ID
+          conversationId,
+          role: "assistant",
+          content: coachResponse.content,
+          tokensUsed: coachResponse.tokensUsed,
+          createdAt: now,
+        },
         tokensUsed: coachResponse.tokensUsed,
       });
+
+      // ALL database operations run in background after response sent
+      Promise.all([
+        userMessagePromise,
+        storage.createMessage({
+          conversation_id: conversationId,
+          role: "assistant",
+          content: coachResponse.content,
+          tokens_used: coachResponse.tokensUsed,
+        }),
+        storage.updateTokenUsage(userId, coachResponse.tokensUsed),
+        history.length === 0
+          ? storage.updateConversationTitle(conversationId, generateConversationTitle(content))
+          : Promise.resolve(),
+      ]).catch((err) => console.error("Background task error:", err));
+
     } catch (err) {
       console.error("Error sending coach message:", err);
       if (err instanceof Error && err.message.includes("GEMINI_API_KEY")) {

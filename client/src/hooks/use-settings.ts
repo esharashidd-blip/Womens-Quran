@@ -42,8 +42,8 @@ export function useUpdateSettings() {
       queryClient.setQueryData<Settings>(["/api/settings"], data);
     },
     onSettled: () => {
-      // Force refetch to ensure consistency
-      queryClient.refetchQueries({ queryKey: ["/api/settings"] });
+      // Only invalidate prayer times if location settings changed
+      // Don't refetch settings - we already have the server response from onSuccess
       queryClient.invalidateQueries({
         predicate: (query) => {
           const key = query.queryKey;
