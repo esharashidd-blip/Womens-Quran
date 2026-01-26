@@ -37,10 +37,8 @@ export function useUpdateSettings() {
         queryClient.setQueryData(["/api/settings"], context.previousSettings);
       }
     },
-    onSuccess: (data) => {
-      // Update cache with actual server response data
-      queryClient.setQueryData<Settings>(["/api/settings"], data);
-    },
+    // No onSuccess needed - optimistic update already set the correct value
+    // Only roll back on error
     onSettled: () => {
       // Only invalidate prayer times if location settings changed
       // Don't refetch settings - we already have the server response from onSuccess
