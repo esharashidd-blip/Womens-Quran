@@ -102,7 +102,7 @@ function AppContent() {
   return <AuthenticatedApp />;
 }
 
-function App() {console.log("App.tsx loaded");
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
