@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 9F042C0E2F30B46A00FBE67D /* Build configuration list for PBXProject "WomensQurans" */;
+			buildConfigurationList = 9F042C0E2F30B46A00FBE67D /* Build configuration list for PBXProject "Womens Quran" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -313,7 +313,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		9F042C0E2F30B46A00FBE67D /* Build configuration list for PBXProject "WomensQurans" */ = {
+		9F042C0E2F30B46A00FBE67D /* Build configuration list for PBXProject "Womens Quran" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9F042C1C2F30B46C00FBE67D /* Debug */,
