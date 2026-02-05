@@ -188,6 +188,57 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
     toast({ title: "Downloaded", description: "Image saved to your device." });
   };
 
+  const handleInstagramShare = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+
+      // Convert to base64 for native bridge
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+
+        // Try to use native bridge if available (iOS app)
+        if ((window as any).webkit?.messageHandlers?.shareToInstagramStories) {
+          try {
+            (window as any).webkit.messageHandlers.shareToInstagramStories.postMessage({
+              image: base64data,
+              backgroundTopColor: themes[bgStyle].gradient.start,
+              backgroundBottomColor: themes[bgStyle].gradient.end
+            });
+            toast({ title: "Opening Instagram Stories..." });
+            return;
+          } catch (err) {
+            console.error("Native bridge failed:", err);
+          }
+        }
+
+        // Fallback: Copy to clipboard + download
+        try {
+          if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+          }
+        } catch (clipboardErr) {
+          console.error("Clipboard failed:", clipboardErr);
+        }
+
+        // Always download as backup
+        handleDownload();
+
+        toast({
+          title: "Ready for Instagram!",
+          description: "Image saved. Open Instagram Stories and paste or upload from camera roll.",
+          duration: 5000,
+        });
+      };
+      reader.readAsDataURL(blob);
+    }, 'image/png', 1.0);
+  };
+
   const handleShare = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -196,22 +247,7 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
       if (!blob) return;
       const file = new File([blob], `noor-verse-${surahName}-${ayahNumber}.png`, { type: 'image/png' });
 
-      // Try to copy to clipboard first (works great for Instagram on iOS)
-      try {
-        if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
-          await navigator.clipboard.write([
-            new ClipboardItem({ 'image/png': blob })
-          ]);
-          toast({
-            title: "Image copied!",
-            description: "Paste it directly into Instagram or any app",
-          });
-        }
-      } catch (clipboardErr) {
-        // Clipboard failed, continue to share API
-      }
-
-      // Check if file sharing is supported (iOS 15.4+)
+      // Check if file sharing is supported
       const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
 
       if (canShareFiles) {
@@ -224,24 +260,17 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
           toast({ title: "Shared successfully" });
         } catch (err: any) {
           if (err.name !== 'AbortError') {
-            console.error("Share failed", err);
-            // Fallback to download
             handleDownload();
-            toast({
-              title: "Image saved",
-              description: "Open Instagram and upload from your camera roll",
-            });
           }
         }
       } else {
-        // No file sharing, save to downloads
         handleDownload();
         toast({
           title: "Image saved",
-          description: "Open Instagram and upload from your camera roll",
+          description: "Upload from your camera roll to share",
         });
       }
-    }, 'image/png', 1.0); // High quality
+    }, 'image/png', 1.0);
   };
 
   return (
@@ -304,20 +333,35 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 w-full">
+          <div className="flex flex-col gap-3 w-full">
+            {/* Instagram Stories - Primary CTA */}
             <Button
-              onClick={handleDownload}
-              variant="outline"
-              className="flex-1 gap-2 rounded-xl border-primary/20 hover:bg-primary/5 hover:text-primary h-11"
+              onClick={handleInstagramShare}
+              className="w-full gap-2 rounded-xl h-12 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white shadow-lg shadow-pink-500/25 hover:shadow-xl hover:-translate-y-0.5 transition-all font-semibold"
             >
-              <Download className="w-4 h-4" /> Save
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153.509.5.902 1.105 1.153 1.772.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 01-1.153 1.772c-.5.509-1.105.902-1.772 1.153-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 01-1.772-1.153 4.904 4.904 0 01-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 011.153-1.772A4.897 4.897 0 015.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 100 10 5 5 0 000-10zm6.5-.25a1.25 1.25 0 10-2.5 0 1.25 1.25 0 002.5 0zM12 9a3 3 0 110 6 3 3 0 010-6z"/>
+              </svg>
+              Share to Instagram Stories
             </Button>
-            <Button
-              onClick={handleShare}
-              className="flex-1 gap-2 rounded-xl bg-gradient-to-r from-primary to-rose-400 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-0.5 transition-all h-11"
-            >
-              <Share2 className="w-4 h-4" /> Share
-            </Button>
+
+            {/* Secondary actions */}
+            <div className="flex gap-3">
+              <Button
+                onClick={handleDownload}
+                variant="outline"
+                className="flex-1 gap-2 rounded-xl border-primary/20 hover:bg-primary/5 hover:text-primary h-11"
+              >
+                <Download className="w-4 h-4" /> Save
+              </Button>
+              <Button
+                onClick={handleShare}
+                variant="outline"
+                className="flex-1 gap-2 rounded-xl border-primary/20 hover:bg-primary/5 hover:text-primary h-11"
+              >
+                <Share2 className="w-4 h-4" /> More
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
