@@ -240,7 +240,7 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
     }, 'image/png', 1.0);
   };
 
-  const handleSocialShare = async (platform: string) => {
+  const handleNativeShare = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -252,26 +252,20 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
         const base64data = reader.result as string;
 
         // Try to use native bridge if available (iOS app)
-        if ((window as any).webkit?.messageHandlers?.shareToSocial) {
+        if ((window as any).webkit?.messageHandlers?.shareWithNativeSheet) {
           try {
-            (window as any).webkit.messageHandlers.shareToSocial.postMessage({
-              platform: platform,
+            (window as any).webkit.messageHandlers.shareWithNativeSheet.postMessage({
               image: base64data,
               text: `${surahName} • Ayah ${ayahNumber} - From Noor App`
             });
-            toast({ title: `Opening ${platform}...` });
             return;
           } catch (err) {
             console.error("Native bridge failed:", err);
           }
         }
 
-        // Fallback to download
-        handleDownload();
-        toast({
-          title: "Image saved",
-          description: `Open ${platform} and share from your camera roll`,
-        });
+        // Fallback to Web Share API or download
+        handleShare();
       };
       reader.readAsDataURL(blob);
     }, 'image/png', 1.0);
@@ -372,7 +366,7 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 w-full">
-            {/* Instagram Stories - Primary CTA */}
+            {/* Instagram Stories - Special case with custom API */}
             <Button
               onClick={handleInstagramShare}
               className="w-full gap-2 rounded-xl h-12 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white shadow-lg shadow-pink-500/25 hover:shadow-xl hover:-translate-y-0.5 transition-all font-semibold"
@@ -383,62 +377,23 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
               Share to Instagram Stories
             </Button>
 
-            {/* Other Social Platforms */}
-            <div className="grid grid-cols-3 gap-2">
-              {/* WhatsApp */}
-              <Button
-                onClick={() => handleSocialShare('whatsapp')}
-                variant="outline"
-                className="flex-col h-20 rounded-xl border-green-200 hover:bg-green-50 hover:text-green-600 gap-1"
-              >
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                </svg>
-                <span className="text-[10px] font-medium">WhatsApp</span>
-              </Button>
+            {/* Native Share - Opens iOS share sheet */}
+            <Button
+              onClick={handleNativeShare}
+              variant="outline"
+              className="w-full gap-2 rounded-xl h-12 border-primary/20 hover:bg-primary/5 hover:text-primary font-medium"
+            >
+              <Share2 className="w-5 h-5" /> Share
+            </Button>
 
-              {/* iMessage */}
-              <Button
-                onClick={() => handleSocialShare('imessage')}
-                variant="outline"
-                className="flex-col h-20 rounded-xl border-blue-200 hover:bg-blue-50 hover:text-blue-600 gap-1"
-              >
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 3 .97 4.29L2 22l5.71-.97C9 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.38 0-2.67-.33-3.82-.91l-.27-.15-2.8.6.6-2.8-.15-.27A7.938 7.938 0 014 12c0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8z"/>
-                </svg>
-                <span className="text-[10px] font-medium">iMessage</span>
-              </Button>
-
-              {/* Snapchat */}
-              <Button
-                onClick={() => handleSocialShare('snapchat')}
-                variant="outline"
-                className="flex-col h-20 rounded-xl border-yellow-200 hover:bg-yellow-50 hover:text-yellow-600 gap-1"
-              >
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015h-.149c-1.468 0-2.427-.675-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.12-.063-.176-.01-.224.165-.435.42-.479 3.266-.54 4.73-3.863 4.79-4.014.016-.015.031-.029.046-.029.179-.345.224-.645.119-.869-.195-.434-.884-.658-1.332-.809-.121-.029-.24-.074-.346-.119-1.107-.435-1.257-.93-1.197-1.273.09-.479.674-.793 1.168-.793.146 0 .27.029.383.074.42.194.789.3 1.104.3.234 0 .384-.06.465-.105-.046-.286-.105-.704-.165-1.212l-.015-.135c-.105-1.679-.24-3.76.359-5.073 1.663-3.65 4.958-3.91 5.948-3.821z"/>
-                </svg>
-                <span className="text-[10px] font-medium">Snapchat</span>
-              </Button>
-            </div>
-
-            {/* Download and More */}
-            <div className="flex gap-3">
-              <Button
-                onClick={handleDownload}
-                variant="outline"
-                className="flex-1 gap-2 rounded-xl border-primary/20 hover:bg-primary/5 hover:text-primary h-11"
-              >
-                <Download className="w-4 h-4" /> Save
-              </Button>
-              <Button
-                onClick={handleShare}
-                variant="outline"
-                className="flex-1 gap-2 rounded-xl border-primary/20 hover:bg-primary/5 hover:text-primary h-11"
-              >
-                <Share2 className="w-4 h-4" /> More
-              </Button>
-            </div>
+            {/* Download */}
+            <Button
+              onClick={handleDownload}
+              variant="outline"
+              className="w-full gap-2 rounded-xl h-11 border-primary/20 hover:bg-primary/5 hover:text-primary"
+            >
+              <Download className="w-4 h-4" /> Save to Photos
+            </Button>
           </div>
         </div>
       </DialogContent>

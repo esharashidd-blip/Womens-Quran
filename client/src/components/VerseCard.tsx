@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QuoteGenerator } from "./QuoteGenerator";
 import { useFavorites, useAddFavorite, useDeleteFavorite } from "@/hooks/use-favorites";
-import { motion } from "framer-motion";
 
 interface VerseCardProps {
   surahName: string;
@@ -42,11 +41,7 @@ export function VerseCard({ surahName, surahNumber, ayahNumber, arabicText, tran
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+    <div
       className={cn(
         "bg-white/60 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-sm border hover:shadow-md transition-all duration-300",
         isCurrentlyPlaying ? "border-primary/50 bg-primary/5" : "border-white/50"
@@ -108,6 +103,6 @@ export function VerseCard({ surahName, surahNumber, ayahNumber, arabicText, tran
           {translationText}
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 }

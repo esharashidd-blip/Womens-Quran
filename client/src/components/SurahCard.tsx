@@ -1,15 +1,10 @@
 import { Link } from "wouter";
 import { type Surah } from "@/hooks/use-quran";
-import { motion } from "framer-motion";
 
 export function SurahCard({ surah, index }: { surah: Surah, index: number }) {
   return (
     <Link href={`/surah/${surah.number}`}>
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-20px" }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
+      <div
         className="group relative bg-white rounded-2xl p-5 shadow-sm border border-pink-50 hover:shadow-lg hover:border-pink-200 transition-all duration-300 cursor-pointer overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-primary/5 to-transparent rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-150 duration-500" />
@@ -35,7 +30,7 @@ export function SurahCard({ surah, index }: { surah: Surah, index: number }) {
              </span>
           </div>
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
 }
