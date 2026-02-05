@@ -71,13 +71,8 @@ export default function Home() {
   const [isDetecting, setIsDetecting] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
 
-  // Check if we're in iOS WKWebView (geolocation won't work without native bridge)
-  const isWKWebView = () => {
-    const ua = navigator.userAgent;
-    return ua.includes('iPhone') && !ua.includes('Safari/');
-  };
-
-  const canUseGeolocation = !isWKWebView() && 'geolocation' in navigator;
+  // Geolocation is available (native bridge provides it in iOS app)
+  const canUseGeolocation = 'geolocation' in navigator;
 
   // Get display name from auth user
   const displayName = user?.firstName;
@@ -375,7 +370,7 @@ export default function Home() {
 
       {settings?.cycleMode && (
         <Link href="/menstrual-guide">
-          <Card className="bg-gradient-to-br from-purple-50 to-rose-50 border-purple-100 p-5 rounded-3xl shadow-sm cursor-pointer hover:shadow-md transition-all group overflow-hidden relative">
+          <Card className="bg-gradient-to-br from-purple-50 to-rose-50 border-purple-100 p-5 rounded-3xl shadow-sm cursor-pointer hover:shadow-md transition-all group overflow-hidden relative mt-5">
             <div className="absolute right-[-10px] top-[-10px] opacity-10 group-hover:scale-110 transition-transform duration-700">
               <Heart className="w-24 h-24 text-purple-600 fill-purple-600" />
             </div>
@@ -397,9 +392,9 @@ export default function Home() {
       )}
 
       {showLocationPicker && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center" onClick={() => !updateSettings.isPending && setShowLocationPicker(false)}>
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center pb-[calc(4rem+env(safe-area-inset-bottom))]" onClick={() => !updateSettings.isPending && setShowLocationPicker(false)}>
           <Card
-            className="w-full max-w-lg bg-background border-t border-white/50 rounded-t-3xl p-5 space-y-4 animate-in slide-in-from-bottom duration-300 max-h-[80vh] flex flex-col"
+            className="w-full max-w-lg bg-background border-t border-white/50 rounded-t-3xl p-5 space-y-4 animate-in slide-in-from-bottom duration-300 max-h-[70vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">

@@ -45,7 +45,8 @@ export function VerseCard({ surahName, surahNumber, ayahNumber, arabicText, tran
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
       className={cn(
         "bg-white/60 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-sm border hover:shadow-md transition-all duration-300",
         isCurrentlyPlaying ? "border-primary/50 bg-primary/5" : "border-white/50"

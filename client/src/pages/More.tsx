@@ -62,8 +62,8 @@ export default function More() {
   // Check if notifications are supported
   const notificationsSupported = "Notification" in window && !isWKWebView();
 
-  // Check if geolocation is available
-  const canUseGeolocation = !isWKWebView() && 'geolocation' in navigator;
+  // Geolocation is available (native bridge provides it in iOS app)
+  const canUseGeolocation = 'geolocation' in navigator;
 
   const filteredLocations = useMemo(() => {
     if (!locationSearch.trim()) return POPULAR_LOCATIONS;

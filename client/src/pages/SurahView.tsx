@@ -208,7 +208,7 @@ export default function SurahView() {
       </div>
 
       {/* Audio Player Fixed at Bottom */}
-      <Card className="fixed bottom-20 left-4 right-4 max-w-3xl mx-auto bg-white/95 backdrop-blur-lg border-primary/10 shadow-lg rounded-2xl p-4 z-50">
+      <Card className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] left-4 right-4 max-w-3xl mx-auto bg-white/95 backdrop-blur-lg border-primary/10 shadow-lg rounded-2xl p-4 z-50">
         <div className="flex items-center gap-4">
           {/* Reciter Selector */}
           <div className="relative">

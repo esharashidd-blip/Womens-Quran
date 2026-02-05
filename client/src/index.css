@@ -160,12 +160,18 @@
     overscroll-behavior: contain;
   }
 
-  /* Fixed elements need safe area handling */
-  [class*="fixed"] {
-    /* iOS safe area support */
-    @supports (padding: max(0px)) {
-      padding-bottom: max(env(safe-area-inset-bottom), 0px);
-    }
+  /* Fixed elements - safe areas handled per component */
+
+  /* Performance optimizations */
+  * {
+    /* Enable hardware acceleration for transforms and opacity */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Optimize scrolling performance */
+  * {
+    scroll-behavior: smooth;
   }
 }
 
