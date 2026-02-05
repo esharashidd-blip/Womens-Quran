@@ -8,10 +8,13 @@ export default function Qibla() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [heading, setHeading] = useState<number>(0);
   const [permissionDenied, setPermissionDenied] = useState(false);
+  const [orientationPermissionDenied, setOrientationPermissionDenied] = useState(false);
+  const [needsOrientationPermission, setNeedsOrientationPermission] = useState(false);
   const { data: qibla, isLoading } = useQiblaDirection(coords?.lat ?? null, coords?.lng ?? null);
 
   useEffect(() => {
     requestLocation();
+    checkOrientationPermission();
   }, []);
 
   const requestLocation = () => {
@@ -29,7 +32,35 @@ export default function Qibla() {
     }
   };
 
-  useEffect(() => {
+  const checkOrientationPermission = () => {
+    // Check if iOS 13+ requires permission
+    if (typeof (DeviceOrientationEvent as any)?.requestPermission === 'function') {
+      setNeedsOrientationPermission(true);
+    } else {
+      // Non-iOS or older iOS, start listening immediately
+      startOrientationTracking();
+    }
+  };
+
+  const requestOrientationPermission = async () => {
+    try {
+      if (typeof (DeviceOrientationEvent as any)?.requestPermission === 'function') {
+        const permission = await (DeviceOrientationEvent as any).requestPermission();
+        if (permission === 'granted') {
+          setNeedsOrientationPermission(false);
+          setOrientationPermissionDenied(false);
+          startOrientationTracking();
+        } else {
+          setOrientationPermissionDenied(true);
+        }
+      }
+    } catch (error) {
+      console.error('Orientation permission error:', error);
+      setOrientationPermissionDenied(true);
+    }
+  };
+
+  const startOrientationTracking = () => {
     const handleOrientation = (event: DeviceOrientationEvent) => {
       if (event.alpha !== null) {
         setHeading(event.alpha);
@@ -43,7 +74,7 @@ export default function Qibla() {
     return () => {
       window.removeEventListener("deviceorientation", handleOrientation);
     };
-  }, []);
+  };
 
   const qiblaAngle = qibla?.direction || 0;
   const rotationAngle = qiblaAngle - heading;
@@ -61,6 +92,23 @@ export default function Qibla() {
           <Button onClick={requestLocation} data-testid="button-request-location">
             <Navigation className="w-4 h-4 mr-2" /> Enable Location
           </Button>
+        </Card>
+      ) : needsOrientationPermission && !orientationPermissionDenied ? (
+        <Card className="bg-accent/30 border-white/50 p-6 rounded-2xl text-center">
+          <Compass className="w-12 h-12 text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground mb-4">
+            Compass access is required to detect your direction
+          </p>
+          <Button onClick={requestOrientationPermission} data-testid="button-request-compass">
+            <Compass className="w-4 h-4 mr-2" /> Enable Compass
+          </Button>
+        </Card>
+      ) : orientationPermissionDenied ? (
+        <Card className="bg-accent/30 border-white/50 p-6 rounded-2xl text-center">
+          <Compass className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground mb-4">
+            Compass permission was denied. Please enable it in your browser settings.
+          </p>
         </Card>
       ) : !coords || isLoading ? (
         <div className="flex flex-col items-center justify-center py-20">

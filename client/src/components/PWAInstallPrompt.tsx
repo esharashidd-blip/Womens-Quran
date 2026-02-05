@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, X, Smartphone } from "lucide-react";
+import { safeLocalStorage } from "@/lib/safe-storage";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -14,7 +15,7 @@ export function PWAInstallPrompt() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    const hasSeenPrompt = localStorage.getItem("noor-pwa-prompt-seen");
+    const hasSeenPrompt = safeLocalStorage.getItem("noor-pwa-prompt-seen");
     if (hasSeenPrompt) return;
 
     // Check if we're in a WKWebView (iOS app wrapper)
@@ -52,14 +53,14 @@ export function PWAInstallPrompt() {
     const { outcome } = await deferredPrompt.userChoice;
     
     if (outcome === 'accepted') {
-      localStorage.setItem("noor-pwa-prompt-seen", "true");
+      safeLocalStorage.setItem("noor-pwa-prompt-seen", "true");
     }
     setDeferredPrompt(null);
     setShowPrompt(false);
   };
 
   const handleDismiss = () => {
-    localStorage.setItem("noor-pwa-prompt-seen", "true");
+    safeLocalStorage.setItem("noor-pwa-prompt-seen", "true");
     setShowPrompt(false);
   };
 

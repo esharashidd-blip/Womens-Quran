@@ -22,7 +22,25 @@ export default function SurahView() {
   const [currentAyah, setCurrentAyah] = useState(1);
   const [selectedReciter, setSelectedReciter] = useState(RECITERS[0].id);
   const [showReciterPicker, setShowReciterPicker] = useState(false);
+  const [audioInitialized, setAudioInitialized] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize audio element on mount (iOS autoplay policy workaround)
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.preload = 'metadata';
+    }
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.onended = null;
+        audioRef.current.onerror = null;
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   // Calculate global ayah number for audio URL
   const getGlobalAyahNumber = (surahNumber: number, ayahNumberInSurah: number): number => {
@@ -47,39 +65,45 @@ export default function SurahView() {
   };
 
   // Play specific ayah
-  const playAyah = (ayahNumber: number) => {
-    if (!surah) return;
+  const playAyah = async (ayahNumber: number) => {
+    if (!surah || !audioRef.current) return;
 
     const url = getAudioUrl(surah.number, ayahNumber);
 
-    // Clean up existing audio and event listeners
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.onended = null;
-      audioRef.current.onerror = null;
-      audioRef.current.src = '';
-      audioRef.current = null;
-    }
+    // Remove old event listeners
+    audioRef.current.onended = null;
+    audioRef.current.onerror = null;
 
-    // Create new audio instance
-    audioRef.current = new Audio(url);
-    audioRef.current.play();
-    setCurrentAyah(ayahNumber);
-    setIsPlaying(true);
+    // Set new source and play (must be synchronous for iOS)
+    audioRef.current.src = url;
+    audioRef.current.load(); // Force load
 
-    audioRef.current.onended = () => {
-      // Auto-play next ayah if available
-      if (ayahNumber < surah.ayahs.length) {
-        playAyah(ayahNumber + 1);
-      } else {
+    try {
+      await audioRef.current.play();
+      setCurrentAyah(ayahNumber);
+      setIsPlaying(true);
+      setAudioInitialized(true);
+
+      // Set up event listeners after successful play
+      audioRef.current.onended = () => {
+        // Auto-play next ayah if available
+        if (ayahNumber < surah.ayahs.length) {
+          playAyah(ayahNumber + 1);
+        } else {
+          setIsPlaying(false);
+        }
+      };
+
+      audioRef.current.onerror = () => {
+        console.error('Failed to load audio');
         setIsPlaying(false);
-      }
-    };
-
-    audioRef.current.onerror = () => {
-      console.error('Failed to load audio');
+      };
+    } catch (error) {
+      // iOS autoplay policy rejection
+      console.warn('Audio play rejected:', error);
       setIsPlaying(false);
-    };
+      // User needs to tap play again
+    }
   };
 
   // Toggle play/pause
@@ -106,19 +130,6 @@ export default function SurahView() {
     playAyah(currentAyah - 1);
   };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.onended = null;
-        audioRef.current.onerror = null;
-        audioRef.current.src = '';
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
   // Reset audio when surah changes
   useEffect(() => {
     if (audioRef.current) {
@@ -126,10 +137,10 @@ export default function SurahView() {
       audioRef.current.onended = null;
       audioRef.current.onerror = null;
       audioRef.current.src = '';
-      audioRef.current = null;
     }
     setIsPlaying(false);
     setCurrentAyah(1);
+    setAudioInitialized(false);
   }, [id]);
 
   if (isLoading) {

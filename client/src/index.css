@@ -131,7 +131,10 @@
 @layer base {
   * {
     @apply border-border;
+    /* iOS momentum scrolling */
+    -webkit-overflow-scrolling: touch;
   }
+
   body {
     @apply font-sans antialiased bg-background text-foreground;
     /* Safe area insets for iPhone notch/Dynamic Island */
@@ -139,6 +142,30 @@
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+    /* Prevent pull-to-refresh on iOS */
+    overscroll-behavior-y: none;
+  }
+
+  /* Remove tap delay on iOS */
+  button, a, [role="button"], [type="button"], [type="submit"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Scroll containers */
+  .scroll-container,
+  [class*="overflow-y-auto"],
+  [class*="overflow-x-auto"],
+  [class*="overflow-auto"] {
+    overscroll-behavior: contain;
+  }
+
+  /* Fixed elements need safe area handling */
+  [class*="fixed"] {
+    /* iOS safe area support */
+    @supports (padding: max(0px)) {
+      padding-bottom: max(env(safe-area-inset-bottom), 0px);
+    }
   }
 }
 

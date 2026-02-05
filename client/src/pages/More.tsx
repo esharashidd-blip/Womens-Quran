@@ -62,6 +62,9 @@ export default function More() {
   // Check if notifications are supported
   const notificationsSupported = "Notification" in window && !isWKWebView();
 
+  // Check if geolocation is available
+  const canUseGeolocation = !isWKWebView() && 'geolocation' in navigator;
+
   const filteredLocations = useMemo(() => {
     if (!locationSearch.trim()) return POPULAR_LOCATIONS;
     const query = locationSearch.toLowerCase();
@@ -344,16 +347,18 @@ export default function More() {
               />
             </div>
 
-            <Button
-              variant="outline"
-              onClick={handleAutoDetect}
-              disabled={updateSettings.isPending || isDetecting}
-              className="w-full h-11 rounded-xl gap-2"
-              data-testid="button-auto-detect"
-            >
-              {isDetecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
-              Use My Current Location
-            </Button>
+            {canUseGeolocation && (
+              <Button
+                variant="outline"
+                onClick={handleAutoDetect}
+                disabled={updateSettings.isPending || isDetecting}
+                className="w-full h-11 rounded-xl gap-2"
+                data-testid="button-auto-detect"
+              >
+                {isDetecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
+                Use My Current Location
+              </Button>
+            )}
 
             <div className="flex-1 overflow-y-auto -mx-1 px-1 space-y-1">
               {filteredLocations.map((loc, index) => {

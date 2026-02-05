@@ -49,13 +49,19 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set high resolution
-    const dpr = window.devicePixelRatio || 1;
+    // Set high resolution for Retina displays
+    const dpr = window.devicePixelRatio || 2;
     const width = 1080;
     const height = 1920; // Instagram Story size
-    
-    canvas.width = width;
-    canvas.height = height;
+
+    // Scale canvas for high-DPI displays
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+
+    // Scale context to match DPR
+    ctx.scale(dpr, dpr);
     
     // Background
     const gradient = ctx.createLinearGradient(0, 0, width, height);
@@ -166,20 +172,47 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
 
     canvas.toBlob(async (blob) => {
       if (!blob) return;
-      const file = new File([blob], 'quote.png', { type: 'image/png' });
-      
-      if (navigator.share) {
+      const file = new File([blob], 'quran-verse.png', { type: 'image/png' });
+
+      // Check if file sharing is supported (iOS 15.4+)
+      const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
+
+      if (canShareFiles) {
         try {
           await navigator.share({
             files: [file],
             title: 'Quran Verse',
-            text: `${surahName} ${ayahNumber}`,
+            text: `${surahName} • Ayah ${ayahNumber}`,
           });
-        } catch (err) {
-          console.error("Share failed", err);
+          toast({ title: "Shared successfully" });
+        } catch (err: any) {
+          // User cancelled share or error occurred
+          if (err.name !== 'AbortError') {
+            console.error("Share failed", err);
+            handleDownload(); // Fallback to download
+          }
+        }
+      } else if (navigator.share) {
+        // Share API exists but file sharing not supported (iOS 15.0-15.3)
+        // Share without file, just text
+        try {
+          await navigator.share({
+            title: 'Quran Verse',
+            text: `${surahName} • Ayah ${ayahNumber}\n\nFrom Noor - Women's Quran App`,
+          });
+          toast({
+            title: "Shared",
+            description: "Download the image to share it"
+          });
+          handleDownload();
+        } catch (err: any) {
+          if (err.name !== 'AbortError') {
+            handleDownload();
+          }
         }
       } else {
-        handleDownload(); // Fallback
+        // No share API at all (older devices)
+        handleDownload();
       }
     });
   };

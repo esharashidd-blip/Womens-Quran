@@ -71,6 +71,14 @@ export default function Home() {
   const [isDetecting, setIsDetecting] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
 
+  // Check if we're in iOS WKWebView (geolocation won't work without native bridge)
+  const isWKWebView = () => {
+    const ua = navigator.userAgent;
+    return ua.includes('iPhone') && !ua.includes('Safari/');
+  };
+
+  const canUseGeolocation = !isWKWebView() && 'geolocation' in navigator;
+
   // Get display name from auth user
   const displayName = user?.firstName;
 
@@ -412,16 +420,18 @@ export default function Home() {
               />
             </div>
 
-            <Button
-              variant="outline"
-              onClick={handleAutoDetect}
-              disabled={updateSettings.isPending || isDetecting}
-              className="w-full h-11 rounded-xl gap-2"
-              data-testid="button-auto-detect"
-            >
-              {isDetecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
-              Use My Current Location
-            </Button>
+            {canUseGeolocation && (
+              <Button
+                variant="outline"
+                onClick={handleAutoDetect}
+                disabled={updateSettings.isPending || isDetecting}
+                className="w-full h-11 rounded-xl gap-2"
+                data-testid="button-auto-detect"
+              >
+                {isDetecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
+                Use My Current Location
+              </Button>
+            )}
 
             <div className="flex-1 overflow-y-auto -mx-1 px-1 space-y-1">
               {filteredLocations.map((loc, index) => {
