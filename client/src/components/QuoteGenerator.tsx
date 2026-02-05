@@ -1,8 +1,17 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Share2, Download, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Debounce utility
+function debounce<T extends (...args: any[]) => void>(func: T, wait: number): T {
+  let timeout: NodeJS.Timeout;
+  return ((...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  }) as T;
+}
 
 interface QuoteGeneratorProps {
   surahName: string;
@@ -33,7 +42,7 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
     "#FFFFFF"
   ];
 
-  const generateImage = () => {
+  const generateImageInternal = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -126,11 +135,17 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
     ctx.fillText(line, x, currentY);
   }
 
+  // Debounced version of generateImage to prevent UI blocking
+  const generateImage = useCallback(
+    debounce(generateImageInternal, 150),
+    [bgStyle, arabicText, translationText, surahName, ayahNumber]
+  );
+
   // Trigger generation when modal opens
   const handleOpen = (open: boolean) => {
     setIsOpen(open);
     if (open) {
-      setTimeout(generateImage, 100);
+      setTimeout(generateImageInternal, 100);
     }
   };
 
@@ -191,7 +206,7 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
             {backgrounds.map((_, i) => (
               <button
                 key={i}
-                onClick={() => { setBgStyle(i); setTimeout(generateImage, 50); }}
+                onClick={() => { setBgStyle(i); generateImage(); }}
                 className={`w-8 h-8 rounded-full border-2 transition-all ${bgStyle === i ? 'border-primary scale-110' : 'border-transparent'}`}
                 style={{ background: backgrounds[i] }}
               />

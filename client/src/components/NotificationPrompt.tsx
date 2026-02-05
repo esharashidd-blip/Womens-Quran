@@ -13,19 +13,34 @@ export function NotificationPrompt({ onClose }: NotificationPromptProps) {
   const updateSettings = useUpdateSettings();
   const [isRequesting, setIsRequesting] = useState(false);
 
+  // Check if we're in a WKWebView (iOS app wrapper)
+  const isWKWebView = () => {
+    const ua = navigator.userAgent;
+    return ua.includes('iPhone') && !ua.includes('Safari/');
+  };
+
+  // Don't show notification prompt in WKWebView or if not supported
+  if (isWKWebView() || !("Notification" in window)) {
+    onClose();
+    return null;
+  }
+
   const handleEnableNotifications = async () => {
     setIsRequesting(true);
-    
+
     try {
-      if ("Notification" in window) {
+      if ("Notification" in window && Notification.permission !== "denied") {
         const permission = await Notification.requestPermission();
-        
+
         if (permission === "granted") {
           updateSettings.mutate({ prayerNotifications: true });
+        } else {
+          updateSettings.mutate({ prayerNotifications: false });
         }
       }
     } catch (err) {
       console.error("Notification permission error:", err);
+      updateSettings.mutate({ prayerNotifications: false });
     } finally {
       setIsRequesting(false);
       onClose();

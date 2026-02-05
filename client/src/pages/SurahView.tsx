@@ -50,11 +50,18 @@ export default function SurahView() {
   const playAyah = (ayahNumber: number) => {
     if (!surah) return;
 
+    const url = getAudioUrl(surah.number, ayahNumber);
+
+    // Clean up existing audio and event listeners
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.onended = null;
+      audioRef.current.onerror = null;
+      audioRef.current.src = '';
+      audioRef.current = null;
     }
 
-    const url = getAudioUrl(surah.number, ayahNumber);
+    // Create new audio instance
     audioRef.current = new Audio(url);
     audioRef.current.play();
     setCurrentAyah(ayahNumber);
@@ -104,6 +111,9 @@ export default function SurahView() {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.onended = null;
+        audioRef.current.onerror = null;
+        audioRef.current.src = '';
         audioRef.current = null;
       }
     };
@@ -113,6 +123,9 @@ export default function SurahView() {
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.onended = null;
+      audioRef.current.onerror = null;
+      audioRef.current.src = '';
       audioRef.current = null;
     }
     setIsPlaying(false);

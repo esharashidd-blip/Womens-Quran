@@ -23,9 +23,9 @@ export function BottomNav() {
               <button
                 data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-3 py-2 transition-all duration-200",
-                  isActive 
-                    ? "text-primary scale-105" 
+                  "flex flex-col items-center justify-center gap-1 px-3 py-2 min-h-[44px] min-w-[44px] transition-all duration-200",
+                  isActive
+                    ? "text-primary scale-105"
                     : "text-muted-foreground hover:text-primary/70"
                 )}
               >

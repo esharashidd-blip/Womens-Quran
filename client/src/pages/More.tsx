@@ -53,6 +53,15 @@ export default function More() {
   const city = settings?.city || "Mecca";
   const country = settings?.country || "Saudi Arabia";
 
+  // Check if we're in a WKWebView (iOS app wrapper)
+  const isWKWebView = () => {
+    const ua = navigator.userAgent;
+    return ua.includes('iPhone') && !ua.includes('Safari/');
+  };
+
+  // Check if notifications are supported
+  const notificationsSupported = "Notification" in window && !isWKWebView();
+
   const filteredLocations = useMemo(() => {
     if (!locationSearch.trim()) return POPULAR_LOCATIONS;
     const query = locationSearch.toLowerCase();
@@ -196,29 +205,35 @@ export default function More() {
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </button>
 
-          <button
-            onClick={async () => {
-              const newValue = !settings?.prayerNotifications;
-              if (newValue && "Notification" in window && Notification.permission !== "granted") {
-                try {
-                  await Notification.requestPermission();
-                } catch (e) {
-                  console.log("Notification permission error:", e);
+          {notificationsSupported && (
+            <button
+              onClick={async () => {
+                const newValue = !settings?.prayerNotifications;
+                if (newValue && Notification.permission !== "granted") {
+                  try {
+                    const permission = await Notification.requestPermission();
+                    if (permission !== "granted") {
+                      return; // Don't enable if permission not granted
+                    }
+                  } catch (e) {
+                    console.log("Notification permission error:", e);
+                    return;
+                  }
                 }
-              }
-              updateSettings.mutate({ prayerNotifications: newValue });
-            }}
-            className="flex items-center justify-between w-full text-left"
-            data-testid="button-toggle-notifications"
-          >
-            <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm">Prayer Notifications</span>
-            </div>
-            <div className={`w-10 h-6 rounded-full transition-colors ${settings?.prayerNotifications ? 'bg-primary' : 'bg-muted'} flex items-center px-0.5`}>
-              <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${settings?.prayerNotifications ? 'translate-x-4' : 'translate-x-0'}`} />
-            </div>
-          </button>
+                updateSettings.mutate({ prayerNotifications: newValue });
+              }}
+              className="flex items-center justify-between w-full text-left"
+              data-testid="button-toggle-notifications"
+            >
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm">Prayer Notifications</span>
+              </div>
+              <div className={`w-10 h-6 rounded-full transition-colors ${settings?.prayerNotifications ? 'bg-primary' : 'bg-muted'} flex items-center px-0.5`}>
+                <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${settings?.prayerNotifications ? 'translate-x-4' : 'translate-x-0'}`} />
+              </div>
+            </button>
+          )}
 
           <button
             onClick={() => updateSettings.mutate({ ramadanMode: !settings?.ramadanMode })}

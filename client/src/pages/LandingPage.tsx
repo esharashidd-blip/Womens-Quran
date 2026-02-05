@@ -75,7 +75,7 @@ export default function LandingPage() {
       <div className="min-h-screen bg-gradient-to-b from-background via-accent/20 to-primary/10 flex flex-col">
         <button
           onClick={toggleAudio}
-          className={`fixed top-4 right-4 z-50 p-3 rounded-full backdrop-blur-sm shadow-md ${isPlaying ? 'bg-primary/20' : 'bg-white/80'}`}
+          className={`fixed top-4 right-4 z-50 w-11 h-11 flex items-center justify-center rounded-full backdrop-blur-sm shadow-md ${isPlaying ? 'bg-primary/20' : 'bg-white/80'}`}
           aria-label={isPlaying ? "Pause nasheed" : "Play nasheed"}
         >
           {isPlaying ? <Volume2 className="w-5 h-5 text-primary" /> : <VolumeX className="w-5 h-5 text-muted-foreground" />}
@@ -190,7 +190,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-b from-background via-accent/20 to-primary/10 flex flex-col">
       <button
         onClick={toggleAudio}
-        className={`fixed top-4 right-4 z-50 p-3 rounded-full backdrop-blur-sm shadow-md hover-elevate ${isPlaying ? 'bg-primary/20' : 'bg-white/80 animate-pulse'}`}
+        className={`fixed top-4 right-4 z-50 w-11 h-11 flex items-center justify-center rounded-full backdrop-blur-sm shadow-md hover-elevate ${isPlaying ? 'bg-primary/20' : 'bg-white/80 animate-pulse'}`}
         data-testid="button-toggle-audio"
         aria-label={isPlaying ? "Pause nasheed" : "Play nasheed"}
       >

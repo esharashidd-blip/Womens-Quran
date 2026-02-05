@@ -17,9 +17,16 @@ export function PWAInstallPrompt() {
     const hasSeenPrompt = localStorage.getItem("noor-pwa-prompt-seen");
     if (hasSeenPrompt) return;
 
+    // Check if we're in a WKWebView (iOS app wrapper)
+    const ua = navigator.userAgent;
+    const isWKWebView = ua.includes('iPhone') && !ua.includes('Safari/');
+
+    // Don't show prompt if already in WKWebView app
+    if (isWKWebView) return;
+
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    
+
     if (isStandalone) return;
 
     if (isIOSDevice) {
