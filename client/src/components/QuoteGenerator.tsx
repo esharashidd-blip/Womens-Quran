@@ -74,8 +74,9 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
     // Scale canvas for high-DPI displays
     canvas.width = width * dpr;
     canvas.height = height * dpr;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+
+    // Don't set inline styles - let CSS handle display size
+    // The canvas will render at high res but display at container size
 
     // Scale context to match DPR
     ctx.scale(dpr, dpr);
