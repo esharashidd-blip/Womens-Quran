@@ -4,18 +4,17 @@
 //
 //  Created by Esha Rashid on 02/02/2026.
 //
+//  ContentView.swift
+//  WomensQurans
+//
 
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            HomeView()
         }
-        .padding()
     }
 }
 
