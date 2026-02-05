@@ -13,7 +13,7 @@ struct HomeView: View {
         WebView(
             url: URL(string: "https://womens-quran-production.up.railway.app")!
         )
-        .ignoresSafeArea()
+        .edgesIgnoringSafeArea(.all)
     }
 }
 

@@ -13,11 +13,26 @@ struct WebView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
 
+        // Enable safe area handling
+        if #available(iOS 11.0, *) {
+            config.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
+        }
+
         let webView = WKWebView(frame: .zero, configuration: config)
 
-        // Disable bouncing and ensure proper content inset
+        // Make background transparent so web content shows through
+        webView.isOpaque = false
+        webView.backgroundColor = .clear
+        webView.scrollView.backgroundColor = .clear
+
+        // Disable bouncing but allow safe area insets to work
         webView.scrollView.bounces = false
         webView.scrollView.contentInsetAdjustmentBehavior = .never
+
+        // Enable safe area layout
+        if #available(iOS 11.0, *) {
+            webView.scrollView.contentInsetAdjustmentBehavior = .never
+        }
 
         let request = URLRequest(url: url)
         webView.load(request)
