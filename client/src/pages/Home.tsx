@@ -373,9 +373,23 @@ export default function Home() {
             variant="ghost"
             size="icon"
             className="h-8 w-8 hover:text-primary hover:bg-primary/10"
-            onClick={() => {
-              // TODO: Implement daily quote sharing
-              console.log("Share daily quote:", quote);
+            onClick={async () => {
+              try {
+                if (navigator.share) {
+                  await navigator.share({
+                    title: 'Daily Inspiration - Women\'s Quran App',
+                    text: `"${quote}"\n\n- Daily Inspiration from Women's Quran App`,
+                  });
+                } else {
+                  // Fallback: copy to clipboard
+                  await navigator.clipboard.writeText(`"${quote}"\n\n- Daily Inspiration from Women's Quran App`);
+                  alert('Quote copied to clipboard!');
+                }
+              } catch (err) {
+                if ((err as Error).name !== 'AbortError') {
+                  console.error('Share failed:', err);
+                }
+              }
             }}
           >
             <Share2 className="h-4 w-4" />
