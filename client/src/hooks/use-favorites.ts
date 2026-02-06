@@ -20,12 +20,19 @@ export function useAddFavorite() {
 
   return useMutation({
     mutationFn: async (favorite: InsertFavorite) => {
-      const res = await apiRequest(
-        api.favorites.create.method,
-        api.favorites.create.path,
-        favorite
-      );
-      return api.favorites.create.responses[201].parse(await res.json());
+      console.log('🔵 Attempting to save favorite:', favorite);
+      try {
+        const res = await apiRequest(
+          api.favorites.create.method,
+          api.favorites.create.path,
+          favorite
+        );
+        console.log('✅ Favorite saved successfully');
+        return api.favorites.create.responses[201].parse(await res.json());
+      } catch (error) {
+        console.error('❌ Failed to save favorite:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.favorites.list.path] });
@@ -34,10 +41,12 @@ export function useAddFavorite() {
         description: "This verse has been added to your collection.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('❌ Favorite mutation error:', error);
+      const errorMessage = error?.message || error?.toString() || "Could not save favorite";
       toast({
         title: "Error",
-        description: "Could not save favorite. Please try again.",
+        description: errorMessage + ". Make sure you're signed in.",
         variant: "destructive",
       });
     }
