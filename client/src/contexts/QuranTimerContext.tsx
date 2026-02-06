@@ -30,6 +30,7 @@ export function QuranTimerProvider({ children }: { children: ReactNode }) {
   const [isReading, setIsReading] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSaveRef = useRef<number>(0);
+  const savedMinutesRef = useRef<number>(0); // Track how many minutes we've already saved
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -103,16 +104,19 @@ export function QuranTimerProvider({ children }: { children: ReactNode }) {
 
   const saveProgress = useCallback(() => {
     if (elapsedSeconds >= 60) {
-      const additionalMinutes = Math.floor(elapsedSeconds / 60);
-      const remainderSeconds = elapsedSeconds % 60;
-      const newTotal = (todaySession?.minutesRead || 0) + additionalMinutes;
+      const currentMinutes = Math.floor(elapsedSeconds / 60);
+      const minutesToSave = currentMinutes - savedMinutesRef.current;
 
-      updateSession.mutate({
-        date: format(new Date(), 'yyyy-MM-dd'),
-        minutesRead: newTotal,
-      });
+      if (minutesToSave > 0) {
+        const newTotal = (todaySession?.minutesRead || 0) + minutesToSave;
 
-      setElapsedSeconds(remainderSeconds);
+        updateSession.mutate({
+          date: format(new Date(), 'yyyy-MM-dd'),
+          minutesRead: newTotal,
+        });
+
+        savedMinutesRef.current = currentMinutes;
+      }
     }
   }, [elapsedSeconds, todaySession, updateSession]);
 
@@ -129,6 +133,7 @@ export function QuranTimerProvider({ children }: { children: ReactNode }) {
     saveProgress();
     setElapsedSeconds(0);
     setIsReading(false);
+    savedMinutesRef.current = 0; // Reset saved minutes counter
   }, [saveProgress]);
 
   const toggleTimer = useCallback(() => {
