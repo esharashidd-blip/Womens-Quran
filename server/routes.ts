@@ -115,6 +115,19 @@ export async function registerRoutes(
       }
 
       const input = api.favorites.create.input.parse(req.body);
+
+      // Check if already favorited
+      const existingFavorites = await storage.getFavorites(userId);
+      const alreadyExists = existingFavorites.find(
+        f => f.surah_number === input.surahNumber && f.ayah_number === input.ayahNumber
+      );
+
+      if (alreadyExists) {
+        return res.status(400).json({
+          message: "This verse is already in your favorites"
+        });
+      }
+
       // Transform camelCase to snake_case for Supabase
       const favorite = await storage.createFavorite(userId, {
         surah_name: input.surahName,

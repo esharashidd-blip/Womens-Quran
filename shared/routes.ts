@@ -17,13 +17,25 @@ export const errorSchemas = {
 // Input schema for favorites - userId comes from auth token, not client
 const favoriteInputSchema = insertFavoriteSchema;
 
+// Response schema for favorites with camelCase
+const favoriteResponseSchema = z.object({
+  id: z.number(),
+  userId: z.string(),
+  surahName: z.string(),
+  surahNumber: z.number(),
+  ayahNumber: z.number(),
+  arabicText: z.string(),
+  translationText: z.string(),
+  createdAt: z.string(),
+});
+
 export const api = {
   favorites: {
     list: {
       method: 'GET' as const,
       path: '/api/favorites',
       responses: {
-        200: z.array(z.custom<typeof favorites.$inferSelect>()),
+        200: z.array(favoriteResponseSchema),
       },
     },
     create: {
@@ -31,7 +43,7 @@ export const api = {
       path: '/api/favorites',
       input: favoriteInputSchema,
       responses: {
-        201: z.custom<typeof favorites.$inferSelect>(),
+        201: favoriteResponseSchema,
         400: errorSchemas.validation,
       },
     },
