@@ -39,13 +39,56 @@ export function useUpdatePrayerProgress() {
       const res = await apiRequest("POST", `/api/prayer-progress/${date}`, { prayer, completed });
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ 
-        predicate: (query) => {
-          const key = query.queryKey;
-          return Array.isArray(key) && typeof key[0] === 'string' && key[0].includes("prayer-progress");
+    onMutate: async ({ date, prayer, completed }) => {
+      // Cancel any outgoing refetches for this specific date
+      await queryClient.cancelQueries({ queryKey: [`/api/prayer-progress/${date}`] });
+
+      // Snapshot the previous value for rollback
+      const previousProgress = queryClient.getQueryData<PrayerProgress | null>([`/api/prayer-progress/${date}`]);
+
+      // Optimistically update the cache with the new value
+      queryClient.setQueryData<PrayerProgress | null>([`/api/prayer-progress/${date}`], (old) => {
+        if (!old) {
+          // Create new progress entry if it doesn't exist
+          return {
+            id: 0,
+            userId: null,
+            date,
+            fajr: prayer === 'fajr' ? completed : false,
+            dhuhr: prayer === 'dhuhr' ? completed : false,
+            asr: prayer === 'asr' ? completed : false,
+            maghrib: prayer === 'maghrib' ? completed : false,
+            isha: prayer === 'isha' ? completed : false,
+          } as PrayerProgress;
         }
+        // Update existing entry
+        return {
+          ...old,
+          [prayer]: completed,
+        };
       });
+
+      return { previousProgress, date };
+    },
+    onError: (err, variables, context) => {
+      // Rollback to previous value on error
+      if (context?.previousProgress !== undefined) {
+        queryClient.setQueryData([`/api/prayer-progress/${context.date}`], context.previousProgress);
+      }
+    },
+    onSettled: (data, error, variables) => {
+      // Only invalidate the specific date's query
+      queryClient.invalidateQueries({ queryKey: [`/api/prayer-progress/${variables.date}`] });
+
+      // Also invalidate weekly/monthly queries since they might include this date
+      const now = new Date();
+      const startDate = format(startOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
+      const endDate = format(endOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
+      queryClient.invalidateQueries({ queryKey: [`/api/prayer-progress?startDate=${startDate}&endDate=${endDate}`] });
+
+      const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
+      const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+      queryClient.invalidateQueries({ queryKey: [`/api/prayer-progress?startDate=${monthStart}&endDate=${monthEnd}`] });
     },
   });
 }

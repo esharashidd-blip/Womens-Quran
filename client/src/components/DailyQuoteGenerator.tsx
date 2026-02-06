@@ -188,15 +188,12 @@ export function DailyQuoteGenerator({ quote }: DailyQuoteGeneratorProps) {
       reader.onloadend = async () => {
         const base64data = reader.result as string;
 
-        // Try to use native bridge if available (iOS app)
-        if ((window as any).webkit?.messageHandlers?.shareToInstagramStories) {
+        // Try to use native share sheet if available (iOS app)
+        if ((window as any).webkit?.messageHandlers?.shareImage) {
           try {
-            (window as any).webkit.messageHandlers.shareToInstagramStories.postMessage({
-              image: base64data,
-              backgroundTopColor: themes[bgStyle].gradient.start,
-              backgroundBottomColor: themes[bgStyle].gradient.end
+            (window as any).webkit.messageHandlers.shareImage.postMessage({
+              image: base64data
             });
-            toast({ title: "Opening Instagram Stories..." });
             return;
           } catch (err) {
             console.error("Native bridge failed:", err);
@@ -238,12 +235,11 @@ export function DailyQuoteGenerator({ quote }: DailyQuoteGeneratorProps) {
       reader.onloadend = async () => {
         const base64data = reader.result as string;
 
-        // Try to use native bridge if available (iOS app)
-        if ((window as any).webkit?.messageHandlers?.shareWithNativeSheet) {
+        // Try to use native share sheet if available (iOS app)
+        if ((window as any).webkit?.messageHandlers?.shareImage) {
           try {
-            (window as any).webkit.messageHandlers.shareWithNativeSheet.postMessage({
-              image: base64data,
-              text: `Daily Inspiration - From Women's Quran App`
+            (window as any).webkit.messageHandlers.shareImage.postMessage({
+              image: base64data
             });
             return;
           } catch (err) {

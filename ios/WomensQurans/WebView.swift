@@ -33,9 +33,7 @@ struct WebView: UIViewRepresentable {
 
         // Add JavaScript message handlers for sharing, audio, and location
         let contentController = WKUserContentController()
-        contentController.add(context.coordinator, name: "shareToInstagramStories")
-        contentController.add(context.coordinator, name: "shareToSocial")
-        contentController.add(context.coordinator, name: "shareWithNativeSheet")
+        contentController.add(context.coordinator, name: "shareImage")
         contentController.add(context.coordinator, name: "configureBackgroundAudio")
         contentController.add(context.coordinator, name: "updateNowPlaying")
         contentController.add(context.coordinator, name: "setupAudioControls")
@@ -84,19 +82,9 @@ struct WebView: UIViewRepresentable {
         // Handle messages from JavaScript
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
 
-            // Instagram Stories sharing
-            if message.name == "shareToInstagramStories" {
-                handleInstagramShare(message: message)
-            }
-
-            // Native iOS share sheet
-            else if message.name == "shareWithNativeSheet" {
-                handleNativeShare(message: message)
-            }
-
-            // General social media sharing
-            else if message.name == "shareToSocial" {
-                handleSocialShare(message: message)
+            // Native iOS share sheet (image only)
+            if message.name == "shareImage" {
+                handleShareImage(message: message)
             }
 
             // Background audio messages
@@ -112,48 +100,14 @@ struct WebView: UIViewRepresentable {
             }
         }
 
-        private func handleInstagramShare(message: WKScriptMessage) {
-            guard let body = message.body as? [String: Any],
-                  let base64Image = body["image"] as? String,
-                  let topColor = body["backgroundTopColor"] as? String,
-                  let bottomColor = body["backgroundBottomColor"] as? String else {
-                print("Invalid Instagram share data")
-                return
-            }
-
-            InstagramSharer.shareToStories(
-                imageBase64: base64Image,
-                topColor: topColor,
-                bottomColor: bottomColor
-            )
-        }
-
-        private func handleNativeShare(message: WKScriptMessage) {
+        private func handleShareImage(message: WKScriptMessage) {
             guard let body = message.body as? [String: Any],
                   let base64Image = body["image"] as? String else {
-                print("Invalid native share data")
+                print("Invalid share data")
                 return
             }
 
-            SocialMediaSharer.shareWithNativeSheet(
-                imageBase64: base64Image,
-                text: body["text"] as? String
-            )
-        }
-
-        private func handleSocialShare(message: WKScriptMessage) {
-            guard let body = message.body as? [String: Any],
-                  let platform = body["platform"] as? String,
-                  let base64Image = body["image"] as? String else {
-                print("Invalid social share data")
-                return
-            }
-
-            SocialMediaSharer.share(
-                platform: platform,
-                imageBase64: base64Image,
-                text: body["text"] as? String
-            )
+            SocialMediaSharer.shareImage(imageBase64: base64Image)
         }
 
         private func handleGetLocation(message: WKScriptMessage) {

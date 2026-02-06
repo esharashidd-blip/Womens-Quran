@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, date, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, date, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -16,7 +16,7 @@ export const favorites = pgTable("favorites", {
 
 export const qada = pgTable("qada", {
   id: serial("id").primaryKey(),
-  userId: text("user_id").notNull(),
+  userId: uuid("user_id").notNull(),
   prayerName: text("prayer_name").notNull(),
   count: integer("count").notNull().default(0),
 });

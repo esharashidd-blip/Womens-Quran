@@ -2,13 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>instagram</string>
-		<string>instagram-stories</string>
-		<string>whatsapp</string>
-		<string>snapchat</string>
-	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need your location to show accurate prayer times for your area</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
