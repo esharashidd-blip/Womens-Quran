@@ -91,9 +91,9 @@ export interface TokenUsage {
 }
 
 export interface IStorage {
-  getFavorites(): Promise<Favorite[]>;
-  createFavorite(favorite: Omit<Favorite, "id" | "created_at">): Promise<Favorite>;
-  deleteFavorite(id: number): Promise<void>;
+  getFavorites(userId: string): Promise<Favorite[]>;
+  createFavorite(userId: string, favorite: Omit<Favorite, "id" | "created_at" | "user_id">): Promise<Favorite>;
+  deleteFavorite(userId: string, id: number): Promise<void>;
 
   getQada(): Promise<Qada[]>;
   updateQada(prayerName: string, count: number): Promise<Qada>;
@@ -126,29 +126,32 @@ export interface IStorage {
 }
 
 export class SupabaseStorage implements IStorage {
-  async getFavorites(): Promise<Favorite[]> {
+  async getFavorites(userId: string): Promise<Favorite[]> {
     const { data, error } = await supabase
       .from("favorites")
-      .select("*");
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
     if (error) throw error;
     return data || [];
   }
 
-  async createFavorite(favorite: Omit<Favorite, "id" | "created_at">): Promise<Favorite> {
+  async createFavorite(userId: string, favorite: Omit<Favorite, "id" | "created_at" | "user_id">): Promise<Favorite> {
     const { data, error } = await supabase
       .from("favorites")
-      .insert(favorite)
+      .insert({ ...favorite, user_id: userId })
       .select()
       .single();
     if (error) throw error;
     return data;
   }
 
-  async deleteFavorite(id: number): Promise<void> {
+  async deleteFavorite(userId: string, id: number): Promise<void> {
     const { error } = await supabase
       .from("favorites")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_id", userId);  // Ensure users can only delete their own favorites
     if (error) throw error;
   }
 

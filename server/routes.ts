@@ -81,21 +81,33 @@ export async function registerRoutes(
   registerAuthRoutes(app);
   // Favorites routes
   app.get(api.favorites.list.path, async (req, res) => {
-    const favorites = await storage.getFavorites();
-    res.json(favorites);
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const favorites = await storage.getFavorites(userId);
+      res.json(favorites);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch favorites" });
+    }
   });
 
   app.post(api.favorites.create.path, async (req, res) => {
     try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const input = api.favorites.create.input.parse(req.body);
       // Transform camelCase to snake_case for Supabase
-      const favorite = await storage.createFavorite({
+      const favorite = await storage.createFavorite(userId, {
         surah_name: input.surahName,
         surah_number: input.surahNumber,
         ayah_number: input.ayahNumber,
         arabic_text: input.arabicText,
         translation_text: input.translationText,
-        user_id: null,
       });
       res.status(201).json(favorite);
     } catch (err) {
@@ -111,13 +123,22 @@ export async function registerRoutes(
   });
 
   app.delete(api.favorites.delete.path, async (req, res) => {
-    const idParam = req.params.id;
-    const id = parseInt(Array.isArray(idParam) ? idParam[0] : idParam);
-    if (isNaN(id)) {
-      return res.status(400).json({ message: "Invalid ID" });
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const idParam = req.params.id;
+      const id = parseInt(Array.isArray(idParam) ? idParam[0] : idParam);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      await storage.deleteFavorite(userId, id);
+      res.status(204).send();
+    } catch (err) {
+      res.status(500).json({ message: "Failed to delete favorite" });
     }
-    await storage.deleteFavorite(id);
-    res.status(204).send();
   });
 
   // Qada routes

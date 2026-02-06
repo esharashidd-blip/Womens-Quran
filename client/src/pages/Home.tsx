@@ -2,7 +2,8 @@ import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useTodayProgress, useWeeklyProgress, useUpdatePrayerProgress } from "@/hooks/use-prayer-progress";
 import { useProgrammeProgress } from "@/hooks/use-programme-progress";
-import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, ChevronDown, Search, Navigation, Check, Flame, Heart, ArrowRight, Share2 } from "lucide-react";
+import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, ChevronDown, Search, Navigation, Check, Flame, Heart, ArrowRight } from "lucide-react";
+import { DailyQuoteGenerator } from "@/components/DailyQuoteGenerator";
 import { Link } from "wouter";
 import { format, subDays } from "date-fns";
 import { Card } from "@/components/ui/card";
@@ -369,31 +370,7 @@ export default function Home() {
       <Card className="bg-white/80 backdrop-blur-sm border-white/50 p-5 rounded-2xl">
         <div className="flex items-start justify-between mb-2">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Daily Inspiration</p>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 hover:text-primary hover:bg-primary/10"
-            onClick={async () => {
-              try {
-                if (navigator.share) {
-                  await navigator.share({
-                    title: 'Daily Inspiration - Women\'s Quran App',
-                    text: `"${quote}"\n\n- Daily Inspiration from Women's Quran App`,
-                  });
-                } else {
-                  // Fallback: copy to clipboard
-                  await navigator.clipboard.writeText(`"${quote}"\n\n- Daily Inspiration from Women's Quran App`);
-                  alert('Quote copied to clipboard!');
-                }
-              } catch (err) {
-                if ((err as Error).name !== 'AbortError') {
-                  console.error('Share failed:', err);
-                }
-              }
-            }}
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
+          <DailyQuoteGenerator quote={quote} />
         </div>
         <p className="font-serif text-base text-foreground leading-relaxed italic" data-testid="text-quote">
           "{quote}"
