@@ -15,7 +15,7 @@ export default function Kalimas() {
         const displayName = parts.length > 1 ? parts[1] : selectedKalima.name;
 
         return (
-            <div className="min-h-screen pb-24 px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-6 animate-in fade-in slide-in-from-right duration-300">
+            <div className="min-h-screen pb-nav-safe px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-6 animate-in fade-in slide-in-from-right duration-300">
                 <div className="flex items-center gap-4">
                     <Button
                         variant="ghost"
@@ -67,7 +67,7 @@ export default function Kalimas() {
     }
 
     return (
-        <div className="min-h-screen pb-24 px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-6">
+        <div className="min-h-screen pb-nav-safe px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-6">
             <div className="flex items-center gap-3 mb-2">
                 <Link href="/more">
                     <Button variant="ghost" size="icon" className="rounded-full" data-testid="button-back-to-more">

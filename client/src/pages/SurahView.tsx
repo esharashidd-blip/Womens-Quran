@@ -154,7 +154,7 @@ export default function SurahView() {
   if (!surah) return <div>Surah not found</div>;
 
   return (
-    <div className="min-h-screen pb-44 pt-10 px-4 md:px-8 max-w-3xl mx-auto">
+    <div className="min-h-screen pb-nav-safe-lg pt-10 px-4 md:px-8 max-w-3xl mx-auto">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg py-4 -mx-4 px-4 flex items-center gap-4 mb-8 border-b border-primary/5">
         <Link href="/quran">

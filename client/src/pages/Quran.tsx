@@ -56,7 +56,7 @@ export default function Quran() {
   );
 
   return (
-    <div className="min-h-screen pb-24 pt-6 px-4 md:px-8 max-w-4xl mx-auto">
+    <div className="min-h-screen pb-nav-safe pt-6 px-4 md:px-8 max-w-4xl mx-auto">
       <div className="mb-6 space-y-4">
         <h1 className="text-3xl font-serif text-gray-800 text-center">Noble Quran</h1>
 

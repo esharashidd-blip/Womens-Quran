@@ -67,9 +67,9 @@ export function PWAInstallPrompt() {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center animate-in fade-in duration-300" onClick={handleDismiss}>
-      <Card 
-        className="w-full max-w-lg bg-background border-t border-white/50 rounded-t-3xl p-6 space-y-4 animate-in slide-in-from-bottom duration-300"
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center animate-in fade-in duration-300 pb-safe" onClick={handleDismiss}>
+      <Card
+        className="w-full max-w-lg bg-background border-t border-white/50 rounded-t-3xl p-6 mb-4 space-y-4 animate-in slide-in-from-bottom duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between">

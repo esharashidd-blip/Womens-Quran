@@ -8,7 +8,7 @@ export default function Favorites() {
   const { data: favorites, isLoading } = useFavorites();
 
   return (
-    <div className="min-h-screen pb-24 pt-16 px-4 md:px-8 max-w-3xl mx-auto">
+    <div className="min-h-screen pb-nav-safe pt-16 px-4 md:px-8 max-w-3xl mx-auto">
       <div className="text-center mb-12">
         <h1 className="text-4xl font-serif text-gray-800">Your Collection</h1>
         <p className="text-muted-foreground mt-2">Verses you have saved to your heart.</p>

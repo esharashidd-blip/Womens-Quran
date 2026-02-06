@@ -143,7 +143,7 @@ export default function IslamicCoach() {
   };
 
   return (
-    <div className="min-h-screen pb-24 flex flex-col">
+    <div className="min-h-screen pb-nav-safe flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg px-4 py-4 border-b border-primary/5">
         <div className="max-w-lg mx-auto flex items-center gap-4">

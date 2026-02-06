@@ -37,7 +37,7 @@ export default function Qada() {
   }
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-6">
+    <div className="min-h-screen pb-nav-safe px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-6">
       <div className="flex items-center gap-3">
         <Link href="/more">
           <Button variant="ghost" size="icon" className="rounded-full" data-testid="button-back">

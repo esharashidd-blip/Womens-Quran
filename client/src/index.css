@@ -176,6 +176,25 @@
 }
 
 @layer utilities {
+  /* iOS Safe Area Utilities */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pb-nav-safe {
+    /* Bottom padding for pages with BottomNav: nav height (4rem) + safe area */
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+
+  .pb-nav-safe-lg {
+    /* Larger bottom padding for pages needing extra space */
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
   .font-arabic {
     font-family: 'Amiri', 'Scheherazade New', serif;
   }

@@ -677,7 +677,7 @@ export default function ForYou() {
   }
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-6">
+    <div className="min-h-screen pb-nav-safe px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-6">
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-serif text-foreground">
           Salam{settings?.userName ? `, ${settings.userName}` : ''} <span className="text-primary">🤍</span>

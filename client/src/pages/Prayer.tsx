@@ -29,7 +29,7 @@ export default function Prayer() {
   }
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-8 md:px-8 max-w-lg mx-auto">
+    <div className="min-h-screen pb-nav-safe px-4 pt-8 md:px-8 max-w-lg mx-auto">
       <h1 className="text-2xl font-serif text-center mb-6">Prayer Times</h1>
 
       <Link href="/">

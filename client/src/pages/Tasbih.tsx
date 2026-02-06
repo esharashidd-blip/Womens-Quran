@@ -44,7 +44,7 @@ export default function Tasbih() {
   const currentPhrase = TASBIH_PHRASES[phraseIndex];
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-8 md:px-8 max-w-lg mx-auto flex flex-col items-center">
+    <div className="min-h-screen pb-nav-safe px-4 pt-8 md:px-8 max-w-lg mx-auto flex flex-col items-center">
       <h1 className="text-2xl font-serif text-center mb-4">Tasbih Counter</h1>
 
       <div className="flex gap-2 mb-6">
