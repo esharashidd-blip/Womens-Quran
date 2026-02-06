@@ -95,8 +95,8 @@ export interface IStorage {
   createFavorite(userId: string, favorite: Omit<Favorite, "id" | "created_at" | "user_id">): Promise<Favorite>;
   deleteFavorite(userId: string, id: number): Promise<void>;
 
-  getQada(): Promise<Qada[]>;
-  updateQada(prayerName: string, count: number): Promise<Qada>;
+  getQada(userId: string): Promise<Qada[]>;
+  updateQada(userId: string, prayerName: string, count: number): Promise<Qada>;
 
   getSettings(userId: string): Promise<Settings>;
   updateSettings(userId: string, updates: Partial<Settings>): Promise<Settings>;
@@ -155,26 +155,28 @@ export class SupabaseStorage implements IStorage {
     if (error) throw error;
   }
 
-  async getQada(): Promise<Qada[]> {
+  async getQada(userId: string): Promise<Qada[]> {
     const { data, error } = await supabase
       .from("qada")
-      .select("*");
+      .select("*")
+      .eq("user_id", userId);
     if (error) throw error;
     return data || [];
   }
 
-  async updateQada(prayerName: string, count: number): Promise<Qada> {
-    // Check if exists
+  async updateQada(userId: string, prayerName: string, count: number): Promise<Qada> {
+    // Check if exists for this user
     const { data: existing } = await supabase
       .from("qada")
       .select("*")
+      .eq("user_id", userId)
       .eq("prayer_name", prayerName)
       .single();
 
     if (!existing) {
       const { data, error } = await supabase
         .from("qada")
-        .insert({ prayer_name: prayerName, count })
+        .insert({ user_id: userId, prayer_name: prayerName, count })
         .select()
         .single();
       if (error) throw error;
@@ -184,6 +186,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabase
       .from("qada")
       .update({ count })
+      .eq("user_id", userId)
       .eq("prayer_name", prayerName)
       .select()
       .single();

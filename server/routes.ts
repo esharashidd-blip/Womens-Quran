@@ -170,15 +170,27 @@ export async function registerRoutes(
 
   // Qada routes
   app.get(api.qada.list.path, async (req, res) => {
-    const qadaList = await storage.getQada();
-    res.json(qadaList);
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const qadaList = await storage.getQada(userId);
+      res.json(qadaList);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch qada" });
+    }
   });
 
   app.post("/api/qada/:prayerName", async (req, res) => {
     try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const prayerName = req.params.prayerName;
       const { count } = req.body;
-      const updated = await storage.updateQada(prayerName, count);
+      const updated = await storage.updateQada(userId, prayerName, count);
       res.json(updated);
     } catch (err) {
       res.status(500).json({ message: "Internal server error" });

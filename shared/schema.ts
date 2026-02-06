@@ -16,6 +16,7 @@ export const favorites = pgTable("favorites", {
 
 export const qada = pgTable("qada", {
   id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
   prayerName: text("prayer_name").notNull(),
   count: integer("count").notNull().default(0),
 });
