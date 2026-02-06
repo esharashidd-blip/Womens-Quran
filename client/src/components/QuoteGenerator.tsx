@@ -96,10 +96,10 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
 
     // Header with decorative elements
     ctx.fillStyle = theme.accentColor;
-    ctx.font = "bold 36px 'Inter', sans-serif";
+    ctx.font = "bold 28px 'Inter', sans-serif";
     ctx.textAlign = "center";
-    ctx.letterSpacing = "3px";
-    ctx.fillText("NOOR", width / 2, 140);
+    ctx.letterSpacing = "2px";
+    ctx.fillText("WOMEN'S QURAN", width / 2, 140);
 
     // Decorative line
     ctx.beginPath();
@@ -189,54 +189,6 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
     toast({ title: "Downloaded", description: "Image saved to your device." });
   };
 
-  const handleInstagramShare = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-
-      // Convert to base64 for native bridge
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64data = reader.result as string;
-
-        // Try to use native share sheet if available (iOS app)
-        if ((window as any).webkit?.messageHandlers?.shareImage) {
-          try {
-            (window as any).webkit.messageHandlers.shareImage.postMessage({
-              image: base64data
-            });
-            return;
-          } catch (err) {
-            console.error("Native bridge failed:", err);
-          }
-        }
-
-        // Fallback: Copy to clipboard + download
-        try {
-          if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
-            await navigator.clipboard.write([
-              new ClipboardItem({ 'image/png': blob })
-            ]);
-          }
-        } catch (clipboardErr) {
-          console.error("Clipboard failed:", clipboardErr);
-        }
-
-        // Always download as backup
-        handleDownload();
-
-        toast({
-          title: "Ready for Instagram!",
-          description: "Image saved. Open Instagram Stories and paste or upload from camera roll.",
-          duration: 5000,
-        });
-      };
-      reader.readAsDataURL(blob);
-    }, 'image/png', 1.0);
-  };
-
   const handleNativeShare = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -273,7 +225,7 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
 
     canvas.toBlob(async (blob) => {
       if (!blob) return;
-      const file = new File([blob], `noor-verse-${surahName}-${ayahNumber}.png`, { type: 'image/png' });
+      const file = new File([blob], `womens-quran-${surahName}-${ayahNumber}.png`, { type: 'image/png' });
 
       // Check if file sharing is supported
       const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
@@ -362,22 +314,10 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 w-full">
-            {/* Instagram Stories - Special case with custom API */}
-            <Button
-              onClick={handleInstagramShare}
-              className="w-full gap-2 rounded-xl h-12 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white shadow-lg shadow-pink-500/25 hover:shadow-xl hover:-translate-y-0.5 transition-all font-semibold"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153.509.5.902 1.105 1.153 1.772.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 01-1.153 1.772c-.5.509-1.105.902-1.772 1.153-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 01-1.772-1.153 4.904 4.904 0 01-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 011.153-1.772A4.897 4.897 0 015.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 100 10 5 5 0 000-10zm6.5-.25a1.25 1.25 0 10-2.5 0 1.25 1.25 0 002.5 0zM12 9a3 3 0 110 6 3 3 0 010-6z"/>
-              </svg>
-              Share to Instagram Stories
-            </Button>
-
             {/* Native Share - Opens iOS share sheet */}
             <Button
               onClick={handleNativeShare}
-              variant="outline"
-              className="w-full gap-2 rounded-xl h-12 border-primary/20 hover:bg-primary/5 hover:text-primary font-medium"
+              className="w-full gap-2 rounded-xl h-12 bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-pink-500/25 hover:shadow-xl hover:-translate-y-0.5 transition-all font-semibold"
             >
               <Share2 className="w-5 h-5" /> Share
             </Button>
