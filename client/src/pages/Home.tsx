@@ -2,7 +2,7 @@ import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useTodayProgress, useWeeklyProgress, useUpdatePrayerProgress } from "@/hooks/use-prayer-progress";
 import { useProgrammeProgress } from "@/hooks/use-programme-progress";
-import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, ChevronDown, Search, Navigation, Check, Flame, Heart, ArrowRight } from "lucide-react";
+import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, ChevronDown, Search, Navigation, Check, Flame, Heart, ArrowRight, Share2 } from "lucide-react";
 import { Link } from "wouter";
 import { format, subDays } from "date-fns";
 import { Card } from "@/components/ui/card";
@@ -65,7 +65,12 @@ export default function Home() {
   const updateProgress = useUpdatePrayerProgress();
   const { data: menstrualProgress } = useProgrammeProgress("menstrual-guide");
   const [countdown, setCountdown] = useState("");
-  const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+  // Use date-based index so quote changes daily
+  const [quote] = useState(() => {
+    const today = new Date();
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    return QUOTES[dayOfYear % QUOTES.length];
+  });
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
   const [isDetecting, setIsDetecting] = useState(false);
@@ -362,7 +367,20 @@ export default function Home() {
       </Card>
 
       <Card className="bg-white/80 backdrop-blur-sm border-white/50 p-5 rounded-2xl">
-        <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Daily Inspiration</p>
+        <div className="flex items-start justify-between mb-2">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Daily Inspiration</p>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 hover:text-primary hover:bg-primary/10"
+            onClick={() => {
+              // TODO: Implement daily quote sharing
+              console.log("Share daily quote:", quote);
+            }}
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+        </div>
         <p className="font-serif text-base text-foreground leading-relaxed italic" data-testid="text-quote">
           "{quote}"
         </p>
