@@ -86,7 +86,7 @@ export default function LandingPage() {
             <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-primary/20 to-accent/40 flex items-center justify-center shadow-lg">
               <Moon className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-3xl font-serif text-foreground">Noor</h1>
+            <h1 className="text-3xl font-serif text-foreground">Welcome</h1>
           </div>
 
           <Card className="w-full bg-white/90 backdrop-blur-sm border-white/50 p-6 rounded-3xl">
@@ -202,7 +202,7 @@ export default function LandingPage() {
           <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary/20 to-accent/40 flex items-center justify-center shadow-lg">
             <Moon className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-4xl font-serif text-foreground">Noor</h1>
+          <h1 className="text-4xl font-serif text-foreground">Welcome</h1>
           <p className="text-muted-foreground text-sm mt-1">Your Islamic Companion</p>
         </div>
 
