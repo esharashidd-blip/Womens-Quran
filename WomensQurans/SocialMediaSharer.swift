@@ -10,6 +10,46 @@ import Foundation
 
 class SocialMediaSharer {
 
+    /// Open native iOS share sheet with image
+    /// - Parameters:
+    ///   - imageBase64: Base64 encoded image string
+    ///   - text: Optional text to share
+    static func shareWithNativeSheet(imageBase64: String, text: String? = nil) {
+        guard let imageData = getImageData(from: imageBase64),
+              let image = UIImage(data: imageData) else {
+            showAlert(message: "Failed to process image")
+            return
+        }
+
+        DispatchQueue.main.async {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let rootViewController = windowScene.windows.first?.rootViewController else {
+                return
+            }
+
+            var itemsToShare: [Any] = [image]
+            if let text = text {
+                itemsToShare.insert(text, at: 0)
+            }
+
+            let activityVC = UIActivityViewController(
+                activityItems: itemsToShare,
+                applicationActivities: nil
+            )
+
+            // For iPad
+            if let popoverController = activityVC.popoverPresentationController {
+                popoverController.sourceView = rootViewController.view
+                popoverController.sourceRect = CGRect(x: rootViewController.view.bounds.midX,
+                                                      y: rootViewController.view.bounds.midY,
+                                                      width: 0, height: 0)
+                popoverController.permittedArrowDirections = []
+            }
+
+            rootViewController.present(activityVC, animated: true)
+        }
+    }
+
     /// Share content to various social media platforms
     /// - Parameters:
     ///   - platform: Platform identifier ("whatsapp", "imessage", "snapchat")
