@@ -260,13 +260,13 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
           <Share2 className="w-5 h-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md bg-white/95 backdrop-blur-xl border-white/20">
-        <DialogHeader>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-xl border-white/20">
+        <DialogHeader className="sticky top-0 bg-white/95 backdrop-blur-xl z-10 pb-4 border-b border-gray-100">
           <DialogTitle className="text-center font-serif text-2xl text-primary-dark">Share Verse</DialogTitle>
           <DialogDescription className="text-center">Customize your card before sharing</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-5 items-center my-4">
+        <div className="flex flex-col gap-5 items-center my-4 pb-4">
           {/* Preview */}
           <div className="relative shadow-2xl rounded-3xl overflow-hidden w-full bg-gradient-to-br from-gray-50 to-gray-100 p-2">
             <div className="relative w-full aspect-[9/16] overflow-hidden rounded-2xl bg-white">

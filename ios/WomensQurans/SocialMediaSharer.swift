@@ -10,7 +10,7 @@ import Foundation
 
 class SocialMediaSharer {
 
-    /// Open native iOS share sheet with image preview
+    /// Open native iOS share sheet with image preview (no filename shown)
     /// - Parameter imageBase64: Base64 encoded image string
     static func shareImage(imageBase64: String) {
         guard let imageData = getImageData(from: imageBase64),
@@ -19,52 +19,32 @@ class SocialMediaSharer {
             return
         }
 
-        // Save image to temporary file for better preview support
-        guard let pngData = image.pngData() else {
-            showAlert(message: "Failed to convert image")
-            return
-        }
-
-        let tempDir = FileManager.default.temporaryDirectory
-        let fileName = "womens-quran-\(UUID().uuidString).png"
-        let fileURL = tempDir.appendingPathComponent(fileName)
-
-        do {
-            try pngData.write(to: fileURL)
-
-            DispatchQueue.main.async {
-                guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                      let rootViewController = windowScene.windows.first?.rootViewController else {
-                    return
-                }
-
-                // Share the file URL for better preview support
-                let activityVC = UIActivityViewController(
-                    activityItems: [fileURL],
-                    applicationActivities: nil
-                )
-
-                // For iPad support
-                if let popoverController = activityVC.popoverPresentationController {
-                    popoverController.sourceView = rootViewController.view
-                    popoverController.sourceRect = CGRect(
-                        x: rootViewController.view.bounds.midX,
-                        y: rootViewController.view.bounds.midY,
-                        width: 0,
-                        height: 0
-                    )
-                    popoverController.permittedArrowDirections = []
-                }
-
-                // Clean up temp file after sharing
-                activityVC.completionWithItemsHandler = { _, _, _, _ in
-                    try? FileManager.default.removeItem(at: fileURL)
-                }
-
-                rootViewController.present(activityVC, animated: true)
+        DispatchQueue.main.async {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let rootViewController = windowScene.windows.first?.rootViewController else {
+                return
             }
-        } catch {
-            showAlert(message: "Failed to save image for sharing")
+
+            // Share the image directly for a cleaner experience (no filename shown)
+            // iOS will automatically generate previews for UIImage objects
+            let activityVC = UIActivityViewController(
+                activityItems: [image],
+                applicationActivities: nil
+            )
+
+            // For iPad support
+            if let popoverController = activityVC.popoverPresentationController {
+                popoverController.sourceView = rootViewController.view
+                popoverController.sourceRect = CGRect(
+                    x: rootViewController.view.bounds.midX,
+                    y: rootViewController.view.bounds.midY,
+                    width: 0,
+                    height: 0
+                )
+                popoverController.permittedArrowDirections = []
+            }
+
+            rootViewController.present(activityVC, animated: true)
         }
     }
 
