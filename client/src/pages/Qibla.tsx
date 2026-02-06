@@ -3,6 +3,7 @@ import { useQiblaDirection } from "@/hooks/use-prayer-times";
 import { Loader2, Compass, Navigation, Landmark } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { nativeLocation } from "@/utils/native-location";
 
 export default function Qibla() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -17,18 +18,19 @@ export default function Qibla() {
     checkOrientationPermission();
   }, []);
 
-  const requestLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCoords({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-          setPermissionDenied(false);
-        },
-        () => setPermissionDenied(true)
-      );
+  const requestLocation = async () => {
+    try {
+      // Try native iOS location first (more accurate and respects iOS permissions)
+      const location = await nativeLocation.requestLocation();
+      setCoords({
+        lat: location.latitude,
+        lng: location.longitude,
+      });
+      setPermissionDenied(false);
+      console.log('✅ Location obtained:', location);
+    } catch (error) {
+      console.error('❌ Location error:', error);
+      setPermissionDenied(true);
     }
   };
 

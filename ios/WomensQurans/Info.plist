@@ -9,5 +9,9 @@
 		<string>whatsapp</string>
 		<string>snapchat</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to show accurate prayer times for your area</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We need your location to show accurate prayer times for your area</string>
 </dict>
 </plist>

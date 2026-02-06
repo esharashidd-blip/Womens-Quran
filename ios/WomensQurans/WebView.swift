@@ -5,6 +5,7 @@
 //  Created by Esha Rashid on 02/02/2026.
 import SwiftUI
 import WebKit
+import CoreLocation
 
 struct WebView: UIViewRepresentable {
     let url: URL
@@ -17,12 +18,20 @@ struct WebView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
 
+        // CRITICAL FIX: Use persistent data store for localStorage, cookies, and IndexedDB
+        // This fixes Qada counter resetting and ensures Supabase auth persists correctly
+        config.websiteDataStore = WKWebsiteDataStore.default()
+
+        // Enable JavaScript and storage APIs
+        config.preferences.javaScriptEnabled = true
+        config.preferences.javaScriptCanOpenWindowsAutomatically = false
+
         // Enable safe area handling
         if #available(iOS 11.0, *) {
             config.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
         }
 
-        // Add JavaScript message handlers for sharing and audio
+        // Add JavaScript message handlers for sharing, audio, and location
         let contentController = WKUserContentController()
         contentController.add(context.coordinator, name: "shareToInstagramStories")
         contentController.add(context.coordinator, name: "shareToSocial")
@@ -30,6 +39,7 @@ struct WebView: UIViewRepresentable {
         contentController.add(context.coordinator, name: "configureBackgroundAudio")
         contentController.add(context.coordinator, name: "updateNowPlaying")
         contentController.add(context.coordinator, name: "setupAudioControls")
+        contentController.add(context.coordinator, name: "getLocation")
         config.userContentController = contentController
 
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -95,6 +105,11 @@ struct WebView: UIViewRepresentable {
                     message.name == "setupAudioControls" {
                 audioBridge.userContentController(userContentController, didReceive: message)
             }
+
+            // Location request
+            else if message.name == "getLocation" {
+                handleGetLocation(message: message)
+            }
         }
 
         private func handleInstagramShare(message: WKScriptMessage) {
@@ -139,6 +154,25 @@ struct WebView: UIViewRepresentable {
                 imageBase64: base64Image,
                 text: body["text"] as? String
             )
+        }
+
+        private func handleGetLocation(message: WKScriptMessage) {
+            LocationManager.shared.requestLocation { latitude, longitude in
+                guard let webView = message.webView else { return }
+
+                let script = """
+                window.dispatchEvent(new CustomEvent('nativeLocation', {
+                    detail: {
+                        latitude: \(latitude),
+                        longitude: \(longitude)
+                    }
+                }));
+                """
+
+                DispatchQueue.main.async {
+                    webView.evaluateJavaScript(script, completionHandler: nil)
+                }
+            }
         }
 
         // Optional: Handle navigation for external links
