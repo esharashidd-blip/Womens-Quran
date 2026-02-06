@@ -5,6 +5,8 @@ import type { Qada } from "@shared/schema";
 export function useQada() {
   return useQuery<Qada[]>({
     queryKey: ["/api/qada"],
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 }
 

@@ -10,6 +10,16 @@ function toSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
   return result;
 }
 
+// Helper to convert snake_case DB response to camelCase for frontend
+function toCamelCase<T>(obj: Record<string, unknown>): T {
+  const result: Record<string, unknown> = {};
+  for (const key of Object.keys(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    result[camelKey] = obj[key];
+  }
+  return result as T;
+}
+
 // Types matching the database schema
 export interface Favorite {
   id: number;
@@ -161,37 +171,21 @@ export class SupabaseStorage implements IStorage {
       .select("*")
       .eq("user_id", userId);
     if (error) throw error;
-    return data || [];
+    return (data || []).map(row => toCamelCase<Qada>(row as Record<string, unknown>));
   }
 
   async updateQada(userId: string, prayerName: string, count: number): Promise<Qada> {
-    // Check if exists for this user
-    const { data: existing } = await supabase
-      .from("qada")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("prayer_name", prayerName)
-      .single();
-
-    if (!existing) {
-      const { data, error } = await supabase
-        .from("qada")
-        .insert({ user_id: userId, prayer_name: prayerName, count })
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    }
-
+    // Use upsert to avoid race conditions
     const { data, error } = await supabase
       .from("qada")
-      .update({ count })
-      .eq("user_id", userId)
-      .eq("prayer_name", prayerName)
+      .upsert(
+        { user_id: userId, prayer_name: prayerName, count },
+        { onConflict: "user_id,prayer_name" }
+      )
       .select()
       .single();
     if (error) throw error;
-    return data;
+    return toCamelCase<Qada>(data as Record<string, unknown>);
   }
 
   async getSettings(userId: string): Promise<Settings> {
