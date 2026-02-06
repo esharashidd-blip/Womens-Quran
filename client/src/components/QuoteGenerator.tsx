@@ -67,17 +67,16 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set high resolution for Retina displays
-    const dpr = window.devicePixelRatio || 2;
-    const width = 1080;
-    const height = 1920; // Instagram Story size
+    // Use HALF resolution for preview - 4x faster!
+    const dpr = Math.min(window.devicePixelRatio || 2, 2);
+    const width = 540;  // Half of Instagram Story width
+    const height = 960; // Half of Instagram Story height
 
-    // Scale canvas for high-DPI displays
+    // Scale canvas for preview
     canvas.width = width * dpr;
     canvas.height = height * dpr;
-
-    // Don't set inline styles - let CSS handle display size
-    // The canvas will render at high res but display at container size
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
 
     // Scale context to match DPR
     ctx.scale(dpr, dpr);
@@ -92,48 +91,48 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    // Styling
-    const padding = 120;
+    // Styling - scaled for half resolution
+    const padding = 60;
 
     // Header with decorative elements
     ctx.fillStyle = theme.accentColor;
-    ctx.font = "bold 28px 'Inter', sans-serif";
+    ctx.font = "bold 14px 'Inter', sans-serif";
     ctx.textAlign = "center";
-    ctx.letterSpacing = "2px";
-    ctx.fillText("WOMEN'S QURAN", width / 2, 140);
+    ctx.letterSpacing = "1px";
+    ctx.fillText("WOMEN'S QURAN", width / 2, 70);
 
     // Decorative line
     ctx.beginPath();
-    ctx.moveTo(width / 2 - 80, 170);
-    ctx.lineTo(width / 2 + 80, 170);
+    ctx.moveTo(width / 2 - 40, 85);
+    ctx.lineTo(width / 2 + 40, 85);
     ctx.strokeStyle = theme.accentColor;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     // Arabic Text - larger and more prominent
     ctx.fillStyle = theme.textColor;
-    ctx.font = "bold 90px 'Amiri', serif";
+    ctx.font = "bold 45px 'Amiri', serif";
     ctx.direction = "rtl";
     ctx.textAlign = "center";
-    wrapText(ctx, arabicText, width / 2, height / 2 - 250, width - (padding * 2), 150);
+    wrapText(ctx, arabicText, width / 2, height / 2 - 125, width - (padding * 2), 75);
 
     // English Translation
     ctx.direction = "ltr";
-    ctx.font = "italic 38px 'Playfair Display', serif";
+    ctx.font = "italic 19px 'Playfair Display', serif";
     ctx.fillStyle = theme.textColor;
     ctx.globalAlpha = 0.9;
-    wrapText(ctx, `"${translationText}"`, width / 2, height / 2 + 150, width - (padding * 2), 68);
+    wrapText(ctx, `"${translationText}"`, width / 2, height / 2 + 75, width - (padding * 2), 34);
     ctx.globalAlpha = 1;
 
     // Footer reference
-    ctx.font = "28px 'Inter', sans-serif";
+    ctx.font = "14px 'Inter', sans-serif";
     ctx.fillStyle = theme.accentColor;
-    ctx.fillText(`${surahName} • Ayah ${ayahNumber}`, width / 2, height - 140);
+    ctx.fillText(`${surahName} • Ayah ${ayahNumber}`, width / 2, height - 70);
 
     // Subtle watermark
-    ctx.font = "20px 'Inter', sans-serif";
+    ctx.font = "10px 'Inter', sans-serif";
     ctx.globalAlpha = 0.4;
-    ctx.fillText("Women's Quran App", width / 2, height - 80);
+    ctx.fillText("Women's Quran App", width / 2, height - 40);
     ctx.globalAlpha = 1;
   };
 

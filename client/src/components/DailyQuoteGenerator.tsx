@@ -64,14 +64,18 @@ export function DailyQuoteGenerator({ quote }: DailyQuoteGeneratorProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set high resolution for Retina displays
-    const dpr = window.devicePixelRatio || 2;
-    const width = 1080;
-    const height = 1920; // Instagram Story size
+    // Use HALF resolution for preview - 4x faster!
+    const dpr = Math.min(window.devicePixelRatio || 2, 2);
+    const width = 540;  // Half of Instagram Story width
+    const height = 960; // Half of Instagram Story height
 
     // Scale canvas for high-DPI displays
     canvas.width = width * dpr;
     canvas.height = height * dpr;
+
+    // Set CSS size for proper display
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
 
     // Scale context to match DPR
     ctx.scale(dpr, dpr);
@@ -86,40 +90,40 @@ export function DailyQuoteGenerator({ quote }: DailyQuoteGeneratorProps) {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    // Styling
-    const padding = 120;
+    // Styling - scaled for half resolution
+    const padding = 60;
 
     // Header with decorative elements
     ctx.fillStyle = theme.accentColor;
-    ctx.font = "bold 36px 'Inter', sans-serif";
+    ctx.font = "bold 18px 'Inter', sans-serif";
     ctx.textAlign = "center";
-    ctx.letterSpacing = "3px";
-    ctx.fillText("DAILY INSPIRATION", width / 2, 140);
+    ctx.letterSpacing = "1.5px";
+    ctx.fillText("DAILY INSPIRATION", width / 2, 70);
 
     // Decorative line
     ctx.beginPath();
-    ctx.moveTo(width / 2 - 120, 170);
-    ctx.lineTo(width / 2 + 120, 170);
+    ctx.moveTo(width / 2 - 60, 85);
+    ctx.lineTo(width / 2 + 60, 85);
     ctx.strokeStyle = theme.accentColor;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     // Quote Text
     ctx.fillStyle = theme.textColor;
-    ctx.font = "italic 48px 'Playfair Display', serif";
+    ctx.font = "italic 24px 'Playfair Display', serif";
     ctx.textAlign = "center";
-    wrapText(ctx, `"${quote}"`, width / 2, height / 2 - 100, width - (padding * 2), 80);
+    wrapText(ctx, `"${quote}"`, width / 2, height / 2 - 50, width - (padding * 2), 40);
 
     // Footer
-    ctx.font = "28px 'Inter', sans-serif";
+    ctx.font = "14px 'Inter', sans-serif";
     ctx.fillStyle = theme.accentColor;
-    ctx.fillText("Women's Quran App", width / 2, height - 140);
+    ctx.fillText("Women's Quran App", width / 2, height - 70);
 
     // Subtle watermark
-    ctx.font = "20px 'Inter', sans-serif";
+    ctx.font = "10px 'Inter', sans-serif";
     ctx.globalAlpha = 0.4;
     const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    ctx.fillText(today, width / 2, height - 80);
+    ctx.fillText(today, width / 2, height - 40);
     ctx.globalAlpha = 1;
   };
 
