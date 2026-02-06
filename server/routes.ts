@@ -20,6 +20,20 @@ function transformQuranSession(session: QuranReadingSession | null) {
   };
 }
 
+// Helper to transform Favorite from snake_case to camelCase
+function transformFavorite(favorite: any) {
+  return {
+    id: favorite.id,
+    userId: favorite.user_id,
+    surahName: favorite.surah_name,
+    surahNumber: favorite.surah_number,
+    ayahNumber: favorite.ayah_number,
+    arabicText: favorite.arabic_text,
+    translationText: favorite.translation_text,
+    createdAt: favorite.created_at,
+  };
+}
+
 // Helper to transform coach conversation from snake_case to camelCase
 function transformConversation(conv: CoachConversation) {
   return {
@@ -87,7 +101,7 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Unauthorized" });
       }
       const favorites = await storage.getFavorites(userId);
-      res.json(favorites);
+      res.json(favorites.map(transformFavorite));
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch favorites" });
     }
@@ -109,7 +123,7 @@ export async function registerRoutes(
         arabic_text: input.arabicText,
         translation_text: input.translationText,
       });
-      res.status(201).json(favorite);
+      res.status(201).json(transformFavorite(favorite));
     } catch (err) {
       if (err instanceof z.ZodError) {
         res.status(400).json({
