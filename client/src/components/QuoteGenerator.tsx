@@ -206,37 +206,37 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
           <Share2 className="w-5 h-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-xl border-white/20">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="text-center font-serif text-2xl text-primary-dark">Share Verse</DialogTitle>
-          <DialogDescription className="text-center">Customize your card before sharing</DialogDescription>
+      <DialogContent className="max-w-[95vw] w-full sm:max-w-md max-h-[95vh] overflow-y-auto bg-white/98 backdrop-blur-xl border-white/20 p-3 sm:p-4">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-center font-serif text-lg sm:text-xl text-primary-dark">Share Verse</DialogTitle>
+          <DialogDescription className="text-center text-xs">Customize before sharing</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-5 items-center my-4 pb-4">
+        <div className="flex flex-col gap-3 items-center pb-2">
           {/* Preview */}
-          <div className="relative shadow-2xl rounded-3xl overflow-hidden w-full bg-gradient-to-br from-gray-50 to-gray-100 p-2">
-            <div className="relative w-full aspect-[9/16] overflow-hidden rounded-2xl bg-white">
+          <div className="relative shadow-lg rounded-2xl overflow-hidden w-full bg-gradient-to-br from-gray-50 to-gray-100 p-1.5">
+            <div className="relative w-full aspect-[9/16] overflow-hidden rounded-xl bg-white">
               <canvas ref={canvasRef} className="w-full h-full object-contain" />
             </div>
           </div>
 
           {/* Theme Picker */}
           <div className="w-full">
-            <p className="text-xs font-medium text-muted-foreground text-center mb-3 uppercase tracking-wide">Choose Theme</p>
-            <div className="grid grid-cols-5 gap-3">
+            <p className="text-[10px] font-medium text-muted-foreground text-center mb-2 uppercase tracking-wide">Theme</p>
+            <div className="grid grid-cols-5 gap-2">
               {themes.map((theme, i) => (
                 <button
                   key={i}
                   onClick={() => setBgStyle(i)}
-                  className={`relative group flex flex-col items-center gap-2 p-2 rounded-xl transition-all ${
+                  className={`relative group flex flex-col items-center gap-1 p-1.5 rounded-lg transition-all ${
                     bgStyle === i
-                      ? 'bg-primary/10 scale-105'
+                      ? 'bg-primary/10'
                       : 'hover:bg-accent/50'
                   }`}
                 >
                   <div
-                    className={`w-12 h-12 rounded-full shadow-md transition-all ${
-                      bgStyle === i ? 'ring-2 ring-primary ring-offset-2' : 'group-hover:scale-110'
+                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full shadow-md transition-all ${
+                      bgStyle === i ? 'ring-2 ring-primary ring-offset-1' : ''
                     }`}
                     style={{
                       background: `linear-gradient(135deg, ${theme.gradient.start} 0%, ${theme.gradient.end} 100%)`
@@ -244,11 +244,11 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
                   >
                     {bgStyle === i && (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Check className="w-5 h-5 text-white drop-shadow-lg" />
+                        <Check className="w-4 h-4 text-white drop-shadow-lg" />
                       </div>
                     )}
                   </div>
-                  <span className={`text-[10px] font-medium transition-colors ${
+                  <span className={`text-[9px] font-medium transition-colors ${
                     bgStyle === i ? 'text-primary' : 'text-muted-foreground'
                   }`}>
                     {theme.name}
@@ -259,20 +259,20 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-3 w-full">
+          <div className="flex flex-col gap-2 w-full">
             {/* Native Share - Opens iOS share sheet */}
             <Button
               onClick={handleNativeShare}
-              className="w-full gap-2 rounded-xl h-12 bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-pink-500/25 hover:shadow-xl hover:-translate-y-0.5 transition-all font-semibold"
+              className="w-full gap-2 rounded-xl h-11 sm:h-12 bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-pink-500/20 hover:shadow-xl active:scale-[0.98] transition-all font-semibold text-sm"
             >
-              <Share2 className="w-5 h-5" /> Share
+              <Share2 className="w-4 h-4" /> Share
             </Button>
 
             {/* Download */}
             <Button
               onClick={handleDownload}
               variant="outline"
-              className="w-full gap-2 rounded-xl h-11 border-primary/20 hover:bg-primary/5 hover:text-primary"
+              className="w-full gap-2 rounded-xl h-10 sm:h-11 border-primary/20 hover:bg-primary/5 hover:text-primary active:scale-[0.98] transition-all text-sm"
             >
               <Download className="w-4 h-4" /> Save to Photos
             </Button>
