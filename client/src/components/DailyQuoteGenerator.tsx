@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, Dialog
 import { Button } from "@/components/ui/button";
 import { Share2, Download, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { waitForFonts, downloadCanvasImage, shareCanvasImage } from "@/utils/canvas-utils";
 
 // Debounce utility
 function debounce<T extends (...args: any[]) => void>(func: T, wait: number): T {
@@ -150,10 +151,11 @@ export function DailyQuoteGenerator({ quote }: DailyQuoteGeneratorProps) {
   );
 
   // Trigger generation when modal opens
-  const handleOpen = (open: boolean) => {
+  const handleOpen = async (open: boolean) => {
     setIsOpen(open);
     if (open) {
-      setTimeout(generateImageInternal, 100);
+      await waitForFonts();
+      generateImageInternal();
     }
   };
 
@@ -164,80 +166,27 @@ export function DailyQuoteGenerator({ quote }: DailyQuoteGeneratorProps) {
     }
   }, [bgStyle, isOpen]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const link = document.createElement('a');
     const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    link.download = `daily-inspiration-${today}.png`;
-    link.href = canvas.toDataURL();
-    link.click();
-    toast({ title: "Downloaded", description: "Image saved to your device." });
+    const success = await downloadCanvasImage(canvas, `womens-quran-daily-${today}.png`);
+    if (success) {
+      toast({ title: "Saved!", description: "Image saved successfully" });
+    } else {
+      toast({ title: "Error", description: "Failed to save image", variant: "destructive" });
+    }
   };
 
   const handleNativeShare = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64data = reader.result as string;
-
-        // Try to use native share sheet if available (iOS app)
-        if ((window as any).webkit?.messageHandlers?.shareImage) {
-          try {
-            (window as any).webkit.messageHandlers.shareImage.postMessage({
-              image: base64data
-            });
-            return;
-          } catch (err) {
-            console.error("Native bridge failed:", err);
-          }
-        }
-
-        // Fallback to Web Share API or download
-        handleShare();
-      };
-      reader.readAsDataURL(blob);
-    }, 'image/png', 1.0);
-  };
-
-  const handleShare = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      const file = new File([blob], `daily-inspiration.png`, { type: 'image/png' });
-
-      // Check if file sharing is supported
-      const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
-
-      if (canShareFiles) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: 'Daily Inspiration',
-            text: 'Daily Inspiration from Women\'s Quran App',
-          });
-          toast({ title: "Shared successfully" });
-        } catch (err: any) {
-          if (err.name !== 'AbortError') {
-            handleDownload();
-          }
-        }
-      } else {
-        handleDownload();
-        toast({
-          title: "Image saved",
-          description: "Upload from your camera roll to share",
-        });
-      }
-    }, 'image/png', 1.0);
+    const success = await shareCanvasImage(canvas);
+    if (!success) {
+      toast({ title: "Share cancelled", description: "You can try saving instead" });
+    }
   };
 
   return (
