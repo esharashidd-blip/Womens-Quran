@@ -75,8 +75,6 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
     // Scale canvas for preview
     canvas.width = width * dpr;
     canvas.height = height * dpr;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
 
     // Scale context to match DPR
     ctx.scale(dpr, dpr);
@@ -209,7 +207,7 @@ export function QuoteGenerator({ surahName, ayahNumber, arabicText, translationT
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-xl border-white/20">
-        <DialogHeader className="sticky top-0 bg-white/95 backdrop-blur-xl z-10 pb-4 border-b border-gray-100">
+        <DialogHeader className="pb-4">
           <DialogTitle className="text-center font-serif text-2xl text-primary-dark">Share Verse</DialogTitle>
           <DialogDescription className="text-center">Customize your card before sharing</DialogDescription>
         </DialogHeader>
