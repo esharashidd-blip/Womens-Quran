@@ -222,22 +222,35 @@ function ChatView({
 
   const canSend = tokenUsage?.allowed !== false;
 
+  // Scroll to bottom when keyboard opens (iOS)
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const onResize = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+    viewport.addEventListener('resize', onResize);
+    return () => viewport.removeEventListener('resize', onResize);
+  }, []);
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-primary/10">
-        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="flex-1">
-          <h2 className="font-serif text-lg">Islamic Life Coach</h2>
-          <p className="text-xs text-muted-foreground">Faith-based guidance for sisters</p>
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-[env(safe-area-inset-top)] border-b border-primary/10">
+        <div className="flex items-center gap-3 py-3 w-full">
+          <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1">
+            <h2 className="font-serif text-lg">Islamic Life Coach</h2>
+            <p className="text-xs text-muted-foreground">Faith-based guidance for sisters</p>
+          </div>
         </div>
       </div>
 
       {/* Token usage */}
       {tokenUsage && (
-        <div className="px-4 py-2 border-b border-primary/5">
+        <div className="flex-shrink-0 px-4 py-2 border-b border-primary/5">
           <TokenUsageBar used={tokenUsage.used} limit={tokenUsage.dailyLimit} />
         </div>
       )}
@@ -317,7 +330,7 @@ function ChatView({
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 border-t border-primary/10 bg-background/50">
+      <div className="flex-shrink-0 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-primary/10 bg-background/50">
         {!canSend ? (
           <div className="flex items-center gap-2 text-orange-600 bg-orange-50 rounded-xl p-3">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -332,15 +345,16 @@ function ChatView({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={() => setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 300)}
               placeholder="Share what's on your heart..."
               disabled={isSending}
-              className="flex-1 rounded-xl bg-white/80 border-primary/10"
+              className="flex-1 h-12 rounded-xl bg-white/80 border-primary/10"
             />
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isSending}
               size="icon"
-              className="rounded-xl"
+              className="h-12 w-12 rounded-xl"
             >
               <Send className="w-4 h-4" />
             </Button>
@@ -407,7 +421,7 @@ export default function Coach() {
   // Show chat view if a conversation is selected
   if (selectedConversationId !== null) {
     return (
-      <div className="fixed inset-0 bottom-16 flex flex-col bg-gradient-to-br from-primary/5 via-background to-primary/10">
+      <div className="fixed inset-0 h-[100dvh] flex flex-col bg-gradient-to-br from-primary/5 via-background to-primary/10 z-50">
         <ChatView
           conversationId={selectedConversationId}
           messages={messages}
