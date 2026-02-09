@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+// ScrollArea removed - causes flex layout issues on iOS
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
@@ -236,8 +236,8 @@ function ChatView({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-[env(safe-area-inset-top)] border-b border-primary/10">
-        <div className="flex items-center gap-3 py-3 w-full">
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-[max(env(safe-area-inset-top,0px),44px)] border-b border-primary/10 bg-background/80">
+        <div className="flex items-center gap-3 py-2 w-full">
           <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -256,7 +256,7 @@ function ChatView({
       )}
 
       {/* Messages */}
-      <ScrollArea ref={scrollRef} className="flex-1 p-4">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-4">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -327,10 +327,10 @@ function ChatView({
             <div ref={messagesEndRef} />
           </div>
         )}
-      </ScrollArea>
+      </div>
 
       {/* Input */}
-      <div className="flex-shrink-0 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-primary/10 bg-background/50">
+      <div className="flex-shrink-0 px-4 pt-3 pb-[max(calc(0.75rem+env(safe-area-inset-bottom,0px)),1.5rem)] border-t border-primary/10 bg-background/80">
         {!canSend ? (
           <div className="flex items-center gap-2 text-orange-600 bg-orange-50 rounded-xl p-3">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -421,7 +421,7 @@ export default function Coach() {
   // Show chat view if a conversation is selected
   if (selectedConversationId !== null) {
     return (
-      <div className="fixed inset-0 h-[100dvh] flex flex-col bg-gradient-to-br from-primary/5 via-background to-primary/10 z-50">
+      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-primary/5 via-background to-primary/10 z-50">
         <ChatView
           conversationId={selectedConversationId}
           messages={messages}
