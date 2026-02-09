@@ -234,9 +234,9 @@ function ChatView({
   }, []);
 
   return (
-    <div className="flex flex-col" style={{ height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b border-primary/10 bg-background" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)' }}>
+      <div className="px-4 border-b border-primary/10 bg-background" style={{ flexShrink: 0, paddingTop: '48px' }}>
         <div className="flex items-center gap-3 py-2 w-full">
           <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
             <ArrowLeft className="w-5 h-5" />
@@ -250,19 +250,19 @@ function ChatView({
 
       {/* Token usage */}
       {tokenUsage && (
-        <div className="flex-shrink-0 px-4 py-2 border-b border-primary/5">
+        <div className="px-4 py-2 border-b border-primary/5" style={{ flexShrink: 0 }}>
           <TokenUsageBar used={tokenUsage.used} limit={tokenUsage.dailyLimit} />
         </div>
       )}
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-4">
+      <div ref={scrollRef} className="p-4" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center py-12 space-y-4">
+          <div className="text-center py-8 space-y-4">
             <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
               <MessageCircle className="w-8 h-8 text-primary" />
             </div>
@@ -330,7 +330,7 @@ function ChatView({
       </div>
 
       {/* Input */}
-      <div className="flex-shrink-0 px-4 pt-3 border-t border-primary/10 bg-background" style={{ paddingBottom: 'max(calc(1rem + env(safe-area-inset-bottom, 0px)), 2.5rem)' }}>
+      <div className="px-4 border-t border-primary/10 bg-background" style={{ flexShrink: 0, paddingTop: '12px', paddingBottom: '28px' }}>
         {!canSend ? (
           <div className="flex items-center gap-2 text-orange-600 bg-orange-50 rounded-xl p-3">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -421,7 +421,7 @@ export default function Coach() {
   // Show chat view if a conversation is selected
   if (selectedConversationId !== null) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-primary/5 via-background to-primary/10 z-50" style={{ height: '100dvh' }}>
+      <div className="bg-gradient-to-br from-primary/5 via-background to-primary/10" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, display: 'flex', flexDirection: 'column' }}>
         <ChatView
           conversationId={selectedConversationId}
           messages={messages}
