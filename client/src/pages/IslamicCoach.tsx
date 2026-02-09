@@ -142,11 +142,22 @@ export default function IslamicCoach() {
     }
   };
 
+  // Scroll to bottom when keyboard opens (iOS)
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const onResize = () => {
+      scrollToBottom();
+    };
+    viewport.addEventListener('resize', onResize);
+    return () => viewport.removeEventListener('resize', onResize);
+  }, []);
+
   return (
-    <div className="min-h-screen pb-nav-safe flex flex-col">
+    <div className="h-[100dvh] flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg px-4 py-4 border-b border-primary/5">
-        <div className="max-w-lg mx-auto flex items-center gap-4">
+      <div className="flex-shrink-0 z-40 bg-background/80 backdrop-blur-lg px-4 pt-[env(safe-area-inset-top)] border-b border-primary/5">
+        <div className="max-w-lg mx-auto flex items-center gap-4 py-3">
           <Link href="/more">
             <Button variant="ghost" size="icon" className="rounded-full">
               <ArrowLeft className="w-5 h-5" />
@@ -241,7 +252,7 @@ export default function IslamicCoach() {
       </div>
 
       {/* Input Area */}
-      <div className="sticky bottom-0 bg-background border-t border-primary/5 px-4 py-4">
+      <div className="flex-shrink-0 bg-background border-t border-primary/5 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <div className="max-w-lg mx-auto">
           {!canAskQuestion ? (
             <Card className="bg-amber-50 border-amber-200 p-4 rounded-xl text-center">
@@ -258,7 +269,8 @@ export default function IslamicCoach() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask a question..."
+                onFocus={() => setTimeout(scrollToBottom, 300)}
+                placeholder="Share what's on your heart..."
                 className="flex-1 h-12 rounded-xl bg-white/80 border-primary/10"
                 disabled={isLoading}
               />
