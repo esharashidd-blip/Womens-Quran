@@ -3,11 +3,13 @@ import { SurahCard } from "@/components/SurahCard";
 import { useTodayQuranSession, useWeeklyQuranSessions, calculateWeeklyMinutes } from "@/hooks/use-quran-sessions";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useQuranTimer } from "@/contexts/QuranTimerContext";
-import { Loader2, Search, BookOpen, Clock, Play, Pause, RotateCcw, TrendingUp } from "lucide-react";
+import { Loader2, Search, BookOpen, Clock, Play, Pause, RotateCcw, TrendingUp, Bookmark } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useQuranBookmark } from "@/hooks/use-quran-bookmark";
+import { Link } from "wouter";
 
 // Total Quran pages (standard Uthmani mushaf)
 const TOTAL_QURAN_PAGES = 604;
@@ -20,6 +22,7 @@ export default function Quran() {
   const { data: todaySession } = useTodayQuranSession();
   const { data: weekSessions } = useWeeklyQuranSessions();
   const { elapsedSeconds, isReading, toggleTimer, resetTimer } = useQuranTimer();
+  const { data: bookmark } = useQuranBookmark();
   const [search, setSearch] = useState("");
 
   const goalMinutes = settings?.quranGoalMinutes || 10;
@@ -157,6 +160,24 @@ export default function Quran() {
             </div>
           )}
         </Card>
+
+        {/* Continue Reading Bookmark */}
+        {bookmark && (
+          <Link href={`/surah/${bookmark.surahNumber}`}>
+            <Card className="bg-gradient-to-r from-primary/10 to-accent/20 border-primary/10 p-4 rounded-2xl cursor-pointer hover:shadow-md transition-all active:scale-[0.98]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/15 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Bookmark className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">Continue Reading</p>
+                  <p className="text-xs text-muted-foreground">{bookmark.surahName} - Ayah {bookmark.ayahNumber}</p>
+                </div>
+                <span className="text-xs text-primary font-medium">Resume</span>
+              </div>
+            </Card>
+          </Link>
+        )}
 
         <div className="relative max-w-md mx-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />

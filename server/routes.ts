@@ -325,6 +325,86 @@ export async function registerRoutes(
     }
   });
 
+  // ===== Programme Progress Routes =====
+
+  // Get all programme progress for the user
+  app.get("/api/programme-progress", async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const progress = await storage.getAllProgrammeProgress(userId);
+      res.json(progress);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch programme progress" });
+    }
+  });
+
+  // Get progress for a specific programme
+  app.get("/api/programme-progress/:programmeId", async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const progress = await storage.getProgrammeProgress(userId, req.params.programmeId);
+      if (!progress) {
+        return res.json(null);
+      }
+      res.json(progress);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch programme progress" });
+    }
+  });
+
+  // Update programme progress
+  app.post("/api/programme-progress/:programmeId", async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const updated = await storage.updateProgrammeProgress(userId, req.params.programmeId, req.body);
+      res.json(updated);
+    } catch (err) {
+      console.error("Error updating programme progress:", err);
+      res.status(500).json({ message: "Failed to update programme progress" });
+    }
+  });
+
+  // ===== Quran Bookmark Routes =====
+
+  // Get the user's bookmark
+  app.get("/api/quran-bookmark", async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const bookmark = await storage.getQuranBookmark(userId);
+      res.json(bookmark);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch bookmark" });
+    }
+  });
+
+  // Set/update the user's bookmark
+  app.post("/api/quran-bookmark", async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const { surahNumber, ayahNumber, surahName } = req.body;
+      const bookmark = await storage.setQuranBookmark(userId, surahNumber, ayahNumber, surahName);
+      res.json(bookmark);
+    } catch (err) {
+      console.error("Error setting bookmark:", err);
+      res.status(500).json({ message: "Failed to save bookmark" });
+    }
+  });
+
   // ===== Islamic Coach Routes =====
 
   // Get all conversations for a user

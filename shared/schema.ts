@@ -87,6 +87,30 @@ export const tokenUsage = pgTable("token_usage", {
   requestCount: integer("request_count").notNull().default(0),
 });
 
+// Programme progress tracking (For You section)
+export const programmeProgress = pgTable("programme_progress", {
+  id: serial("id").primaryKey(),
+  userId: uuid("user_id").notNull(),
+  programmeId: text("programme_id").notNull(),
+  currentDay: integer("current_day").notNull().default(0),
+  completedDays: text("completed_days").notNull().default("[]"),
+  journalEntries: text("journal_entries").notNull().default("{}"),
+  emotionalCheckIns: text("emotional_check_ins").notNull().default("{}"),
+  startedAt: timestamp("started_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Quran reading bookmark (one per user)
+export const quranBookmarks = pgTable("quran_bookmarks", {
+  id: serial("id").primaryKey(),
+  userId: uuid("user_id").notNull(),
+  surahNumber: integer("surah_number").notNull(),
+  ayahNumber: integer("ayah_number").notNull(),
+  surahName: text("surah_name").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertFavoriteSchema = createInsertSchema(favorites).omit({ id: true });
 export const insertQadaSchema = createInsertSchema(qada).omit({ id: true });
 export const insertSettingsSchema = createInsertSchema(settings).omit({ id: true });
@@ -113,3 +137,6 @@ export type InsertQuranReadingSession = z.infer<typeof insertQuranReadingSession
 export type InsertCoachConversation = z.infer<typeof insertCoachConversationSchema>;
 export type InsertCoachMessage = z.infer<typeof insertCoachMessageSchema>;
 export type InsertTokenUsage = z.infer<typeof insertTokenUsageSchema>;
+
+export type ProgrammeProgress = typeof programmeProgress.$inferSelect;
+export type QuranBookmark = typeof quranBookmarks.$inferSelect;

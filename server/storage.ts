@@ -100,6 +100,28 @@ export interface TokenUsage {
   request_count: number;
 }
 
+export interface ProgrammeProgressRow {
+  id: number;
+  user_id: string;
+  programme_id: string;
+  current_day: number;
+  completed_days: string;
+  journal_entries: string;
+  emotional_check_ins: string;
+  started_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface QuranBookmarkRow {
+  id: number;
+  user_id: string;
+  surah_number: number;
+  ayah_number: number;
+  surah_name: string;
+  updated_at: string | null;
+}
+
 export interface IStorage {
   getFavorites(userId: string): Promise<Favorite[]>;
   createFavorite(userId: string, favorite: Omit<Favorite, "id" | "created_at" | "user_id">): Promise<Favorite>;
@@ -118,6 +140,15 @@ export interface IStorage {
   getQuranReadingSessions(userId: string, startDate: string, endDate: string): Promise<QuranReadingSession[]>;
   getTodayQuranSession(userId: string): Promise<QuranReadingSession | null>;
   updateQuranSession(userId: string, data: Partial<QuranReadingSession>): Promise<QuranReadingSession>;
+
+  // Programme progress methods
+  getAllProgrammeProgress(userId: string): Promise<ProgrammeProgressRow[]>;
+  getProgrammeProgress(userId: string, programmeId: string): Promise<ProgrammeProgressRow | null>;
+  updateProgrammeProgress(userId: string, programmeId: string, updates: Partial<ProgrammeProgressRow>): Promise<ProgrammeProgressRow>;
+
+  // Quran bookmark methods
+  getQuranBookmark(userId: string): Promise<QuranBookmarkRow | null>;
+  setQuranBookmark(userId: string, surahNumber: number, ayahNumber: number, surahName: string): Promise<QuranBookmarkRow>;
 
   // Coach chat methods
   getConversations(userId: string): Promise<CoachConversation[]>;
@@ -459,6 +490,113 @@ export class SupabaseStorage implements IStorage {
       remaining,
       used,
     };
+  }
+
+  // Programme progress methods
+  async getAllProgrammeProgress(userId: string): Promise<ProgrammeProgressRow[]> {
+    const { data, error } = await supabase
+      .from("programme_progress")
+      .select("*")
+      .eq("user_id", userId);
+    if (error) throw error;
+    return (data || []).map(row => toCamelCase<ProgrammeProgressRow>(row as Record<string, unknown>));
+  }
+
+  async getProgrammeProgress(userId: string, programmeId: string): Promise<ProgrammeProgressRow | null> {
+    const { data } = await supabase
+      .from("programme_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("programme_id", programmeId)
+      .single();
+    if (!data) return null;
+    return toCamelCase<ProgrammeProgressRow>(data as Record<string, unknown>);
+  }
+
+  async updateProgrammeProgress(userId: string, programmeId: string, updates: Partial<ProgrammeProgressRow>): Promise<ProgrammeProgressRow> {
+    const snakeUpdates = toSnakeCase(updates as Record<string, unknown>);
+    // Remove fields that shouldn't be in the upsert payload
+    delete snakeUpdates.id;
+    delete snakeUpdates.created_at;
+
+    const existing = await this.getProgrammeProgress(userId, programmeId);
+
+    if (!existing) {
+      const { data, error } = await supabase
+        .from("programme_progress")
+        .insert({
+          user_id: userId,
+          programme_id: programmeId,
+          current_day: 0,
+          completed_days: "[]",
+          journal_entries: "{}",
+          emotional_check_ins: "{}",
+          ...snakeUpdates,
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return toCamelCase<ProgrammeProgressRow>(data as Record<string, unknown>);
+    }
+
+    const { data, error } = await supabase
+      .from("programme_progress")
+      .update({
+        ...snakeUpdates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .eq("programme_id", programmeId)
+      .select()
+      .single();
+    if (error) throw error;
+    return toCamelCase<ProgrammeProgressRow>(data as Record<string, unknown>);
+  }
+
+  // Quran bookmark methods
+  async getQuranBookmark(userId: string): Promise<QuranBookmarkRow | null> {
+    const { data } = await supabase
+      .from("quran_bookmarks")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+    if (!data) return null;
+    return toCamelCase<QuranBookmarkRow>(data as Record<string, unknown>);
+  }
+
+  async setQuranBookmark(userId: string, surahNumber: number, ayahNumber: number, surahName: string): Promise<QuranBookmarkRow> {
+    const existing = await this.getQuranBookmark(userId);
+
+    if (!existing) {
+      const { data, error } = await supabase
+        .from("quran_bookmarks")
+        .insert({
+          user_id: userId,
+          surah_number: surahNumber,
+          ayah_number: ayahNumber,
+          surah_name: surahName,
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return toCamelCase<QuranBookmarkRow>(data as Record<string, unknown>);
+    }
+
+    const { data, error } = await supabase
+      .from("quran_bookmarks")
+      .update({
+        surah_number: surahNumber,
+        ayah_number: ayahNumber,
+        surah_name: surahName,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .select()
+      .single();
+    if (error) throw error;
+    return toCamelCase<QuranBookmarkRow>(data as Record<string, unknown>);
   }
 }
 

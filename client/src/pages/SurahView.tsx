@@ -1,10 +1,12 @@
 import { useParams, Link } from "wouter";
 import { useSurahDetail } from "@/hooks/use-quran";
 import { VerseCard } from "@/components/VerseCard";
-import { Loader2, ArrowLeft, Play, Pause, SkipForward, SkipBack, Volume2 } from "lucide-react";
+import { Loader2, ArrowLeft, Play, Pause, SkipForward, SkipBack, Volume2, Bookmark, BookmarkCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { useQuranBookmark, useSetQuranBookmark } from "@/hooks/use-quran-bookmark";
+import { useToast } from "@/hooks/use-toast";
 
 // Available reciters with their identifiers
 const RECITERS = [
@@ -24,6 +26,19 @@ export default function SurahView() {
   const [showReciterPicker, setShowReciterPicker] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { data: bookmark } = useQuranBookmark();
+  const setBookmark = useSetQuranBookmark();
+  const { toast } = useToast();
+
+  const isBookmarked = bookmark?.surahNumber === Number(id) && bookmark?.ayahNumber === currentAyah;
+
+  const handleBookmark = () => {
+    if (!surah) return;
+    setBookmark.mutate(
+      { surahNumber: surah.number, ayahNumber: currentAyah, surahName: surah.englishName },
+      { onSuccess: () => toast({ title: "Bookmark saved" }) }
+    );
+  };
 
   // Initialize audio element on mount (iOS autoplay policy workaround)
   useEffect(() => {
@@ -166,6 +181,13 @@ export default function SurahView() {
           <h1 className="text-2xl font-serif text-gray-800">{surah.englishName}</h1>
           <p className="text-xs text-muted-foreground uppercase tracking-wider">{surah.englishNameTranslation} • {surah.revelationType}</p>
         </div>
+        <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10" onClick={handleBookmark}>
+          {isBookmarked ? (
+            <BookmarkCheck className="w-5 h-5 text-primary" />
+          ) : (
+            <Bookmark className="w-5 h-5 text-gray-500" />
+          )}
+        </Button>
       </div>
 
       {/* Bismillah */}
