@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useRef, useState } from "react";
 import { Moon, Star, Book, Heart, Compass, Clock, Volume2, VolumeX, Loader2, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 
 export default function LandingPage() {
   const [isMuted, setIsMuted] = useState(true);
@@ -19,6 +20,7 @@ export default function LandingPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { login, signUp } = useAuth();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     const audio = new Audio("https://archive.org/download/Muhammad-AlMuqit-nasheed/I%20Am%20Resistant%20-%20Muhammad%20Al%20Muqit.ogg");
@@ -180,6 +182,17 @@ export default function LandingPage() {
             >
               Back
             </Button>
+
+            <p className="text-center text-xs text-muted-foreground mt-3">
+              By signing up, you agree to our{" "}
+              <button
+                type="button"
+                onClick={() => setLocation("/privacy")}
+                className="text-primary underline"
+              >
+                Privacy Policy
+              </button>
+            </p>
           </Card>
         </div>
       </div>

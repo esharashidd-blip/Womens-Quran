@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -28,6 +28,7 @@ import MenstrualGuide from "@/pages/MenstrualGuide";
 import Duas from "@/pages/Duas";
 import LandingPage from "@/pages/LandingPage";
 import AuthCallback from "@/pages/AuthCallback";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 
 function AuthenticatedApp() {
   const { data: settings, isLoading: settingsLoading } = useSettings();
@@ -69,6 +70,7 @@ function AuthenticatedApp() {
           <Route path="/menstrual-guide" component={MenstrualGuide} />
           <Route path="/duas" component={Duas} />
           <Route path="/auth/callback" component={AuthCallback} />
+          <Route path="/privacy" component={PrivacyPolicy} />
           <Route component={NotFound} />
         </Switch>
         <BottomNav />
@@ -83,6 +85,12 @@ function AuthenticatedApp() {
 
 function AppContent() {
   const { user, isLoading } = useAuth();
+  const [location] = useLocation();
+
+  // Public routes accessible without authentication
+  if (location === "/privacy") {
+    return <PrivacyPolicy />;
+  }
 
   if (isLoading) {
     return (
