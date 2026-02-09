@@ -608,19 +608,7 @@ export async function registerRoutes(
     }
   });
 
-  // Seed qada prayers if empty
-  try {
-    const existingQada = await storage.getQada();
-    if (existingQada.length === 0) {
-      const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-      for (const prayer of prayers) {
-        await storage.updateQada(prayer, 0);
-      }
-      console.log("Seeded qada tracker");
-    }
-  } catch (err) {
-    console.error("Error seeding qada:", err);
-  }
+  // Qada entries are created per-user on first access via upsert
 
   return httpServer;
 }
