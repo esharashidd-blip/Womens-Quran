@@ -234,9 +234,9 @@ function ChatView({
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col" style={{ height: '100%' }}>
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-[max(env(safe-area-inset-top,0px),44px)] border-b border-primary/10 bg-background/80">
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b border-primary/10 bg-background" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)' }}>
         <div className="flex items-center gap-3 py-2 w-full">
           <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
             <ArrowLeft className="w-5 h-5" />
@@ -330,7 +330,7 @@ function ChatView({
       </div>
 
       {/* Input */}
-      <div className="flex-shrink-0 px-4 pt-3 pb-[max(calc(1rem+env(safe-area-inset-bottom,0px)),2.5rem)] border-t border-primary/10 bg-background">
+      <div className="flex-shrink-0 px-4 pt-3 border-t border-primary/10 bg-background" style={{ paddingBottom: 'max(calc(1rem + env(safe-area-inset-bottom, 0px)), 2.5rem)' }}>
         {!canSend ? (
           <div className="flex items-center gap-2 text-orange-600 bg-orange-50 rounded-xl p-3">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -421,7 +421,7 @@ export default function Coach() {
   // Show chat view if a conversation is selected
   if (selectedConversationId !== null) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-primary/5 via-background to-primary/10 z-50">
+      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-primary/5 via-background to-primary/10 z-50" style={{ height: '100dvh' }}>
         <ChatView
           conversationId={selectedConversationId}
           messages={messages}
