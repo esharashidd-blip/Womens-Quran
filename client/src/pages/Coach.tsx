@@ -421,7 +421,7 @@ export default function Coach() {
   // Show chat view if a conversation is selected
   if (selectedConversationId !== null) {
     return (
-      <div className="bg-gradient-to-br from-primary/5 via-background to-primary/10" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, display: 'flex', flexDirection: 'column' }}>
+      <div className="bg-gradient-to-br from-primary/5 via-background to-primary/10" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 60, display: 'flex', flexDirection: 'column' }}>
         <ChatView
           conversationId={selectedConversationId}
           messages={messages}
