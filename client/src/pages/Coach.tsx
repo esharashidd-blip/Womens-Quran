@@ -234,9 +234,9 @@ function ChatView({
   }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <>
       {/* Header */}
-      <div className="px-4 border-b border-primary/10 bg-background" style={{ flexShrink: 0, paddingTop: '48px' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 61, paddingTop: '48px', backgroundColor: 'hsl(var(--background))' }} className="px-4 border-b border-primary/10">
         <div className="flex items-center gap-3 py-2 w-full">
           <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
             <ArrowLeft className="w-5 h-5" />
@@ -248,15 +248,14 @@ function ChatView({
         </div>
       </div>
 
-      {/* Token usage */}
-      {tokenUsage && (
-        <div className="px-4 py-2 border-b border-primary/5" style={{ flexShrink: 0 }}>
-          <TokenUsageBar used={tokenUsage.used} limit={tokenUsage.dailyLimit} />
-        </div>
-      )}
-
-      {/* Messages */}
-      <div ref={scrollRef} className="p-4" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+      {/* Messages - scrollable area between header and input */}
+      <div ref={scrollRef} style={{ position: 'fixed', top: tokenUsage ? '130px' : '100px', bottom: '90px', left: 0, right: 0, zIndex: 60, overflowY: 'auto', padding: '16px' }}>
+        {/* Token usage - inside scroll area at top */}
+        {tokenUsage && (
+          <div className="px-0 py-2 mb-3 border-b border-primary/5">
+            <TokenUsageBar used={tokenUsage.used} limit={tokenUsage.dailyLimit} />
+          </div>
+        )}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -329,8 +328,8 @@ function ChatView({
         )}
       </div>
 
-      {/* Input */}
-      <div className="px-4 border-t border-primary/10 bg-background" style={{ flexShrink: 0, paddingTop: '12px', paddingBottom: '28px' }}>
+      {/* Input - fixed to bottom of screen */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 61, padding: '12px 16px 28px', backgroundColor: 'hsl(var(--background))', borderTop: '1px solid hsl(var(--primary) / 0.1)' }}>
         {!canSend ? (
           <div className="flex items-center gap-2 text-orange-600 bg-orange-50 rounded-xl p-3">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -361,7 +360,7 @@ function ChatView({
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
 
