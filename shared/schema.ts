@@ -34,6 +34,8 @@ export const settings = pgTable("settings", {
   cycleMode: boolean("cycle_mode").notNull().default(false),
   cycleModeFirstTime: boolean("cycle_mode_first_time").notNull().default(true),
   userName: text("user_name"),
+  coachQuestionsToday: integer("coach_questions_today").notNull().default(0),
+  coachLastQuestionDate: text("coach_last_question_date"),
 });
 
 // Prayer progress tracking
