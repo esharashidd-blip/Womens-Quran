@@ -330,7 +330,7 @@ function ChatView({
       </div>
 
       {/* Input */}
-      <div className="flex-shrink-0 px-4 pt-3 pb-[max(calc(0.75rem+env(safe-area-inset-bottom,0px)),1.5rem)] border-t border-primary/10 bg-background/80">
+      <div className="flex-shrink-0 px-4 pt-3 pb-[max(calc(1rem+env(safe-area-inset-bottom,0px)),2.5rem)] border-t border-primary/10 bg-background">
         {!canSend ? (
           <div className="flex items-center gap-2 text-orange-600 bg-orange-50 rounded-xl p-3">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
