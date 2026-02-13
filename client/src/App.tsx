@@ -29,6 +29,7 @@ import Duas from "@/pages/Duas";
 import LandingPage from "@/pages/LandingPage";
 import AuthCallback from "@/pages/AuthCallback";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfUse from "@/pages/TermsOfUse";
 
 function AuthenticatedApp() {
   const { data: settings, isLoading: settingsLoading } = useSettings();
@@ -71,6 +72,7 @@ function AuthenticatedApp() {
           <Route path="/duas" component={Duas} />
           <Route path="/auth/callback" component={AuthCallback} />
           <Route path="/privacy" component={PrivacyPolicy} />
+          <Route path="/terms" component={TermsOfUse} />
           <Route component={NotFound} />
         </Switch>
         <BottomNav />
@@ -90,6 +92,9 @@ function AppContent() {
   // Public routes accessible without authentication
   if (location === "/privacy") {
     return <PrivacyPolicy />;
+  }
+  if (location === "/terms") {
+    return <TermsOfUse />;
   }
 
   if (isLoading) {

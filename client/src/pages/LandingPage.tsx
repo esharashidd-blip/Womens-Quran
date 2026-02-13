@@ -192,6 +192,14 @@ export default function LandingPage() {
               >
                 Privacy Policy
               </button>
+              {" "}and{" "}
+              <button
+                type="button"
+                onClick={() => setLocation("/terms")}
+                className="text-primary underline"
+              >
+                Terms of Use
+              </button>
             </p>
           </Card>
         </div>
