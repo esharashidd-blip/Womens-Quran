@@ -6,9 +6,9 @@ class SubscriptionManager: ObservableObject {
     static let shared = SubscriptionManager()
 
     // Product IDs - must match App Store Connect
-    static let monthlyID = "com.womensquran.premium.monthly"
-    static let yearlyID = "com.womensquran.premium.yearly"
-    static let groupID = "21689847"
+    static let monthlyID = "wq_islamic_life_coach_monthly"
+    static let yearlyID = "wq_islamic_life_coach_yearly"
+    static let groupID = "21925449"
 
     @Published var products: [Product] = []
     @Published var isSubscribed: Bool = false
