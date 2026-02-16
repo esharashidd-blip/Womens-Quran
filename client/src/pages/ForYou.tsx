@@ -7,7 +7,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { Link } from "wouter";
 import { GUIDED_PROGRAMS, type GuidedProgram, type DayContent } from "@/data/guided-programs";
-import { PremiumGate } from "@/components/PremiumGate";
+
 
 // Daily Adhkar Categories
 const ADHKAR_CATEGORIES = [
@@ -41,11 +41,7 @@ type SectionType = 'intro' | 'ayah' | 'story' | 'reflection' | 'action' | 'journ
 import { useProgrammeProgress, useUpdateProgrammeProgress, useAllProgrammeProgress } from "@/hooks/use-programme-progress";
 
 export default function ForYou() {
-  return (
-    <PremiumGate featureName="Guided Programmes">
-      <ForYouContent />
-    </PremiumGate>
-  );
+  return <ForYouContent />;
 }
 
 function ForYouContent() {
