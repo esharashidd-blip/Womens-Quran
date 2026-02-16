@@ -26,13 +26,13 @@ export function PremiumGate({ children, featureName }: PremiumGateProps) {
   return (
     <div className="min-h-screen pb-nav-safe px-4 pt-6 md:px-8 max-w-lg mx-auto flex flex-col items-center justify-center">
       <Card className="p-8 bg-white/80 border-white/50 rounded-3xl text-center space-y-5 w-full">
-        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-          <Crown className="w-8 h-8 text-purple-500" />
+        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center">
+          <Crown className="w-8 h-8 text-pink-500" />
         </div>
 
         <div>
-          <h2 className="text-xl font-serif mb-2">Premium Feature</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-xl font-serif mb-2 text-gray-900">Premium Feature</h2>
+          <p className="text-sm text-gray-600">
             {featureName} is available with a premium subscription.
             Unlock full access to strengthen your faith journey.
           </p>
@@ -41,7 +41,7 @@ export function PremiumGate({ children, featureName }: PremiumGateProps) {
         <div className="space-y-3">
           <Button
             onClick={showPaywall}
-            className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-500 to-pink-400 hover:from-purple-600 hover:to-pink-500 text-white"
+            className="w-full h-12 rounded-xl bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 text-white font-semibold shadow-md shadow-pink-200"
           >
             <Lock className="w-4 h-4 mr-2" />
             Unlock Premium
