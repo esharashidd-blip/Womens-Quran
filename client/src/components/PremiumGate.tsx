@@ -31,10 +31,10 @@ export function PremiumGate({ children, featureName }: PremiumGateProps) {
         </div>
 
         <div>
-          <h2 className="text-xl font-serif mb-2 text-gray-900">Premium Feature</h2>
+          <h2 className="text-xl font-serif mb-2 text-gray-900">Islamic Life Coach</h2>
           <p className="text-sm text-gray-600">
-            {featureName} is available with a premium subscription.
-            Unlock full access to strengthen your faith journey.
+            Get personalised faith-based guidance and spiritual support.
+            Unlock your Islamic Life Coach with a premium subscription.
           </p>
         </div>
 
