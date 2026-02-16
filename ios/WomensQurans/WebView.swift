@@ -9,6 +9,7 @@ import CoreLocation
 
 struct WebView: UIViewRepresentable {
     let url: URL
+    var onShowPaywall: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -38,6 +39,9 @@ struct WebView: UIViewRepresentable {
         contentController.add(context.coordinator, name: "updateNowPlaying")
         contentController.add(context.coordinator, name: "setupAudioControls")
         contentController.add(context.coordinator, name: "getLocation")
+        contentController.add(context.coordinator, name: "checkSubscription")
+        contentController.add(context.coordinator, name: "showPaywall")
+        contentController.add(context.coordinator, name: "restorePurchases")
         config.userContentController = contentController
 
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -98,6 +102,19 @@ struct WebView: UIViewRepresentable {
             else if message.name == "getLocation" {
                 handleGetLocation(message: message)
             }
+
+            // Subscription messages
+            else if message.name == "checkSubscription" {
+                handleCheckSubscription(message: message)
+            }
+            else if message.name == "showPaywall" {
+                DispatchQueue.main.async {
+                    self.parent.onShowPaywall?()
+                }
+            }
+            else if message.name == "restorePurchases" {
+                handleRestorePurchases(message: message)
+            }
         }
 
         private func handleShareImage(message: WKScriptMessage) {
@@ -126,6 +143,38 @@ struct WebView: UIViewRepresentable {
                 DispatchQueue.main.async {
                     webView.evaluateJavaScript(script, completionHandler: nil)
                 }
+            }
+        }
+
+        private func handleCheckSubscription(message: WKScriptMessage) {
+            guard let webView = message.webView else { return }
+
+            Task { @MainActor in
+                await SubscriptionManager.shared.updateSubscriptionStatus()
+                let isSubscribed = SubscriptionManager.shared.isSubscribed
+
+                let script = """
+                window.dispatchEvent(new CustomEvent('nativeSubscriptionStatus', {
+                    detail: { isSubscribed: \(isSubscribed) }
+                }));
+                """
+                webView.evaluateJavaScript(script, completionHandler: nil)
+            }
+        }
+
+        private func handleRestorePurchases(message: WKScriptMessage) {
+            guard let webView = message.webView else { return }
+
+            Task { @MainActor in
+                await SubscriptionManager.shared.restore()
+                let isSubscribed = SubscriptionManager.shared.isSubscribed
+
+                let script = """
+                window.dispatchEvent(new CustomEvent('nativeSubscriptionStatus', {
+                    detail: { isSubscribed: \(isSubscribed) }
+                }));
+                """
+                webView.evaluateJavaScript(script, completionHandler: nil)
             }
         }
 

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 // ScrollArea removed - causes flex layout issues on iOS
 import { useToast } from "@/hooks/use-toast";
+import { PremiumGate } from "@/components/PremiumGate";
 import {
   ArrowLeft,
   Send,
@@ -365,6 +366,14 @@ function ChatView({
 }
 
 export default function Coach() {
+  return (
+    <PremiumGate featureName="Islamic Life Coach">
+      <CoachContent />
+    </PremiumGate>
+  );
+}
+
+function CoachContent() {
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null);
   const { toast } = useToast();
 
