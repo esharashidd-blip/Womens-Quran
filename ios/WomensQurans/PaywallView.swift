@@ -4,9 +4,6 @@ import StoreKit
 struct PaywallView: View {
     @ObservedObject var subscriptionManager = SubscriptionManager.shared
     @Environment(\.dismiss) var dismiss
-    @State private var isPurchasing = false
-    @State private var errorMessage: String?
-    @State private var selectedProduct: Product?
 
     var body: some View {
         ZStack {
@@ -81,76 +78,33 @@ struct PaywallView: View {
                             .fill(.white.opacity(0.8))
                     )
 
-                    // Subscription options
-                    if subscriptionManager.isLoading {
-                        ProgressView()
-                            .padding()
-                    } else if subscriptionManager.products.isEmpty {
-                        Text("Unable to load subscription options. Please try again later.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding()
+                    // Apple's SubscriptionStoreView - handles all compliance automatically
+                    if #available(iOS 17.0, *) {
+                        SubscriptionStoreView(groupID: SubscriptionManager.groupID) {
+                            // Marketing content shown above the subscription options
+                            VStack(spacing: 8) {
+                                Text("Noor Premium")
+                                    .font(.headline)
+                                Text("Unlock Islamic Life Coach & Guided Programmes")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .subscriptionStoreControlStyle(.prominentPicker)
+                        .storeButton(.visible, for: .restorePurchase)
+                        .onInAppPurchaseCompletion { _, result in
+                            if case .success(.success(_)) = result {
+                                Task {
+                                    await subscriptionManager.updateSubscriptionStatus()
+                                    dismiss()
+                                }
+                            }
+                        }
+                        .frame(minHeight: 300)
                     } else {
-                        VStack(spacing: 12) {
-                            ForEach(subscriptionManager.products, id: \.id) { product in
-                                SubscriptionOption(
-                                    product: product,
-                                    isSelected: selectedProduct?.id == product.id,
-                                    isYearly: product.id == SubscriptionManager.yearlyID
-                                ) {
-                                    selectedProduct = product
-                                }
-                            }
-                        }
+                        // Fallback for iOS 16 and below
+                        FallbackSubscriptionView(subscriptionManager: subscriptionManager, dismiss: dismiss)
                     }
-
-                    // Purchase button
-                    if let product = selectedProduct {
-                        Button(action: {
-                            Task { await purchaseProduct(product) }
-                        }) {
-                            HStack {
-                                if isPurchasing {
-                                    ProgressView()
-                                        .tint(.white)
-                                } else {
-                                    Text("Subscribe Now")
-                                        .font(.headline)
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 54)
-                            .background(
-                                LinearGradient(
-                                    colors: [.purple, .pink.opacity(0.8)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
-                        }
-                        .disabled(isPurchasing)
-                    }
-
-                    if let error = errorMessage {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundColor(.red)
-                    }
-
-                    // Restore purchases
-                    Button("Restore Purchases") {
-                        Task {
-                            await subscriptionManager.restore()
-                            if subscriptionManager.isSubscribed {
-                                dismiss()
-                            }
-                        }
-                    }
-                    .font(.caption)
-                    .foregroundColor(.secondary)
 
                     // Legal links
                     HStack(spacing: 16) {
@@ -160,19 +114,98 @@ struct PaywallView: View {
                     }
                     .font(.caption2)
                     .foregroundColor(.secondary)
-
-                    Text("Payment will be charged to your Apple ID account at the confirmation of purchase. Subscription automatically renews unless it is cancelled at least 24 hours before the end of the current period. You can manage and cancel your subscriptions in your App Store account settings.")
-                        .font(.system(size: 9))
-                        .foregroundColor(.secondary.opacity(0.7))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 20)
+                    .padding(.bottom, 20)
                 }
                 .padding(.horizontal, 20)
             }
         }
+        .onChange(of: subscriptionManager.isSubscribed) { _, isSubscribed in
+            if isSubscribed {
+                dismiss()
+            }
+        }
+    }
+}
+
+// Fallback for iOS < 17
+struct FallbackSubscriptionView: View {
+    @ObservedObject var subscriptionManager: SubscriptionManager
+    var dismiss: DismissAction
+    @State private var isPurchasing = false
+    @State private var errorMessage: String?
+    @State private var selectedProduct: Product?
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if subscriptionManager.isLoading {
+                ProgressView()
+                    .padding()
+            } else if subscriptionManager.products.isEmpty {
+                Text("Unable to load subscription options. Please try again later.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            } else {
+                ForEach(subscriptionManager.products, id: \.id) { product in
+                    SubscriptionOption(
+                        product: product,
+                        isSelected: selectedProduct?.id == product.id,
+                        isYearly: product.id == SubscriptionManager.yearlyID
+                    ) {
+                        selectedProduct = product
+                    }
+                }
+
+                if let product = selectedProduct {
+                    Button(action: {
+                        Task { await purchaseProduct(product) }
+                    }) {
+                        HStack {
+                            if isPurchasing {
+                                ProgressView().tint(.white)
+                            } else {
+                                Text("Subscribe Now").font(.headline)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(
+                            LinearGradient(
+                                colors: [.purple, .pink.opacity(0.8)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
+                    }
+                    .disabled(isPurchasing)
+                }
+
+                if let error = errorMessage {
+                    Text(error).font(.caption).foregroundColor(.red)
+                }
+
+                Button("Restore Purchases") {
+                    Task {
+                        await subscriptionManager.restore()
+                        if subscriptionManager.isSubscribed {
+                            dismiss()
+                        }
+                    }
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+
+            Text("Payment will be charged to your Apple ID account at the confirmation of purchase. Subscription automatically renews unless it is cancelled at least 24 hours before the end of the current period. You can manage and cancel your subscriptions in your App Store account settings.")
+                .font(.system(size: 9))
+                .foregroundColor(.secondary.opacity(0.7))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+        }
         .onAppear {
-            // Default to yearly if available
             if selectedProduct == nil {
                 selectedProduct = subscriptionManager.products.first(where: {
                     $0.id == SubscriptionManager.yearlyID
@@ -186,9 +219,7 @@ struct PaywallView: View {
         errorMessage = nil
         do {
             let success = try await subscriptionManager.purchase(product)
-            if success {
-                dismiss()
-            }
+            if success { dismiss() }
         } catch {
             errorMessage = "Purchase failed. Please try again."
         }

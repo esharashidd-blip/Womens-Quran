@@ -62,9 +62,21 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
+            <h2 className="text-lg font-serif mb-2">Subscriptions and Payments</h2>
+            <p>
+              Women's Quran offers optional premium subscriptions processed through Apple's
+              in-app purchase system. We do not collect or store your payment information
+              directly. All payment processing is handled securely by Apple. Your subscription
+              status is verified through Apple's StoreKit framework. We do not have access to
+              your credit card details or Apple ID payment information.
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-lg font-serif mb-2">Third-Party Services</h2>
             <p className="mb-2">We use the following third-party services:</p>
             <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Apple StoreKit:</strong> For in-app subscription processing and verification</li>
               <li><strong>Supabase:</strong> For authentication and data storage</li>
               <li><strong>Railway:</strong> For application hosting</li>
               <li><strong>OpenAI:</strong> To power the Islamic Life Coach feature (your messages are processed to generate responses)</li>

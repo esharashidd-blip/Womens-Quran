@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { Link } from "wouter";
-import { Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, BookOpen, Plane, LogOut, Bell, Moon, Flower2, MessageCircle, User, Edit2, Shirt, HandHeart } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, BookOpen, Plane, LogOut, Bell, Moon, Flower2, MessageCircle, User, Edit2, Shirt, HandHeart, FileText, Shield } from "lucide-react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -313,6 +313,38 @@ export default function More() {
           </div>
         </Card>
       )}
+
+      {/* Legal */}
+      <div className="space-y-2">
+        <Link href="/privacy">
+          <Card className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                <Shield className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">Privacy Policy</p>
+                <p className="text-xs text-muted-foreground">How we handle your data</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </div>
+          </Card>
+        </Link>
+        <Link href="/terms">
+          <Card className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                <FileText className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">Terms of Use</p>
+                <p className="text-xs text-muted-foreground">App usage terms and subscription policy</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </div>
+          </Card>
+        </Link>
+      </div>
 
       <Card className="bg-accent/30 border-white/50 p-4 rounded-2xl text-center">
         <p className="text-sm text-muted-foreground">

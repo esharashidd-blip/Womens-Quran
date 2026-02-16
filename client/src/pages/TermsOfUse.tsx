@@ -61,7 +61,22 @@ export default function TermsOfUse() {
           </section>
 
           <section>
-            <h2 className="text-lg font-serif mb-2">5. Islamic Life Coach</h2>
+            <h2 className="text-lg font-serif mb-2">5. Subscriptions and Payments</h2>
+            <p className="mb-2">
+              Women's Quran offers optional auto-renewable premium subscriptions that unlock
+              additional features including the Islamic Life Coach and Guided Programmes.
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Payment:</strong> Payment will be charged to your Apple ID account at the confirmation of purchase.</li>
+              <li><strong>Auto-Renewal:</strong> Subscriptions automatically renew unless auto-renew is turned off at least 24 hours before the end of the current subscription period.</li>
+              <li><strong>Renewal Cost:</strong> Your account will be charged for renewal within 24 hours prior to the end of the current period at the same price.</li>
+              <li><strong>Managing Subscriptions:</strong> You can manage and cancel your subscriptions by going to your App Store account settings after purchase.</li>
+              <li><strong>Free Trial:</strong> Any unused portion of a free trial period, if offered, will be forfeited when you purchase a subscription.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-serif mb-2">6. Islamic Life Coach</h2>
             <p>
               The Islamic Life Coach feature provides AI-generated spiritual guidance and
               support based on Islamic principles. This feature is for informational and
@@ -73,7 +88,7 @@ export default function TermsOfUse() {
           </section>
 
           <section>
-            <h2 className="text-lg font-serif mb-2">6. Intellectual Property</h2>
+            <h2 className="text-lg font-serif mb-2">7. Intellectual Property</h2>
             <p>
               All content, features, and functionality of the App, including but not limited
               to text, graphics, logos, and software, are the property of Women's Quran and
@@ -83,7 +98,7 @@ export default function TermsOfUse() {
           </section>
 
           <section>
-            <h2 className="text-lg font-serif mb-2">7. User Content</h2>
+            <h2 className="text-lg font-serif mb-2">8. User Content</h2>
             <p>
               Any content you create within the App, including coach conversations and
               personal data, remains yours. However, by using the App, you grant us the
@@ -92,7 +107,7 @@ export default function TermsOfUse() {
           </section>
 
           <section>
-            <h2 className="text-lg font-serif mb-2">8. Disclaimer of Warranties</h2>
+            <h2 className="text-lg font-serif mb-2">9. Disclaimer of Warranties</h2>
             <p>
               The App is provided "as is" and "as available" without warranties of any kind,
               either express or implied. We do not warrant that the App will be uninterrupted,
@@ -102,7 +117,7 @@ export default function TermsOfUse() {
           </section>
 
           <section>
-            <h2 className="text-lg font-serif mb-2">9. Limitation of Liability</h2>
+            <h2 className="text-lg font-serif mb-2">10. Limitation of Liability</h2>
             <p>
               To the fullest extent permitted by law, Women's Quran shall not be liable for
               any indirect, incidental, special, consequential, or punitive damages arising
@@ -111,7 +126,7 @@ export default function TermsOfUse() {
           </section>
 
           <section>
-            <h2 className="text-lg font-serif mb-2">10. Termination</h2>
+            <h2 className="text-lg font-serif mb-2">11. Termination</h2>
             <p>
               We reserve the right to suspend or terminate your access to the App at any time,
               with or without cause. You may also delete your account at any time. Upon
@@ -120,7 +135,7 @@ export default function TermsOfUse() {
           </section>
 
           <section>
-            <h2 className="text-lg font-serif mb-2">11. Changes to Terms</h2>
+            <h2 className="text-lg font-serif mb-2">12. Changes to Terms</h2>
             <p>
               We may update these Terms of Use from time to time. Continued use of the App
               after changes constitutes acceptance of the updated terms. We will notify you
@@ -129,7 +144,7 @@ export default function TermsOfUse() {
           </section>
 
           <section>
-            <h2 className="text-lg font-serif mb-2">12. Governing Law</h2>
+            <h2 className="text-lg font-serif mb-2">13. Governing Law</h2>
             <p>
               These Terms shall be governed by and construed in accordance with the laws of
               the United Kingdom, without regard to its conflict of law provisions.
@@ -137,7 +152,7 @@ export default function TermsOfUse() {
           </section>
 
           <section>
-            <h2 className="text-lg font-serif mb-2">13. Contact Us</h2>
+            <h2 className="text-lg font-serif mb-2">14. Contact Us</h2>
             <p>
               If you have any questions about these Terms of Use, please contact us
               at <a href="mailto:support@womensquran.com" className="text-primary underline">support@womensquran.com</a>.
