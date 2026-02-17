@@ -39,6 +39,7 @@ const CATEGORIES = [
 type SectionType = 'intro' | 'ayah' | 'story' | 'reflection' | 'action' | 'journal' | 'closing';
 
 import { useProgrammeProgress, useUpdateProgrammeProgress, useAllProgrammeProgress } from "@/hooks/use-programme-progress";
+import { useSubscription } from "@/hooks/use-subscription";
 
 export default function ForYou() {
   return <ForYouContent />;
@@ -47,6 +48,7 @@ export default function ForYou() {
 function ForYouContent() {
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
+  const { isSubscribed, showPaywall } = useSubscription();
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
   const selectedProgram = useMemo(() =>
     GUIDED_PROGRAMS.find(p => p.id === selectedProgramId) || null,
@@ -115,6 +117,10 @@ function ForYouContent() {
   const isSearching = searchQuery.trim().length > 0;
 
   const openProgram = (programId: string) => {
+    if (!isSubscribed) {
+      showPaywall();
+      return;
+    }
     setSelectedProgramId(programId);
     setCurrentSection('ayah');
     setSelectedEmotions([]);
