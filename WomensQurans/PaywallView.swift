@@ -11,8 +11,6 @@ struct PaywallView: View {
 
     // App primary: HSL(350, 70%, 60%) ≈ rose pink
     static let accentPink = Color(hue: 350/360, saturation: 0.70, brightness: 0.85)
-    static let accentPinkLight = Color(hue: 350/360, saturation: 0.30, brightness: 0.95)
-    static let accentPinkDeep = Color(hue: 350/360, saturation: 0.65, brightness: 0.55)
 
     var body: some View {
         ZStack {
@@ -83,19 +81,16 @@ struct PaywallView: View {
                     // Features
                     VStack(spacing: 0) {
                         PaywallFeatureRow(
-                            icon: "sparkles",
                             title: "Personalised For You",
                             description: "Daily content tailored to your interests and journey",
                             isLast: false
                         )
                         PaywallFeatureRow(
-                            icon: "message.fill",
                             title: "Islamic Life Coach",
                             description: "Faith-based guidance and spiritual support, anytime",
                             isLast: false
                         )
                         PaywallFeatureRow(
-                            icon: "heart.fill",
                             title: "Full Premium Access",
                             description: "Unlock all current and future premium features",
                             isLast: true
@@ -214,6 +209,11 @@ struct PaywallView: View {
                 selectedPackage = subscriptionManager.packages.first
             }
         }
+        .onChange(of: subscriptionManager.packages) { _, packages in
+            if selectedPackage == nil {
+                selectedPackage = packages.first
+            }
+        }
         .onChange(of: subscriptionManager.isSubscribed) { _, isSubscribed in
             if isSubscribed { dismiss() }
         }
@@ -236,7 +236,6 @@ struct PaywallView: View {
 // MARK: - Feature Row
 
 struct PaywallFeatureRow: View {
-    let icon: String
     let title: String
     let description: String
     let isLast: Bool
