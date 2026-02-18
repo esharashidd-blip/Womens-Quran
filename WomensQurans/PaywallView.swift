@@ -243,11 +243,11 @@ struct PaywallFeatureRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 12) {
+            HStack(spacing: 14) {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 20))
+                    .font(.system(size: 22))
                     .foregroundColor(PaywallView.accentPink)
-                    .frame(width: 24)
+                    .frame(width: 28, alignment: .center)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
@@ -259,10 +259,14 @@ struct PaywallFeatureRow: View {
                         .lineSpacing(2)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 14)
 
             if !isLast {
-                Divider().opacity(0.3)
+                Rectangle()
+                    .fill(Color.gray.opacity(0.15))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 0.5)
             }
         }
     }
