@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Search, Play, Pause, Bookmark, Share2, Copy, ChevronLeft, ChevronRight, X, Sun, Moon, Bed, Shield, Heart, HandHeart, Sparkles, Car, BookOpen, Clock, Volume2, CheckCircle2, Circle, Mic, Image, PenLine, Smile } from "lucide-react";
+import Coach from "@/pages/Coach";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { Link } from "wouter";
@@ -62,7 +63,7 @@ function ForYouContent() {
   const [currentSection, setCurrentSection] = useState<SectionType>('ayah');
   const [searchQuery, setSearchQuery] = useState("");
   const [showTransliteration, setShowTransliteration] = useState(false);
-  const [activeTab, setActiveTab] = useState<'foryou' | 'adhkar'>('foryou');
+  const [activeTab, setActiveTab] = useState<'foryou' | 'coach'>('foryou');
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
   const [journalEntries, setJournalEntries] = useState<Record<string, string>>({});
@@ -707,13 +708,13 @@ function ForYouContent() {
           Guided Programs
         </button>
         <button
-          onClick={() => setActiveTab('adhkar')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === 'adhkar'
+          onClick={() => setActiveTab('coach')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === 'coach'
             ? 'bg-white shadow-sm text-foreground'
             : 'text-muted-foreground'
             }`}
         >
-          Daily Adhkar
+          Islamic Coach
         </button>
       </div>
 
@@ -837,31 +838,8 @@ function ForYouContent() {
         </>
       )}
 
-      {activeTab === 'adhkar' && (
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground text-center">
-            Protect yourself with daily remembrance of Allah.
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            {ADHKAR_CATEGORIES.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <Link key={cat.id} href={`/duas?category=${cat.id}`}>
-                  <Card
-                    className="bg-white/80 border-white/50 p-4 rounded-2xl hover-elevate cursor-pointer h-full"
-                    data-testid={`adhkar-${cat.id}`}
-                  >
-                    <div className={`w-10 h-10 ${cat.bg} rounded-full flex items-center justify-center mb-3`}>
-                      <Icon className={`w-5 h-5 ${cat.color}`} />
-                    </div>
-                    <p className="font-medium text-sm">{cat.title}</p>
-                    <p className="text-xs text-muted-foreground">{cat.description}</p>
-                  </Card>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
+      {activeTab === 'coach' && (
+        <Coach />
       )}
     </div>
   );
