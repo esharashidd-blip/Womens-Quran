@@ -6,10 +6,15 @@
 //
 
 import SwiftUI
+import RevenueCat
 
 @main
 struct WomensQuransApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    init() {
+        Purchases.configure(withAPIKey: "appl_hfglRDbdxUCAYEwkOiVBKyvmyfP")
+    }
 
     var body: some Scene {
         WindowGroup {

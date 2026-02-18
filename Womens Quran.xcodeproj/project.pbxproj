@@ -6,17 +6,21 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9F6994C92F43743A0063A52A /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 9F6994C82F43743A0063A52A /* RevenueCat */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		9F042C132F30B46A00FBE67D /* WomensQurans.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WomensQurans.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F042C132F30B46A00FBE67D /* Womens Quran.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Womens Quran.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		9F7363042F34B0D000C8BF56 /* Exceptions for "WomensQurans" folder in "WomensQurans" target */ = {
+		9F7363042F34B0D000C8BF56 /* Exceptions for "WomensQurans" folder in "Womens Quran" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 9F042C122F30B46A00FBE67D /* WomensQurans */;
+			target = 9F042C122F30B46A00FBE67D /* Womens Quran */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -24,7 +28,7 @@
 		9F042C152F30B46A00FBE67D /* WomensQurans */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				9F7363042F34B0D000C8BF56 /* Exceptions for "WomensQurans" folder in "WomensQurans" target */,
+				9F7363042F34B0D000C8BF56 /* Exceptions for "WomensQurans" folder in "Womens Quran" target */,
 			);
 			path = WomensQurans;
 			sourceTree = "<group>";
@@ -36,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9F6994C92F43743A0063A52A /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -46,6 +51,7 @@
 			isa = PBXGroup;
 			children = (
 				9F042C152F30B46A00FBE67D /* WomensQurans */,
+				9F93F1242F43822C00F8C0EA /* Frameworks */,
 				9F042C142F30B46A00FBE67D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,17 +59,24 @@
 		9F042C142F30B46A00FBE67D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9F042C132F30B46A00FBE67D /* WomensQurans.app */,
+				9F042C132F30B46A00FBE67D /* Womens Quran.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		9F93F1242F43822C00F8C0EA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		9F042C122F30B46A00FBE67D /* WomensQurans */ = {
+		9F042C122F30B46A00FBE67D /* Womens Quran */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9F042C1E2F30B46C00FBE67D /* Build configuration list for PBXNativeTarget "WomensQurans" */;
+			buildConfigurationList = 9F042C1E2F30B46C00FBE67D /* Build configuration list for PBXNativeTarget "Womens Quran" */;
 			buildPhases = (
 				9F042C0F2F30B46A00FBE67D /* Sources */,
 				9F042C102F30B46A00FBE67D /* Frameworks */,
@@ -76,11 +89,12 @@
 			fileSystemSynchronizedGroups = (
 				9F042C152F30B46A00FBE67D /* WomensQurans */,
 			);
-			name = WomensQurans;
+			name = "Womens Quran";
 			packageProductDependencies = (
+				9F6994C82F43743A0063A52A /* RevenueCat */,
 			);
 			productName = WomensQurans;
-			productReference = 9F042C132F30B46A00FBE67D /* WomensQurans.app */;
+			productReference = 9F042C132F30B46A00FBE67D /* Womens Quran.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -107,12 +121,15 @@
 			);
 			mainGroup = 9F042C0A2F30B46A00FBE67D;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				9F6994C52F43743A0063A52A /* XCLocalSwiftPackageReference "../../../Downloads/purchases-ios-main" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9F042C142F30B46A00FBE67D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				9F042C122F30B46A00FBE67D /* WomensQurans */,
+				9F042C122F30B46A00FBE67D /* Womens Quran */,
 			);
 		};
 /* End PBXProject section */
@@ -270,6 +287,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WomensQurans/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Women's Quran";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -303,6 +322,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WomensQurans/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Women's Quran";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -337,7 +358,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9F042C1E2F30B46C00FBE67D /* Build configuration list for PBXNativeTarget "WomensQurans" */ = {
+		9F042C1E2F30B46C00FBE67D /* Build configuration list for PBXNativeTarget "Womens Quran" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9F042C1F2F30B46C00FBE67D /* Debug */,
@@ -347,6 +368,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		9F6994C52F43743A0063A52A /* XCLocalSwiftPackageReference "../../../Downloads/purchases-ios-main" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../../Downloads/purchases-ios-main";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9F6994C82F43743A0063A52A /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RevenueCat;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9F042C0B2F30B46A00FBE67D /* Project object */;
 }

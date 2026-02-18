@@ -1,27 +1,24 @@
-import Foundation
+import SwiftUI
 import RevenueCat
 
+@Observable
 @MainActor
-class SubscriptionManager: NSObject, ObservableObject, PurchasesDelegate {
+class SubscriptionManager {
     static let shared = SubscriptionManager()
 
     static let entitlementID = "premium"
     static let groupID = "21925449"
 
-    @Published var packages: [Package] = []
-    @Published var isSubscribed: Bool = false
-    @Published var isLoading: Bool = true
+    var packages: [Package] = []
+    var isSubscribed: Bool = false
+    var isLoading: Bool = true
 
-    override init() {
-        super.init()
-        Purchases.shared.delegate = self
+    init() {
         Task {
             await loadOfferings()
             await updateSubscriptionStatus()
         }
     }
-
-    // MARK: - Load Offerings
 
     func loadOfferings() async {
         do {
@@ -36,16 +33,12 @@ class SubscriptionManager: NSObject, ObservableObject, PurchasesDelegate {
         }
     }
 
-    // MARK: - Purchase
-
     func purchase(_ package: Package) async throws -> Bool {
         let result = try await Purchases.shared.purchase(package: package)
         if result.userCancelled { return false }
         isSubscribed = result.customerInfo.entitlements[SubscriptionManager.entitlementID]?.isActive == true
         return true
     }
-
-    // MARK: - Restore
 
     func restore() async {
         do {
@@ -55,8 +48,6 @@ class SubscriptionManager: NSObject, ObservableObject, PurchasesDelegate {
             print("Failed to restore: \(error)")
         }
     }
-
-    // MARK: - Check Subscription Status
 
     func updateSubscriptionStatus() async {
         do {
@@ -68,12 +59,5 @@ class SubscriptionManager: NSObject, ObservableObject, PurchasesDelegate {
             isLoading = false
         }
     }
-
-    // MARK: - PurchasesDelegate
-
-    nonisolated func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
-        Task { @MainActor in
-            self.isSubscribed = customerInfo.entitlements[SubscriptionManager.entitlementID]?.isActive == true
-        }
-    }
 }
+
