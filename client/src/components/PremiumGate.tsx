@@ -1,7 +1,7 @@
 import { useSubscription } from "@/hooks/use-subscription";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Lock, Loader2, Crown } from "lucide-react";
+import { Loader2, Crown, MessageCircle, Sparkles, Heart } from "lucide-react";
 
 interface PremiumGateProps {
   children: React.ReactNode;
@@ -31,22 +31,48 @@ export function PremiumGate({ children, featureName }: PremiumGateProps) {
         </div>
 
         <div>
-          <h2 className="text-xl font-serif mb-2 text-gray-900">Islamic Life Coach</h2>
-          <p className="text-sm text-gray-600">
-            Get personalised faith-based guidance and spiritual support.
-            Unlock your Islamic Life Coach with a premium subscription.
+          <h2 className="text-xl font-serif mb-2 text-gray-900">Your Personal Islamic Life Coach</h2>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            A safe, private space to talk through anything on your heart — relationships, anxiety, faith, family — with compassionate guidance rooted in Quran and Sunnah.
           </p>
         </div>
 
-        <div className="space-y-3">
-          <Button
-            onClick={showPaywall}
-            className="w-full h-12 rounded-xl bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 text-white font-semibold shadow-md shadow-pink-200"
-          >
-            <Lock className="w-4 h-4 mr-2" />
-            Unlock Premium
-          </Button>
+        <div className="space-y-3 text-left">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <MessageCircle className="w-4 h-4 text-pink-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-800">Talk anytime, judgement-free</p>
+              <p className="text-xs text-gray-500">Ask anything, day or night</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Sparkles className="w-4 h-4 text-pink-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-800">Personalised advice for sisters</p>
+              <p className="text-xs text-gray-500">Guidance tailored to your situation</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Heart className="w-4 h-4 text-pink-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-800">Rooted in Quran & Sunnah</p>
+              <p className="text-xs text-gray-500">Faith-based wisdom you can trust</p>
+            </div>
+          </div>
         </div>
+
+        <Button
+          onClick={showPaywall}
+          className="w-full h-12 rounded-xl bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 text-white font-semibold shadow-md shadow-pink-200"
+        >
+          Start Your Journey
+        </Button>
       </Card>
     </div>
   );

@@ -63,7 +63,7 @@ function ForYouContent() {
   const [currentSection, setCurrentSection] = useState<SectionType>('ayah');
   const [searchQuery, setSearchQuery] = useState("");
   const [showTransliteration, setShowTransliteration] = useState(false);
-  const [activeTab, setActiveTab] = useState<'foryou' | 'coach'>('foryou');
+  const [activeTab, setActiveTab] = useState<'foryou' | 'coach'>('coach');
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
   const [journalEntries, setJournalEntries] = useState<Record<string, string>>({});
@@ -699,15 +699,6 @@ function ForYouContent() {
       {/* Tabs */}
       <div className="flex gap-2 p-1 bg-accent/30 rounded-2xl">
         <button
-          onClick={() => setActiveTab('foryou')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === 'foryou'
-            ? 'bg-white shadow-sm text-foreground'
-            : 'text-muted-foreground'
-            }`}
-        >
-          Guided Programs
-        </button>
-        <button
           onClick={() => setActiveTab('coach')}
           className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === 'coach'
             ? 'bg-white shadow-sm text-foreground'
@@ -715,6 +706,15 @@ function ForYouContent() {
             }`}
         >
           Islamic Coach
+        </button>
+        <button
+          onClick={() => setActiveTab('foryou')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === 'foryou'
+            ? 'bg-white shadow-sm text-foreground'
+            : 'text-muted-foreground'
+            }`}
+        >
+          Guided Programs
         </button>
       </div>
 
