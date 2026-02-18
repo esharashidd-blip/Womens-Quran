@@ -33,7 +33,7 @@ export function PremiumGate({ children, featureName }: PremiumGateProps) {
         <div>
           <h2 className="text-xl font-serif mb-2 text-foreground">Your Personal Islamic Life Coach</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            A safe, private space to talk through anything on your heart — relationships, anxiety, faith, family — with compassionate guidance rooted in Quran and Sunnah.
+            A safe, private space to talk through anything on your heart with compassionate guidance rooted in Quran and Sunnah.
           </p>
         </div>
 
