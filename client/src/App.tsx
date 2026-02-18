@@ -23,7 +23,7 @@ import Kalimas from "@/pages/Kalimas";
 import UmrahGuide from "@/pages/UmrahGuide";
 import HajjGuide from "@/pages/HajjGuide";
 import More from "@/pages/More";
-import Coach from "@/pages/Coach";
+
 import MenstrualGuide from "@/pages/MenstrualGuide";
 import Duas from "@/pages/Duas";
 import LandingPage from "@/pages/LandingPage";
@@ -67,7 +67,7 @@ function AuthenticatedApp() {
           <Route path="/umrah" component={UmrahGuide} />
           <Route path="/hajj" component={HajjGuide} />
           <Route path="/more" component={More} />
-          <Route path="/coach" component={Coach} />
+
           <Route path="/menstrual-guide" component={MenstrualGuide} />
           <Route path="/duas" component={Duas} />
           <Route path="/auth/callback" component={AuthCallback} />

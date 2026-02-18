@@ -24,7 +24,7 @@ export function PremiumGate({ children, featureName }: PremiumGateProps) {
   }
 
   return (
-    <div className="min-h-screen pb-nav-safe px-4 pt-6 md:px-8 max-w-lg mx-auto flex flex-col items-center justify-center">
+    <div className="min-h-[50vh] px-4 pt-6 md:px-8 max-w-lg mx-auto flex flex-col items-center justify-center">
       <Card className="p-8 bg-white/80 border-white/50 rounded-3xl text-center space-y-5 w-full">
         <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center">
           <Crown className="w-8 h-8 text-pink-500" />

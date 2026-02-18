@@ -31,7 +31,7 @@ const MENU_ITEMS = [
   { href: "/favorites", icon: Heart, label: "Saved Verses", description: "Your favorite ayahs" },
   { href: "/kalimas", icon: Flower2, label: "Six Kalmas", description: "The six foundational declarations" },
   { href: "/duas", icon: HandHeart, label: "Duas & Adhkar", description: "Daily supplications & remembrances" },
-  { href: "/coach", icon: MessageCircle, label: "Speak to an Islamic Coach", description: "Faith-based guidance for sisters" },
+
   { href: "/umrah", icon: Plane, label: "Umrah Guide", description: "Step-by-step rituals & duas" },
   { href: "/hajj", icon: BookOpen, label: "Hajj Guide", description: "Comprehensive pilgrimage guide" },
   { id: "clothing", icon: Shirt, label: "Islamic Clothing", description: "Modest wear for sisters", comingSoon: true },
