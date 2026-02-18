@@ -1,8 +1,9 @@
 import SwiftUI
 import StoreKit
+import RevenueCat
 
 struct PaywallView: View {
-    @ObservedObject var subscriptionManager = SubscriptionManager.shared
+    var subscriptionManager = SubscriptionManager.shared
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -129,37 +130,36 @@ struct PaywallView: View {
 
 // Fallback for iOS < 17
 struct FallbackSubscriptionView: View {
-    @ObservedObject var subscriptionManager: SubscriptionManager
+    var subscriptionManager: SubscriptionManager
     var dismiss: DismissAction
     @State private var isPurchasing = false
     @State private var errorMessage: String?
-    @State private var selectedProduct: Product?
+    @State private var selectedPackage: Package?
 
     var body: some View {
         VStack(spacing: 12) {
             if subscriptionManager.isLoading {
                 ProgressView()
                     .padding()
-            } else if subscriptionManager.products.isEmpty {
+            } else if subscriptionManager.packages.isEmpty {
                 Text("Unable to load subscription options. Please try again later.")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding()
             } else {
-                ForEach(subscriptionManager.products, id: \.id) { product in
-                    SubscriptionOption(
-                        product: product,
-                        isSelected: selectedProduct?.id == product.id,
-                        isYearly: product.id == SubscriptionManager.yearlyID
+                ForEach(subscriptionManager.packages, id: \.identifier) { package in
+                    PackageOption(
+                        package: package,
+                        isSelected: selectedPackage?.identifier == package.identifier
                     ) {
-                        selectedProduct = product
+                        selectedPackage = package
                     }
                 }
 
-                if let product = selectedProduct {
+                if let package = selectedPackage {
                     Button(action: {
-                        Task { await purchaseProduct(product) }
+                        Task { await purchasePackage(package) }
                     }) {
                         HStack {
                             if isPurchasing {
@@ -206,19 +206,17 @@ struct FallbackSubscriptionView: View {
                 .padding(.horizontal, 20)
         }
         .onAppear {
-            if selectedProduct == nil {
-                selectedProduct = subscriptionManager.products.first(where: {
-                    $0.id == SubscriptionManager.yearlyID
-                }) ?? subscriptionManager.products.first
+            if selectedPackage == nil {
+                selectedPackage = subscriptionManager.packages.first
             }
         }
     }
 
-    private func purchaseProduct(_ product: Product) async {
+    private func purchasePackage(_ package: Package) async {
         isPurchasing = true
         errorMessage = nil
         do {
-            let success = try await subscriptionManager.purchase(product)
+            let success = try await subscriptionManager.purchase(package)
             if success { dismiss() }
         } catch {
             errorMessage = "Purchase failed. Please try again."
@@ -256,43 +254,25 @@ struct FeatureRow: View {
     }
 }
 
-struct SubscriptionOption: View {
-    let product: Product
+struct PackageOption: View {
+    let package: Package
     let isSelected: Bool
-    let isYearly: Bool
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack {
-                        Text(product.displayName)
-                            .font(.subheadline.weight(.semibold))
-                        if isYearly {
-                            Text("BEST VALUE")
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(
-                                    LinearGradient(
-                                        colors: [.purple, .pink.opacity(0.8)],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(4)
-                        }
-                    }
-                    Text(product.description)
+                    Text(package.storeProduct.localizedTitle)
+                        .font(.subheadline.weight(.semibold))
+                    Text(package.storeProduct.localizedDescription)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
 
                 Spacer()
 
-                Text(product.displayPrice)
+                Text(package.localizedPriceString)
                     .font(.subheadline.weight(.bold))
             }
             .padding(16)

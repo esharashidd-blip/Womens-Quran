@@ -1,119 +1,70 @@
-import StoreKit
-import Foundation
+import SwiftUI
+import RevenueCat
 
+@Observable
 @MainActor
-class SubscriptionManager: ObservableObject {
+class SubscriptionManager {
     static let shared = SubscriptionManager()
 
-    // Product IDs - must match App Store Connect
-    static let monthlyID = "wq_islamic_life_coach_monthly"
-    static let yearlyID = "wq_islamic_life_coach_yearly"
+    static let entitlementID = "premium"
     static let groupID = "21925449"
 
-    @Published var products: [Product] = []
-    @Published var isSubscribed: Bool = false
-    @Published var isLoading: Bool = true
-
-    private var transactionListener: Task<Void, Error>?
+    var packages: [Package] = []
+    var isSubscribed: Bool = false
+    var isLoading: Bool = true
 
     init() {
-        transactionListener = listenForTransactions()
         Task {
-            await loadProducts()
+            await loadOfferings()
             await updateSubscriptionStatus()
         }
     }
 
-    deinit {
-        transactionListener?.cancel()
-    }
+    // MARK: - Load Offerings
 
-    // MARK: - Load Products
-
-    func loadProducts() async {
+    func loadOfferings() async {
         do {
-            let productIDs: Set<String> = [
-                SubscriptionManager.monthlyID,
-                SubscriptionManager.yearlyID
-            ]
-            products = try await Product.products(for: productIDs)
-                .sorted { $0.price < $1.price }
+            let offerings = try await Purchases.shared.offerings()
+            if let current = offerings.current {
+                packages = current.availablePackages
+            }
             isLoading = false
         } catch {
-            print("Failed to load products: \(error)")
+            print("Failed to load offerings: \(error)")
             isLoading = false
         }
     }
 
     // MARK: - Purchase
 
-    func purchase(_ product: Product) async throws -> Bool {
-        let result = try await product.purchase()
-
-        switch result {
-        case .success(let verification):
-            let transaction = try checkVerified(verification)
-            await transaction.finish()
-            await updateSubscriptionStatus()
-            return true
-        case .userCancelled:
-            return false
-        case .pending:
-            return false
-        @unknown default:
-            return false
-        }
+    func purchase(_ package: Package) async throws -> Bool {
+        let result = try await Purchases.shared.purchase(package: package)
+        if result.userCancelled { return false }
+        isSubscribed = result.customerInfo.entitlements[SubscriptionManager.entitlementID]?.isActive == true
+        return true
     }
 
     // MARK: - Restore
 
     func restore() async {
-        try? await AppStore.sync()
-        await updateSubscriptionStatus()
+        do {
+            let customerInfo = try await Purchases.shared.restorePurchases()
+            isSubscribed = customerInfo.entitlements[SubscriptionManager.entitlementID]?.isActive == true
+        } catch {
+            print("Failed to restore: \(error)")
+        }
     }
 
     // MARK: - Check Subscription Status
 
     func updateSubscriptionStatus() async {
-        var hasActiveSubscription = false
-
-        for await result in Transaction.currentEntitlements {
-            if let transaction = try? checkVerified(result) {
-                if transaction.productID == SubscriptionManager.monthlyID ||
-                   transaction.productID == SubscriptionManager.yearlyID {
-                    hasActiveSubscription = true
-                }
-            }
+        do {
+            let customerInfo = try await Purchases.shared.customerInfo()
+            isSubscribed = customerInfo.entitlements[SubscriptionManager.entitlementID]?.isActive == true
+            isLoading = false
+        } catch {
+            print("Failed to get customer info: \(error)")
+            isLoading = false
         }
-
-        isSubscribed = hasActiveSubscription
-    }
-
-    // MARK: - Transaction Listener
-
-    private func listenForTransactions() -> Task<Void, Error> {
-        return Task.detached {
-            for await result in Transaction.updates {
-                if let transaction = try? self.checkVerified(result) {
-                    await transaction.finish()
-                    await self.updateSubscriptionStatus()
-                }
-            }
-        }
-    }
-
-    // MARK: - Verification
-
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
-        switch result {
-        case .unverified:
-            throw StoreError.failedVerification
-        case .verified(let safe):
-            return safe
-        }
-    }
-
-    enum StoreError: Error {
-        case failedVerification
     }
 }
