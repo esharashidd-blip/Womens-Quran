@@ -1,5 +1,6 @@
 import type { Express, RequestHandler, Request, Response, NextFunction } from "express";
 import { supabaseAdmin as supabase } from "./supabase";
+import { storage } from "./storage";
 
 // Extend Express Request type to include user
 declare global {
@@ -84,5 +85,26 @@ export function registerAuthRoutes(app: Express) {
       firstName: req.user.firstName,
       lastName: req.user.lastName,
     });
+  });
+
+  // Delete account and all associated data
+  app.delete("/api/auth/account", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      // Delete all user data from app tables
+      await storage.deleteAllUserData(req.user.id);
+
+      // Delete the auth user from Supabase
+      const { error } = await supabase.auth.admin.deleteUser(req.user.id);
+      if (error) throw error;
+
+      res.status(200).json({ message: "Account deleted successfully" });
+    } catch (err) {
+      console.error("Error deleting account:", err);
+      res.status(500).json({ message: "Failed to delete account" });
+    }
   });
 }

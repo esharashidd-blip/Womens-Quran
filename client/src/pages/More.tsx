@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Link, useLocation } from "wouter";
-import { Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, BookOpen, Plane, LogOut, Bell, Moon, Flower2, MessageCircle, User, Edit2, Shirt, HandHeart, FileText, Shield } from "lucide-react";
+import { Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, BookOpen, Plane, LogOut, Bell, Moon, Flower2, MessageCircle, User, Edit2, Shirt, HandHeart, FileText, Shield, Trash2 } from "lucide-react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ const MENU_ITEMS = [
 
 export default function More() {
   const { data: settings, isLoading } = useSettings();
-  const { user, logout, updateDisplayName } = useAuth();
+  const { user, logout, updateDisplayName, deleteAccount } = useAuth();
   const updateSettings = useUpdateSettings();
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
@@ -49,6 +49,9 @@ export default function More() {
   const [showClothingComingSoon, setShowClothingComingSoon] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [isSavingName, setIsSavingName] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const city = settings?.city || "Mecca";
   const country = settings?.country || "Saudi Arabia";
@@ -314,6 +317,25 @@ export default function More() {
         </Card>
       )}
 
+      {user && (
+        <Card
+          className="bg-white/80 border-red-100 p-4 rounded-2xl hover-elevate cursor-pointer"
+          data-testid="button-delete-account"
+          onClick={() => setShowDeleteConfirm(true)}
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-red-600">Delete Account</p>
+              <p className="text-xs text-muted-foreground">Permanently delete your account and data</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </div>
+        </Card>
+      )}
+
       {/* Legal */}
       <div className="space-y-2">
         <Link href="/privacy">
@@ -509,6 +531,69 @@ export default function More() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Delete Account Confirmation Modal */}
+      <Dialog open={showDeleteConfirm} onOpenChange={(open) => {
+        if (!isDeleting) {
+          setShowDeleteConfirm(open);
+          setDeleteConfirmText("");
+        }
+      }}>
+        <DialogContent className="bg-white border-red-100 max-w-sm mx-auto rounded-3xl">
+          <div className="py-4 px-2">
+            <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-7 h-7 text-red-500" />
+            </div>
+            <h2 className="text-xl font-serif text-center mb-2">Delete Account?</h2>
+            <p className="text-sm text-muted-foreground text-center mb-4">
+              This will permanently delete your account and all your data including saved verses, prayer progress, and coach conversations. This action cannot be undone.
+            </p>
+            <p className="text-sm text-center mb-3">
+              Type <span className="font-semibold text-red-600">DELETE</span> to confirm:
+            </p>
+            <Input
+              placeholder="Type DELETE"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              className="h-12 rounded-xl text-center mb-4"
+              disabled={isDeleting}
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="w-full rounded-xl"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteConfirmText("");
+                }}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="w-full rounded-xl"
+                disabled={deleteConfirmText !== "DELETE" || isDeleting}
+                onClick={async () => {
+                  setIsDeleting(true);
+                  try {
+                    await deleteAccount();
+                  } catch (err) {
+                    console.error("Failed to delete account:", err);
+                    setIsDeleting(false);
+                  }
+                }}
+              >
+                {isDeleting ? (
+                  <><Loader2 className="w-4 h-4 animate-spin mr-2" />Deleting...</>
+                ) : (
+                  "Delete Account"
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Islamic Clothing Coming Soon Modal */}
       <Dialog open={showClothingComingSoon} onOpenChange={setShowClothingComingSoon}>
         <DialogContent className="bg-white border-primary/10 max-w-sm mx-auto rounded-3xl">

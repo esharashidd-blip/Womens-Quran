@@ -150,6 +150,9 @@ export interface IStorage {
   getQuranBookmark(userId: string): Promise<QuranBookmarkRow | null>;
   setQuranBookmark(userId: string, surahNumber: number, ayahNumber: number, surahName: string): Promise<QuranBookmarkRow>;
 
+  // Account deletion
+  deleteAllUserData(userId: string): Promise<void>;
+
   // Coach chat methods
   getConversations(userId: string): Promise<CoachConversation[]>;
   getConversation(id: number, userId: string): Promise<CoachConversation | null>;
@@ -597,6 +600,33 @@ export class SupabaseStorage implements IStorage {
       .single();
     if (error) throw error;
     return toCamelCase<QuranBookmarkRow>(data as Record<string, unknown>);
+  }
+
+  async deleteAllUserData(userId: string): Promise<void> {
+    // Get conversation IDs first for deleting messages
+    const { data: conversations } = await supabase
+      .from("coach_conversations")
+      .select("id")
+      .eq("user_id", userId);
+    const conversationIds = conversations?.map(c => c.id) || [];
+
+    // Delete coach messages first (foreign key dependency)
+    if (conversationIds.length > 0) {
+      await supabase.from("coach_messages").delete().in("conversation_id", conversationIds);
+    }
+
+    // Delete all other user data in parallel
+    await Promise.all([
+      supabase.from("coach_conversations").delete().eq("user_id", userId),
+      supabase.from("favorites").delete().eq("user_id", userId),
+      supabase.from("qada").delete().eq("user_id", userId),
+      supabase.from("settings").delete().eq("user_id", userId),
+      supabase.from("prayer_progress").delete().eq("user_id", userId),
+      supabase.from("quran_reading_sessions").delete().eq("user_id", userId),
+      supabase.from("token_usage").delete().eq("user_id", userId),
+      supabase.from("programme_progress").delete().eq("user_id", userId),
+      supabase.from("quran_bookmarks").delete().eq("user_id", userId),
+    ]);
   }
 }
 

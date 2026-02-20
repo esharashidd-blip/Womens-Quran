@@ -87,6 +87,26 @@ export function useAuth() {
     if (error) throw error;
   };
 
+  const deleteAccount = async () => {
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    if (!currentSession) throw new Error("Not authenticated");
+
+    const res = await fetch("/api/auth/account", {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${currentSession.access_token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.message || "Failed to delete account");
+    }
+
+    await supabase.auth.signOut();
+    queryClient.clear();
+  };
+
   const updateDisplayName = async (displayName: string) => {
     const { data, error } = await supabase.auth.updateUser({
       data: { display_name: displayName }
@@ -106,5 +126,6 @@ export function useAuth() {
     signUp,
     loginWithGoogle,
     updateDisplayName,
+    deleteAccount,
   };
 }
