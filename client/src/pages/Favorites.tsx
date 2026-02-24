@@ -1,6 +1,7 @@
 import { useFavorites } from "@/hooks/use-favorites";
 import { VerseCard } from "@/components/VerseCard";
-import { Loader2, HeartOff } from "lucide-react";
+import { HeartOff } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
@@ -15,7 +16,27 @@ export default function Favorites() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+        <div className="space-y-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white/60 rounded-3xl p-6 border border-white/50 space-y-5">
+              <div className="flex justify-between items-center pb-4 border-b border-pink-100">
+                <Skeleton className="h-6 w-12 rounded-full" />
+                <div className="flex gap-2">
+                  <Skeleton className="w-8 h-8 rounded-full" />
+                  <Skeleton className="w-8 h-8 rounded-full" />
+                </div>
+              </div>
+              <div className="text-right space-y-3">
+                <Skeleton className="h-8 w-full rounded-lg" />
+                <Skeleton className="h-8 w-3/4 ml-auto rounded-lg" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-full rounded-full" />
+                <Skeleton className="h-5 w-4/5 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : favorites && favorites.length > 0 ? (
         <div className="space-y-6">
           {favorites.map((fav, index) => (

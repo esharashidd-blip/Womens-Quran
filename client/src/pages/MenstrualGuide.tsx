@@ -78,28 +78,41 @@ export default function MenstrualGuide() {
         }
     };
 
-    const toggleAudio = (url: string) => {
-        if (playingAudio === url) {
-            audioRef.current?.pause();
-            setPlayingAudio(null);
-        } else {
-            if (audioRef.current) {
-                audioRef.current.pause();
-            }
-            audioRef.current = new Audio(url);
-            audioRef.current.onended = () => setPlayingAudio(null);
-            audioRef.current.play();
-            setPlayingAudio(url);
-        }
-    };
-
+    // Initialize persistent audio element (better WKWebView compatibility)
     useEffect(() => {
+        if (!audioRef.current) {
+            audioRef.current = new Audio();
+            audioRef.current.preload = 'auto';
+        }
         return () => {
             if (audioRef.current) {
                 audioRef.current.pause();
+                audioRef.current.src = '';
+                audioRef.current = null;
             }
         };
     }, []);
+
+    const toggleAudio = (url: string) => {
+        if (!audioRef.current) return;
+
+        if (playingAudio === url) {
+            audioRef.current.pause();
+            setPlayingAudio(null);
+        } else {
+            audioRef.current.pause();
+            audioRef.current.src = url;
+            audioRef.current.load();
+            audioRef.current.onended = () => setPlayingAudio(null);
+            audioRef.current.onerror = () => setPlayingAudio(null);
+            audioRef.current.play().then(() => {
+                setPlayingAudio(url);
+            }).catch((err) => {
+                console.warn('Audio play failed:', err);
+                setPlayingAudio(null);
+            });
+        }
+    };
 
     if (!dayData) return null;
 

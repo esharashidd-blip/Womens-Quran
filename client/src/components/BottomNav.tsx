@@ -1,9 +1,9 @@
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { Home, Clock, Heart, BookOpen, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNav() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   const navItems = [
     { href: "/", icon: Home, label: "Home" },
@@ -13,28 +13,33 @@ export function BottomNav() {
     { href: "/more", icon: Menu, label: "More" },
   ];
 
+  const handleNavClick = (href: string) => {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    setLocation(href);
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-primary/10 z-50 pb-[env(safe-area-inset-bottom)]">
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
         {navItems.map((item) => {
           const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
           return (
-            <Link key={item.href} href={item.href}>
-              <button
-                data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-3 py-2 min-h-[44px] min-w-[44px] transition-all duration-200",
-                  isActive
-                    ? "text-primary scale-105"
-                    : "text-muted-foreground hover:text-primary/70"
-                )}
-              >
-                <item.icon className={cn("w-5 h-5", isActive && "fill-primary/20")} strokeWidth={isActive ? 2.5 : 2} />
-                <span className="text-[10px] font-medium">
-                  {item.label}
-                </span>
-              </button>
-            </Link>
+            <button
+              key={item.href}
+              onClick={() => handleNavClick(item.href)}
+              data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+              className={cn(
+                "flex flex-col items-center justify-center gap-1 px-3 py-2 min-h-[44px] min-w-[44px] transition-all duration-200",
+                isActive
+                  ? "text-primary scale-105"
+                  : "text-muted-foreground hover:text-primary/70"
+              )}
+            >
+              <item.icon className={cn("w-5 h-5", isActive && "fill-primary/20")} strokeWidth={isActive ? 2.5 : 2} />
+              <span className="text-[10px] font-medium">
+                {item.label}
+              </span>
+            </button>
           );
         })}
       </div>

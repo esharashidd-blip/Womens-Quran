@@ -30,7 +30,7 @@ interface PrayerData {
 }
 
 export function usePrayerTimes(city: string = "Mecca", country: string = "Saudi Arabia") {
-  return useQuery({
+  return useQuery<PrayerData>({
     queryKey: ["prayer-times", city, country],
     queryFn: async () => {
       const res = await fetch(
@@ -38,9 +38,13 @@ export function usePrayerTimes(city: string = "Mecca", country: string = "Saudi 
       );
       if (!res.ok) throw new Error("Failed to fetch prayer times");
       const data = await res.json();
+      if (data.code !== 200 || !data.data?.timings) {
+        throw new Error("Invalid prayer times response");
+      }
       return data.data as PrayerData;
     },
     staleTime: 1000 * 60 * 30,
+    retry: 1,
   });
 }
 

@@ -311,37 +311,62 @@ function ForYouContent() {
     return normalized as Required<DayContent>;
   }, [currentDayContent]);
 
+  // Initialize a persistent audio element once (better WKWebView compatibility)
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.preload = 'auto';
+    }
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.onended = null;
+        audioRef.current.onerror = null;
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
   const toggleAudio = () => {
-    if (!normalizedDayContent) return;
+    if (!normalizedDayContent || !audioRef.current) return;
 
     let audioUrl = '';
     if (currentSection === 'intro') audioUrl = normalizedDayContent.introAudio.audioUrl || '';
     else if (currentSection === 'ayah') audioUrl = normalizedDayContent.ayahStudy.audioUrl || '';
     else if (currentSection === 'story') audioUrl = normalizedDayContent.multiPartStory.audioUrl || '';
 
-    if (audioUrl) {
-      if (isPlaying && audioRef.current) {
+    if (!audioUrl) return;
+
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      // Reuse existing audio element, just change src if needed
+      const currentSrc = audioRef.current.getAttribute('data-url');
+      if (currentSrc !== audioUrl) {
         audioRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        if (!audioRef.current) {
-          audioRef.current = new Audio(audioUrl);
-          audioRef.current.onended = () => setIsPlaying(false);
-        } else if (audioRef.current.src !== audioUrl) {
-          audioRef.current.pause();
-          audioRef.current = new Audio(audioUrl);
-          audioRef.current.onended = () => setIsPlaying(false);
-        }
-        audioRef.current.play();
-        setIsPlaying(true);
+        audioRef.current.src = audioUrl;
+        audioRef.current.setAttribute('data-url', audioUrl);
+        audioRef.current.load();
       }
+      audioRef.current.onended = () => setIsPlaying(false);
+      audioRef.current.onerror = () => setIsPlaying(false);
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch((err) => {
+        console.warn('Audio play failed:', err);
+        setIsPlaying(false);
+      });
     }
   };
 
+  // Reset playback state when switching sections/days/programs
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current = null;
+      audioRef.current.src = '';
+      audioRef.current.removeAttribute('data-url');
     }
     setIsPlaying(false);
   }, [currentDay, currentSection, selectedProgramId]);

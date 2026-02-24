@@ -2,7 +2,8 @@ import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { useSettings } from "@/hooks/use-settings";
 import { useQada, useUpdateQada } from "@/hooks/use-qada";
 import { useTodayProgress, useWeeklyProgress, useUpdatePrayerProgress, calculateWeeklyStats } from "@/hooks/use-prayer-progress";
-import { Loader2, Sunrise, Sun, Sunset, Moon, Plus, Minus, CircleDot, CalendarCheck, Compass, ChevronRight, ChevronLeft, UtensilsCrossed, Check, BellOff, Share2, Heart } from "lucide-react";
+import { Sunrise, Sun, Sunset, Moon, Plus, Minus, CircleDot, CalendarCheck, Compass, ChevronRight, ChevronLeft, UtensilsCrossed, Check, BellOff, Share2, Heart } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -225,8 +226,23 @@ export default function PrayerTab() {
           {/* Prayer Times List with Checkboxes */}
           <Card className="bg-white/80 border-white/50 rounded-2xl overflow-hidden">
             {prayersLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="animate-spin text-primary w-8 h-8" />
+              <div className="divide-y divide-primary/5">
+                <div className="px-4 py-2 bg-accent/20">
+                  <Skeleton className="h-4 w-48 mx-auto rounded-full" />
+                </div>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-6 h-6 rounded-full" />
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                      <Skeleton className="h-5 w-5 rounded-full" />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-6 w-12 rounded-full" />
+                      <Skeleton className="w-5 h-5 rounded-full" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="divide-y divide-primary/5">

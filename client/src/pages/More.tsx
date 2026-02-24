@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Link, useLocation } from "wouter";
 import { Heart, Settings, ChevronRight, Loader2, MapPin, Navigation, BookOpen, Plane, LogOut, Bell, Moon, Flower2, MessageCircle, User, Edit2, Shirt, HandHeart, FileText, Shield, Trash2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -127,8 +128,43 @@ export default function More() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-primary w-8 h-8" />
+      <div className="min-h-screen pb-nav-safe px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-5">
+        <Skeleton className="h-7 w-16 mx-auto rounded-full" />
+        <div className="space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-white/80 border border-white/50 p-4 rounded-2xl">
+              <div className="flex items-center gap-4">
+                <Skeleton className="w-10 h-10 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-5 w-28 rounded-full" />
+                  <Skeleton className="h-3 w-40 rounded-full" />
+                </div>
+                <Skeleton className="w-5 h-5 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Settings card skeleton */}
+        <div className="bg-white/80 border border-white/50 p-4 rounded-2xl space-y-4">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-10 h-10 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-20 rounded-full" />
+              <Skeleton className="h-3 w-36 rounded-full" />
+            </div>
+          </div>
+          <div className="pt-4 border-t border-primary/10 space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="w-4 h-4 rounded-full" />
+                  <Skeleton className="h-4 w-32 rounded-full" />
+                </div>
+                <Skeleton className="w-10 h-6 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -443,50 +479,50 @@ export default function More() {
       )}
 
       {/* Name Editor Modal */}
-      {showNameEditor && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={() => setShowNameEditor(false)}>
-          <Card
-            className="w-full max-w-sm bg-background rounded-3xl p-6 space-y-4 animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="font-serif text-lg text-center">What should we call you?</h3>
-            <p className="text-sm text-muted-foreground text-center">
-              Your name will appear in the app greeting.
-            </p>
+      <Dialog open={showNameEditor} onOpenChange={(open) => !isSavingName && setShowNameEditor(open)}>
+        <DialogContent className="bg-white border-primary/10 max-w-sm mx-auto rounded-3xl">
+          <div className="text-center py-4 px-2 space-y-6">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+              <User className="w-8 h-8 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-serif text-foreground">What should we call you?</h2>
+              <p className="text-sm text-muted-foreground">
+                Your name will appear in the app greeting.
+              </p>
+            </div>
             <Input
               placeholder="Enter your name"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
-              className="h-12 rounded-xl text-center text-lg"
+              className="h-14 rounded-2xl text-center text-lg border-primary/20 focus:border-primary focus:ring-primary/20"
               autoFocus
               onKeyDown={async (e) => {
-                if (e.key === 'Enter' && !isSavingName) {
+                if (e.key === 'Enter' && !isSavingName && nameInput.trim()) {
                   const firstName = nameInput.trim().split(/\s+/)[0];
-                  if (firstName) {
-                    setIsSavingName(true);
-                    try {
-                      await updateDisplayName(firstName);
-                    } catch (err) {
-                      console.error("Failed to save name:", err);
-                    }
-                    setIsSavingName(false);
+                  setIsSavingName(true);
+                  try {
+                    await updateDisplayName(firstName);
+                  } catch (err) {
+                    console.error("Failed to save name:", err);
                   }
+                  setIsSavingName(false);
                   setShowNameEditor(false);
                 }
               }}
             />
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button
                 variant="outline"
-                className="w-full rounded-xl"
+                className="w-full rounded-xl h-12"
                 onClick={() => setShowNameEditor(false)}
                 disabled={isSavingName}
               >
                 Cancel
               </Button>
               <Button
-                className="w-full rounded-xl"
-                disabled={isSavingName}
+                className="w-full rounded-xl h-12 bg-primary hover:bg-primary/90 text-white"
+                disabled={isSavingName || !nameInput.trim()}
                 onClick={async () => {
                   const firstName = nameInput.trim().split(/\s+/)[0];
                   if (firstName) {
@@ -501,12 +537,12 @@ export default function More() {
                   setShowNameEditor(false);
                 }}
               >
-                {isSavingName ? "Saving..." : "Save"}
+                {isSavingName ? "Saving..." : "Save Name"}
               </Button>
             </div>
-          </Card>
-        </div>
-      )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Cycle Mode First-Time Modal */}
       <Dialog open={showCycleModeModal} onOpenChange={setShowCycleModeModal}>

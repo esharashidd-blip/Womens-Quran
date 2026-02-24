@@ -3,7 +3,8 @@ import { SurahCard } from "@/components/SurahCard";
 import { useTodayQuranSession, useWeeklyQuranSessions, calculateWeeklyMinutes } from "@/hooks/use-quran-sessions";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useQuranTimer } from "@/contexts/QuranTimerContext";
-import { Loader2, Search, BookOpen, Clock, Play, Pause, RotateCcw, TrendingUp, Bookmark } from "lucide-react";
+import { Search, BookOpen, Clock, Play, Pause, RotateCcw, TrendingUp, Bookmark } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -192,9 +193,21 @@ export default function Quran() {
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-4 text-primary/60">
-          <Loader2 className="w-10 h-10 animate-spin" />
-          <p>Loading Surahs...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-pink-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="w-10 h-10 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-28 rounded-full" />
+                    <Skeleton className="h-3 w-36 rounded-full" />
+                  </div>
+                </div>
+                <Skeleton className="h-7 w-16 rounded-md" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -131,41 +131,57 @@ export async function shareCanvasImage(
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64data = reader.result as string;
-
-        // Try native iOS share if available
-        if ((window as any).webkit?.messageHandlers?.shareImage) {
-          try {
-            (window as any).webkit.messageHandlers.shareImage.postMessage({
-              image: base64data
-            });
-            resolve(true);
-            return;
-          } catch (err) {
-            console.error("Native bridge failed:", err);
-          }
-        }
-
-        // Fallback to Web Share API
-        if (navigator.canShare && navigator.canShare({ files: [new File([blob], 'womens-quran.png', { type: 'image/png' })] })) {
-          try {
-            const file = new File([blob], 'womens-quran.png', { type: 'image/png' });
-            await navigator.share({ files: [file] });
-            resolve(true);
-            return;
-          } catch (err: any) {
-            if (err.name === 'AbortError') {
-              resolve(false); // User cancelled
-              return;
+      // Try native iOS share bridge first (for WKWebView)
+      if ((window as any).webkit?.messageHandlers?.shareImage) {
+        try {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            try {
+              const base64data = reader.result as string;
+              (window as any).webkit.messageHandlers.shareImage.postMessage({
+                image: base64data
+              });
+              resolve(true);
+            } catch (err) {
+              console.warn("Native bridge postMessage failed:", err);
+              resolve(false);
             }
-          }
+          };
+          reader.readAsDataURL(blob);
+          return;
+        } catch (err) {
+          console.warn("Native bridge setup failed:", err);
         }
+      }
 
+      // Try Web Share API with file (don't gate on canShare - just try it)
+      if (navigator.share) {
+        try {
+          const file = new File([blob], 'womens-quran.png', { type: 'image/png' });
+          await navigator.share({ files: [file] });
+          resolve(true);
+          return;
+        } catch (err: any) {
+          if (err.name === 'AbortError') {
+            resolve(false);
+            return;
+          }
+          console.warn("File share not supported, trying download fallback");
+        }
+      }
+
+      // Final fallback: trigger download
+      try {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = 'womens-quran.png';
+        link.href = url;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        resolve(true);
+      } catch {
         resolve(false);
-      };
-      reader.readAsDataURL(blob);
+      }
     }, 'image/png', 0.95);
   });
 }

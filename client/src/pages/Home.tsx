@@ -2,7 +2,8 @@ import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useTodayProgress, useWeeklyProgress, useUpdatePrayerProgress } from "@/hooks/use-prayer-progress";
 import { useProgrammeProgress } from "@/hooks/use-programme-progress";
-import { Loader2, Sunrise, Sun, Sunset, Moon, MapPin, Clock, ChevronDown, Search, Navigation, Check, Flame, Heart, ArrowRight } from "lucide-react";
+import { Sunrise, Sun, Sunset, Moon, MapPin, Clock, ChevronDown, Search, Navigation, Check, Flame, Heart, ArrowRight, Loader2, UtensilsCrossed } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DailyQuoteGenerator } from "@/components/DailyQuoteGenerator";
 import { Link } from "wouter";
 import { format, subDays } from "date-fns";
@@ -266,6 +267,9 @@ export default function Home() {
         onSuccess: () => {
           setShowLocationPicker(false);
           setLocationSearch("");
+        },
+        onError: (err) => {
+          console.error("Failed to update location:", err);
         }
       }
     );
@@ -274,42 +278,63 @@ export default function Home() {
   const handleAutoDetect = () => {
     if (!navigator.geolocation) return;
     setIsDetecting(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const res = await fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
-          );
-          const data = await res.json();
-          updateSettings.mutate(
-            {
-              city: data.city || data.locality || "Unknown",
-              country: data.countryName || "Unknown",
-              autoLocation: true,
-            },
-            {
-              onSuccess: () => {
-                setShowLocationPicker(false);
-                setLocationSearch("");
-                setIsDetecting(false);
+    try {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const res = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+            );
+            if (!res.ok) throw new Error('Geocoding request failed');
+            const data = await res.json();
+            const detectedCity = data.city || data.locality || data.principalSubdivision || "Unknown";
+            const detectedCountry = data.countryName || "Unknown";
+            updateSettings.mutate(
+              {
+                city: detectedCity,
+                country: detectedCountry,
+                autoLocation: true,
+              },
+              {
+                onSuccess: () => {
+                  setShowLocationPicker(false);
+                  setLocationSearch("");
+                  setIsDetecting(false);
+                },
+                onError: () => {
+                  setIsDetecting(false);
+                }
               }
-            }
-          );
-        } catch (e) {
-          console.error("Geocoding failed", e);
+            );
+          } catch (e) {
+            console.error("Geocoding failed", e);
+            setIsDetecting(false);
+          }
+        },
+        (err) => {
+          console.error("Geolocation error", err);
           setIsDetecting(false);
-        }
-      },
-      (err) => {
-        console.error("Geolocation error", err);
-        setIsDetecting(false);
-      }
-    );
+        },
+        { timeout: 10000, enableHighAccuracy: false }
+      );
+    } catch (e) {
+      console.error("Geolocation unavailable", e);
+      setIsDetecting(false);
+    }
   };
 
   return (
     <div className="min-h-screen pb-nav-safe px-4 pt-6 md:px-8 max-w-lg mx-auto space-y-5">
       <div className="text-center space-y-1">
+        <button
+          onClick={() => setShowLocationPicker(true)}
+          className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mx-auto bg-white/60 px-3 py-1.5 rounded-full hover-elevate cursor-pointer transition-all border border-primary/10 mb-2"
+          data-testid="button-change-location"
+        >
+          <MapPin className="w-3 h-3 text-primary" />
+          <span>{city}, {country}</span>
+          <ChevronDown className="w-3 h-3" />
+        </button>
         <h1 className="text-2xl font-serif text-foreground">
           Salam{displayName ? `, ${displayName}` : ''} <span className="text-primary">🤍</span>
         </h1>
@@ -323,20 +348,48 @@ export default function Home() {
         )}
       </div>
 
-      <button
-        onClick={() => setShowLocationPicker(true)}
-        className="flex items-center justify-center gap-2 text-sm text-muted-foreground mx-auto bg-white/60 px-4 py-2 rounded-full hover-elevate cursor-pointer transition-all border border-primary/10"
-        data-testid="button-change-location"
-      >
-        <MapPin className="w-4 h-4 text-primary" />
-        <span>{city}, {country}</span>
-        <ChevronDown className="w-4 h-4" />
-      </button>
+      {/* Ramadan Iftar/Suhoor Times */}
+      {settings?.ramadanMode && prayers && (
+        <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-100 p-4 rounded-2xl shadow-sm">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <UtensilsCrossed className="w-4 h-4 text-emerald-600" />
+            <span className="font-serif text-sm text-emerald-700">Ramadan Times</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-widest text-emerald-600/70 mb-0.5">Suhoor Ends</p>
+              <p className="text-xl font-serif text-emerald-700">
+                {(prayers.timings.Imsak || prayers.timings.Fajr)?.split(" ")[0] || "--:--"}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-widest text-emerald-600/70 mb-0.5">Iftar</p>
+              <p className="text-xl font-serif text-emerald-700">
+                {prayers.timings.Maghrib?.split(" ")[0] || "--:--"}
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Card className="bg-gradient-to-br from-primary/10 to-accent/30 border-white/50 p-6 rounded-3xl shadow-lg">
         {prayersLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="animate-spin text-primary w-8 h-8" />
+          <div className="flex flex-col items-center gap-4">
+            <div className="text-center space-y-2">
+              <Skeleton className="h-3 w-20 mx-auto rounded-full" />
+              <Skeleton className="h-10 w-32 mx-auto rounded-full" />
+              <Skeleton className="h-6 w-16 mx-auto rounded-full" />
+            </div>
+            <Skeleton className="h-10 w-40 rounded-full" />
+            <div className="grid grid-cols-5 gap-2 w-full pt-5 border-t border-white/30">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex flex-col items-center gap-1.5 py-2">
+                  <Skeleton className="h-4 w-4 rounded-full" />
+                  <Skeleton className="h-3 w-6 rounded-full" />
+                  <Skeleton className="h-2 w-8 rounded-full" />
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center">

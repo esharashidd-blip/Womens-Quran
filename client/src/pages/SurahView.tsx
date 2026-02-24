@@ -1,7 +1,8 @@
 import { useParams, Link } from "wouter";
 import { useSurahDetail } from "@/hooks/use-quran";
 import { VerseCard } from "@/components/VerseCard";
-import { Loader2, ArrowLeft, Play, Pause, SkipForward, SkipBack, Volume2, Bookmark, BookmarkCheck } from "lucide-react";
+import { ArrowLeft, Play, Pause, SkipForward, SkipBack, Volume2, Bookmark, BookmarkCheck } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
@@ -10,12 +11,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/hooks/use-favorites";
 
 // Available reciters with their identifiers
+// Some reciters are only available at 64kbps on the CDN
 const RECITERS = [
-  { id: "ar.alafasy", name: "Mishary Rashid Alafasy" },
-  { id: "ar.abdurrahmaansudais", name: "Abdurrahman As-Sudais" },
-  { id: "ar.abdulbasitmurattal", name: "Abdul Basit (Murattal)" },
-  { id: "ar.husary", name: "Mahmoud Khalil Al-Husary" },
-  { id: "ar.minshawi", name: "Mohamed Siddiq El-Minshawi" },
+  { id: "ar.alafasy", name: "Mishary Rashid Alafasy", bitrate: 128 },
+  { id: "ar.abdurrahmaansudais", name: "Abdurrahman As-Sudais", bitrate: 64 },
+  { id: "ar.abdulbasitmurattal", name: "Abdul Basit (Murattal)", bitrate: 64 },
+  { id: "ar.husary", name: "Mahmoud Khalil Al-Husary", bitrate: 128 },
+  { id: "ar.minshawi", name: "Mohamed Siddiq El-Minshawi", bitrate: 128 },
 ];
 
 // Starting ayah numbers for each surah (1-indexed)
@@ -95,7 +97,9 @@ export default function SurahView() {
 
   const getAudioUrl = (surahNumber: number, ayahNumberInSurah: number): string => {
     const globalAyahNumber = getGlobalAyahNumber(surahNumber, ayahNumberInSurah);
-    return `https://cdn.islamic.network/quran/audio/128/${selectedReciter}/${globalAyahNumber}.mp3`;
+    const reciter = RECITERS.find(r => r.id === selectedReciter);
+    const bitrate = reciter?.bitrate || 128;
+    return `https://cdn.islamic.network/quran/audio/${bitrate}/${selectedReciter}/${globalAyahNumber}.mp3`;
   };
 
   // Preload the next ayah's audio in the background
@@ -198,8 +202,43 @@ export default function SurahView() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-pink-50/30">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      <div className="min-h-screen pb-nav-safe-lg pt-10 px-4 md:px-8 max-w-3xl mx-auto">
+        {/* Header skeleton */}
+        <div className="py-4 flex items-center gap-4 mb-8 border-b border-primary/5">
+          <Skeleton className="w-10 h-10 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-7 w-40 rounded-full" />
+            <Skeleton className="h-3 w-52 rounded-full" />
+          </div>
+          <Skeleton className="w-10 h-10 rounded-full" />
+        </div>
+        {/* Bismillah skeleton */}
+        <div className="text-center mb-12">
+          <Skeleton className="h-10 w-64 mx-auto rounded-lg" />
+        </div>
+        {/* Verse card skeletons */}
+        <div className="space-y-6">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="bg-white/60 rounded-3xl p-6 border border-white/50 space-y-5">
+              <div className="flex justify-between items-center pb-4 border-b border-pink-100">
+                <Skeleton className="h-6 w-12 rounded-full" />
+                <div className="flex gap-2">
+                  <Skeleton className="w-8 h-8 rounded-full" />
+                  <Skeleton className="w-8 h-8 rounded-full" />
+                </div>
+              </div>
+              <div className="text-right space-y-3">
+                <Skeleton className="h-8 w-full rounded-lg" />
+                <Skeleton className="h-8 w-3/4 ml-auto rounded-lg" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-full rounded-full" />
+                <Skeleton className="h-5 w-5/6 rounded-full" />
+                <Skeleton className="h-5 w-2/3 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
