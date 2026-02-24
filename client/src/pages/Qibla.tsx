@@ -11,38 +11,50 @@ export default function Qibla() {
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [orientationPermissionDenied, setOrientationPermissionDenied] = useState(false);
   const [needsOrientationPermission, setNeedsOrientationPermission] = useState(false);
+  const [orientationGranted, setOrientationGranted] = useState(false);
   const { data: qibla, isLoading } = useQiblaDirection(coords?.lat ?? null, coords?.lng ?? null);
-
-  useEffect(() => {
-    requestLocation();
-    checkOrientationPermission();
-  }, []);
 
   const requestLocation = async () => {
     try {
-      // Try native iOS location first (more accurate and respects iOS permissions)
       const location = await nativeLocation.requestLocation();
-      setCoords({
-        lat: location.latitude,
-        lng: location.longitude,
-      });
+      setCoords({ lat: location.latitude, lng: location.longitude });
       setPermissionDenied(false);
-      console.log('✅ Location obtained:', location);
     } catch (error) {
-      console.error('❌ Location error:', error);
+      console.error('Location error:', error);
       setPermissionDenied(true);
     }
   };
 
-  const checkOrientationPermission = () => {
-    // Check if iOS 13+ requires permission
+  // On mount: get location and check orientation permission
+  useEffect(() => {
+    requestLocation();
     if (typeof (DeviceOrientationEvent as any)?.requestPermission === 'function') {
       setNeedsOrientationPermission(true);
     } else {
-      // Non-iOS or older iOS, start listening immediately
-      startOrientationTracking();
+      setOrientationGranted(true);
     }
-  };
+  }, []);
+
+  // Listen for device orientation with proper cleanup
+  useEffect(() => {
+    if (!orientationGranted) return;
+
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      // iOS: webkitCompassHeading gives degrees from magnetic north (0 = north)
+      // Android: alpha is rotation around Z-axis, invert for compass heading
+      const iosHeading = (event as any).webkitCompassHeading;
+      if (iosHeading !== undefined && iosHeading !== null) {
+        setHeading(iosHeading);
+      } else if (event.alpha !== null) {
+        setHeading(360 - event.alpha);
+      }
+    };
+
+    window.addEventListener("deviceorientation", handleOrientation);
+    return () => {
+      window.removeEventListener("deviceorientation", handleOrientation);
+    };
+  }, [orientationGranted]);
 
   const requestOrientationPermission = async () => {
     try {
@@ -51,7 +63,7 @@ export default function Qibla() {
         if (permission === 'granted') {
           setNeedsOrientationPermission(false);
           setOrientationPermissionDenied(false);
-          startOrientationTracking();
+          setOrientationGranted(true);
         } else {
           setOrientationPermissionDenied(true);
         }
@@ -60,22 +72,6 @@ export default function Qibla() {
       console.error('Orientation permission error:', error);
       setOrientationPermissionDenied(true);
     }
-  };
-
-  const startOrientationTracking = () => {
-    const handleOrientation = (event: DeviceOrientationEvent) => {
-      if (event.alpha !== null) {
-        setHeading(event.alpha);
-      }
-    };
-
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener("deviceorientation", handleOrientation);
-    }
-
-    return () => {
-      window.removeEventListener("deviceorientation", handleOrientation);
-    };
   };
 
   const qiblaAngle = qibla?.direction || 0;

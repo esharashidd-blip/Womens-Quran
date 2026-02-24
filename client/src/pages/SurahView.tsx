@@ -3,10 +3,11 @@ import { useSurahDetail } from "@/hooks/use-quran";
 import { VerseCard } from "@/components/VerseCard";
 import { Loader2, ArrowLeft, Play, Pause, SkipForward, SkipBack, Volume2, Bookmark, BookmarkCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { useQuranBookmark, useSetQuranBookmark } from "@/hooks/use-quran-bookmark";
 import { useToast } from "@/hooks/use-toast";
+import { useFavorites } from "@/hooks/use-favorites";
 
 // Available reciters with their identifiers
 const RECITERS = [
@@ -15,6 +16,18 @@ const RECITERS = [
   { id: "ar.abdulbasitmurattal", name: "Abdul Basit (Murattal)" },
   { id: "ar.husary", name: "Mahmoud Khalil Al-Husary" },
   { id: "ar.minshawi", name: "Mohamed Siddiq El-Minshawi" },
+];
+
+// Starting ayah numbers for each surah (1-indexed)
+const SURAH_STARTS = [
+  0, 1, 8, 294, 494, 670, 790, 997, 1072, 1201, 1310, 1433, 1542, 1596, 1649, 1706,
+  1751, 1802, 1902, 2029, 2140, 2251, 2329, 2404, 2463, 2530, 2620, 2677, 2735, 2820, 2879,
+  2913, 2943, 3016, 3070, 3115, 3198, 3280, 3343, 3418, 3503, 3557, 3611, 3664, 3717, 3754,
+  3789, 3842, 3894, 3912, 3957, 4017, 4066, 4118, 4173, 4218, 4314, 4387, 4431, 4455, 4468,
+  4482, 4493, 4505, 4523, 4535, 4547, 4577, 4609, 4661, 4705, 4733, 4761, 4781, 4817, 4857,
+  4887, 4937, 4987, 5033, 5075, 5104, 5123, 5159, 5184, 5207, 5224, 5241, 5271, 5301, 5321,
+  5336, 5357, 5368, 5376, 5384, 5403, 5414, 5422, 5430, 5442, 5453, 5463, 5474, 5490, 5508,
+  5514, 5521, 5528, 5534, 5540, 5549, 5559, 5564, 5568
 ];
 
 export default function SurahView() {
@@ -26,9 +39,20 @@ export default function SurahView() {
   const [showReciterPicker, setShowReciterPicker] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const preloadRef = useRef<HTMLAudioElement | null>(null);
   const { data: bookmark } = useQuranBookmark();
   const setBookmark = useSetQuranBookmark();
   const { toast } = useToast();
+  const { data: favorites } = useFavorites();
+
+  // Build a Map for O(1) favorite lookups
+  const favoritesMap = useMemo(() => {
+    const map = new Map<string, number>();
+    favorites?.forEach(f => {
+      map.set(`${f.surahNumber}:${f.ayahNumber}`, f.id);
+    });
+    return map;
+  }, [favorites]);
 
   const isBookmarked = bookmark?.surahNumber === Number(id) && bookmark?.ayahNumber === currentAyah;
 
@@ -40,11 +64,15 @@ export default function SurahView() {
     );
   };
 
-  // Initialize audio element on mount (iOS autoplay policy workaround)
+  // Initialize audio elements on mount
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
-      audioRef.current.preload = 'metadata';
+      audioRef.current.preload = 'auto';
+    }
+    if (!preloadRef.current) {
+      preloadRef.current = new Audio();
+      preloadRef.current.preload = 'auto';
     }
     return () => {
       if (audioRef.current) {
@@ -54,44 +82,56 @@ export default function SurahView() {
         audioRef.current.src = '';
         audioRef.current = null;
       }
+      if (preloadRef.current) {
+        preloadRef.current.src = '';
+        preloadRef.current = null;
+      }
     };
   }, []);
 
-  // Calculate global ayah number for audio URL
   const getGlobalAyahNumber = (surahNumber: number, ayahNumberInSurah: number): number => {
-    // Starting ayah numbers for each surah (1-indexed)
-    const surahStarts = [
-      0, 1, 8, 294, 494, 670, 790, 997, 1072, 1201, 1310, 1433, 1542, 1596, 1649, 1706,
-      1751, 1802, 1902, 2029, 2140, 2251, 2329, 2404, 2463, 2530, 2620, 2677, 2735, 2820, 2879,
-      2913, 2943, 3016, 3070, 3115, 3198, 3280, 3343, 3418, 3503, 3557, 3611, 3664, 3717, 3754,
-      3789, 3842, 3894, 3912, 3957, 4017, 4066, 4118, 4173, 4218, 4314, 4387, 4431, 4455, 4468,
-      4482, 4493, 4505, 4523, 4535, 4547, 4577, 4609, 4661, 4705, 4733, 4761, 4781, 4817, 4857,
-      4887, 4937, 4987, 5033, 5075, 5104, 5123, 5159, 5184, 5207, 5224, 5241, 5271, 5301, 5321,
-      5336, 5357, 5368, 5376, 5384, 5403, 5414, 5422, 5430, 5442, 5453, 5463, 5474, 5490, 5508,
-      5514, 5521, 5528, 5534, 5540, 5549, 5559, 5564, 5568
-    ];
-    return surahStarts[surahNumber] + ayahNumberInSurah;
+    return SURAH_STARTS[surahNumber] + ayahNumberInSurah;
   };
 
-  // Get audio URL for a specific ayah
   const getAudioUrl = (surahNumber: number, ayahNumberInSurah: number): string => {
     const globalAyahNumber = getGlobalAyahNumber(surahNumber, ayahNumberInSurah);
     return `https://cdn.islamic.network/quran/audio/128/${selectedReciter}/${globalAyahNumber}.mp3`;
+  };
+
+  // Preload the next ayah's audio in the background
+  const preloadNextAyah = (currentAyahNumber: number) => {
+    if (!surah || !preloadRef.current) return;
+    if (currentAyahNumber < surah.ayahs.length) {
+      preloadRef.current.src = getAudioUrl(surah.number, currentAyahNumber + 1);
+      preloadRef.current.load();
+    }
   };
 
   // Play specific ayah
   const playAyah = async (ayahNumber: number) => {
     if (!surah || !audioRef.current) return;
 
+    // Check if preload already has this ayah ready
     const url = getAudioUrl(surah.number, ayahNumber);
+    const preloadHasIt = preloadRef.current && preloadRef.current.src === url && preloadRef.current.readyState >= 3;
 
-    // Remove old event listeners
-    audioRef.current.onended = null;
-    audioRef.current.onerror = null;
+    if (preloadHasIt && preloadRef.current) {
+      // Swap: use the preloaded audio as the main player
+      audioRef.current.pause();
+      audioRef.current.onended = null;
+      audioRef.current.onerror = null;
 
-    // Set new source and play (must be synchronous for iOS)
-    audioRef.current.src = url;
-    audioRef.current.load(); // Force load
+      const temp = audioRef.current;
+      audioRef.current = preloadRef.current;
+      preloadRef.current = temp;
+      preloadRef.current.src = '';
+    } else {
+      // No preload available, load fresh
+      audioRef.current.onended = null;
+      audioRef.current.onerror = null;
+      audioRef.current.src = url;
+      audioRef.current.load();
+    }
 
     try {
       await audioRef.current.play();
@@ -99,9 +139,10 @@ export default function SurahView() {
       setIsPlaying(true);
       setAudioInitialized(true);
 
-      // Set up event listeners after successful play
+      // Start preloading the next ayah
+      preloadNextAyah(ayahNumber);
+
       audioRef.current.onended = () => {
-        // Auto-play next ayah if available
         if (ayahNumber < surah.ayahs.length) {
           playAyah(ayahNumber + 1);
         } else {
@@ -114,17 +155,13 @@ export default function SurahView() {
         setIsPlaying(false);
       };
     } catch (error) {
-      // iOS autoplay policy rejection
       console.warn('Audio play rejected:', error);
       setIsPlaying(false);
-      // User needs to tap play again
     }
   };
 
-  // Toggle play/pause
   const togglePlayPause = () => {
     if (!surah) return;
-
     if (isPlaying && audioRef.current) {
       audioRef.current.pause();
       setIsPlaying(false);
@@ -133,13 +170,11 @@ export default function SurahView() {
     }
   };
 
-  // Skip to next ayah
   const nextAyah = () => {
     if (!surah || currentAyah >= surah.ayahs.length) return;
     playAyah(currentAyah + 1);
   };
 
-  // Skip to previous ayah
   const prevAyah = () => {
     if (currentAyah <= 1) return;
     playAyah(currentAyah - 1);
@@ -152,6 +187,9 @@ export default function SurahView() {
       audioRef.current.onended = null;
       audioRef.current.onerror = null;
       audioRef.current.src = '';
+    }
+    if (preloadRef.current) {
+      preloadRef.current.src = '';
     }
     setIsPlaying(false);
     setCurrentAyah(1);
@@ -199,19 +237,25 @@ export default function SurahView() {
 
       {/* Verses */}
       <div className="space-y-6">
-        {surah.ayahs.map((ayah, index) => (
-          <VerseCard
-            key={ayah.number}
-            index={index}
-            surahName={surah.englishName}
-            surahNumber={surah.number}
-            ayahNumber={ayah.numberInSurah}
-            arabicText={ayah.text}
-            translationText={ayah.translation || ""}
-            isCurrentlyPlaying={isPlaying && currentAyah === ayah.numberInSurah}
-            onPlayAyah={() => playAyah(ayah.numberInSurah)}
-          />
-        ))}
+        {surah.ayahs.map((ayah, index) => {
+          const key = `${surah.number}:${ayah.numberInSurah}`;
+          const favoriteId = favoritesMap.get(key);
+          return (
+            <VerseCard
+              key={ayah.number}
+              index={index}
+              surahName={surah.englishName}
+              surahNumber={surah.number}
+              ayahNumber={ayah.numberInSurah}
+              arabicText={ayah.text}
+              translationText={ayah.translation || ""}
+              isCurrentlyPlaying={isPlaying && currentAyah === ayah.numberInSurah}
+              onPlayAyah={() => playAyah(ayah.numberInSurah)}
+              isFavorite={favoriteId !== undefined}
+              favoriteId={favoriteId}
+            />
+          );
+        })}
       </div>
 
       {/* Navigation Footer */}
@@ -251,9 +295,8 @@ export default function SurahView() {
                     onClick={() => {
                       setSelectedReciter(reciter.id);
                       setShowReciterPicker(false);
-                      // Restart current ayah with new reciter
                       if (isPlaying) {
-                        setTimeout(() => playAyah(currentAyah), 100);
+                        playAyah(currentAyah);
                       }
                     }}
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${

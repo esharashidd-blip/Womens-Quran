@@ -1,8 +1,9 @@
+import { memo } from "react";
 import { Heart, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QuoteGenerator } from "./QuoteGenerator";
-import { useFavorites, useAddFavorite, useDeleteFavorite } from "@/hooks/use-favorites";
+import { useAddFavorite, useDeleteFavorite } from "@/hooks/use-favorites";
 
 interface VerseCardProps {
   surahName: string;
@@ -13,22 +14,20 @@ interface VerseCardProps {
   index: number;
   isCurrentlyPlaying?: boolean;
   onPlayAyah?: () => void;
+  isFavorite?: boolean;
+  favoriteId?: number;
 }
 
-export function VerseCard({ surahName, surahNumber, ayahNumber, arabicText, translationText, index, isCurrentlyPlaying, onPlayAyah }: VerseCardProps) {
-  const { data: favorites } = useFavorites();
+export const VerseCard = memo(function VerseCard({
+  surahName, surahNumber, ayahNumber, arabicText, translationText, index,
+  isCurrentlyPlaying, onPlayAyah, isFavorite = false, favoriteId,
+}: VerseCardProps) {
   const addMutation = useAddFavorite();
   const deleteMutation = useDeleteFavorite();
 
-  const favorite = favorites?.find(f => 
-    f.surahNumber === surahNumber && f.ayahNumber === ayahNumber
-  );
-  
-  const isFavorite = !!favorite;
-
   const handleFavorite = () => {
-    if (isFavorite) {
-      deleteMutation.mutate(favorite.id);
+    if (isFavorite && favoriteId !== undefined) {
+      deleteMutation.mutate(favoriteId);
     } else {
       addMutation.mutate({
         surahName,
@@ -105,4 +104,4 @@ export function VerseCard({ surahName, surahNumber, ayahNumber, arabicText, tran
       </div>
     </div>
   );
-}
+});

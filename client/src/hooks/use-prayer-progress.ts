@@ -40,20 +40,31 @@ export function useUpdatePrayerProgress() {
       return res.json();
     },
     onMutate: async ({ date, prayer, completed }) => {
-      // Cancel any outgoing refetches for this specific date
-      await queryClient.cancelQueries({ queryKey: [`/api/prayer-progress/${date}`] });
+      const now = new Date();
+      const weekStart = format(startOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
+      const weekEnd = format(endOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
+      const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
+      const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+      const weeklyKey = [`/api/prayer-progress?startDate=${weekStart}&endDate=${weekEnd}`];
+      const monthlyKey = [`/api/prayer-progress?startDate=${monthStart}&endDate=${monthEnd}`];
 
-      // Snapshot the previous value for rollback
+      // Cancel all related refetches
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: [`/api/prayer-progress/${date}`] }),
+        queryClient.cancelQueries({ queryKey: weeklyKey }),
+        queryClient.cancelQueries({ queryKey: monthlyKey }),
+      ]);
+
+      // Snapshot previous values for rollback
       const previousProgress = queryClient.getQueryData<PrayerProgress | null>([`/api/prayer-progress/${date}`]);
+      const previousWeekly = queryClient.getQueryData<PrayerProgress[]>(weeklyKey);
+      const previousMonthly = queryClient.getQueryData<PrayerProgress[]>(monthlyKey);
 
-      // Optimistically update the cache with the new value
-      queryClient.setQueryData<PrayerProgress | null>([`/api/prayer-progress/${date}`], (old) => {
+      // Helper to update a single day's progress
+      const updateDay = (old: PrayerProgress | null | undefined): PrayerProgress => {
         if (!old) {
-          // Create new progress entry if it doesn't exist
           return {
-            id: 0,
-            userId: null,
-            date,
+            id: 0, userId: null, date,
             fajr: prayer === 'fajr' ? completed : false,
             dhuhr: prayer === 'dhuhr' ? completed : false,
             asr: prayer === 'asr' ? completed : false,
@@ -61,30 +72,48 @@ export function useUpdatePrayerProgress() {
             isha: prayer === 'isha' ? completed : false,
           } as PrayerProgress;
         }
-        // Update existing entry
-        return {
-          ...old,
-          [prayer]: completed,
-        };
-      });
+        return { ...old, [prayer]: completed };
+      };
 
-      return { previousProgress, date };
+      // Optimistically update the daily cache
+      queryClient.setQueryData<PrayerProgress | null>([`/api/prayer-progress/${date}`], updateDay);
+
+      // Helper to update a progress array in-place
+      const updateProgressArray = (old: PrayerProgress[] | undefined): PrayerProgress[] => {
+        if (!old) return [];
+        const idx = old.findIndex(p => p.date === date);
+        if (idx >= 0) {
+          const updated = [...old];
+          updated[idx] = updateDay(updated[idx]);
+          return updated;
+        }
+        return [...old, updateDay(null)];
+      };
+
+      // Optimistically update weekly and monthly caches too (prevents flicker)
+      queryClient.setQueryData<PrayerProgress[]>(weeklyKey, updateProgressArray);
+      queryClient.setQueryData<PrayerProgress[]>(monthlyKey, updateProgressArray);
+
+      return { previousProgress, previousWeekly, previousMonthly, date, weeklyKey, monthlyKey };
     },
     onError: (err, variables, context) => {
-      // Rollback to previous value on error
-      if (context?.previousProgress !== undefined) {
-        queryClient.setQueryData([`/api/prayer-progress/${context.date}`], context.previousProgress);
+      if (!context) return;
+      queryClient.setQueryData([`/api/prayer-progress/${context.date}`], context.previousProgress);
+      if (context.previousWeekly !== undefined) {
+        queryClient.setQueryData(context.weeklyKey, context.previousWeekly);
+      }
+      if (context.previousMonthly !== undefined) {
+        queryClient.setQueryData(context.monthlyKey, context.previousMonthly);
       }
     },
     onSettled: (data, error, variables) => {
-      // Only invalidate the specific date's query
+      // Silently refetch in background — UI already shows optimistic data
       queryClient.invalidateQueries({ queryKey: [`/api/prayer-progress/${variables.date}`] });
 
-      // Also invalidate weekly/monthly queries since they might include this date
       const now = new Date();
-      const startDate = format(startOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
-      const endDate = format(endOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
-      queryClient.invalidateQueries({ queryKey: [`/api/prayer-progress?startDate=${startDate}&endDate=${endDate}`] });
+      const weekStart = format(startOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
+      const weekEnd = format(endOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
+      queryClient.invalidateQueries({ queryKey: [`/api/prayer-progress?startDate=${weekStart}&endDate=${weekEnd}`] });
 
       const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
       const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
